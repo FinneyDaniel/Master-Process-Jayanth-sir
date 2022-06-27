@@ -127,7 +127,7 @@ static void sch_fnEvent3(void)
 
 static void sch_fnEvent4(void)
 {
-
+    faultCheck();
 }
 
 static void sch_fnEvent5(void)

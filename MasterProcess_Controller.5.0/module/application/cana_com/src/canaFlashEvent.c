@@ -201,7 +201,7 @@ void CANA_FlashEvent()
 {
 
 
-    if (CAN_IsMessageReceived(CANA_BASE, CANA_mMAILBOX_1))
+    if (CAN_IsMessageReceived(CANA_BASE, CAN_mMAILBOX_1))
     {
 
         ui16btcmd = can_fnFWupdate_cmd();
@@ -259,14 +259,14 @@ void CANA_FlashEvent()
             {
                 //check for previous flash fail
             }
-            while (!CAN_IsMessageReceived(CANA_BASE, CANA_mMAILBOX_1));
+            while (!CAN_IsMessageReceived(CANA_BASE, CAN_mMAILBOX_1));
 
             p_buff = &u32_DataBuffer[0];
 
             do
             {
 
-                CAN_readMessage(CANA_BASE, CANA_mMAILBOX_1,
+                CAN_readMessage(CANA_BASE, CAN_mMAILBOX_1,
                                 ui16Rx2MsgDataFlash);
                 timeout_cnt = 0;
 
@@ -339,10 +339,10 @@ void CANA_FlashEvent()
                 }
 
                 uiErrorCode = 0; //????
-                msgsts = CAN_IsMessageReceived(CANA_BASE, CANA_mMAILBOX_1);
+                msgsts = CAN_IsMessageReceived(CANA_BASE, CAN_mMAILBOX_1);
                 while (!msgsts)
                 {
-                    msgsts = CAN_IsMessageReceived(CANA_BASE, CANA_mMAILBOX_1);
+                    msgsts = CAN_IsMessageReceived(CANA_BASE, CAN_mMAILBOX_1);
 
                     if (++timeout_cnt >= (APPROX_1_SECOND_DELAY * 10))
                     {
@@ -366,9 +366,9 @@ void CANA_FlashEvent()
             }
             else
             {
-                while (!CAN_IsMessageReceived(CANA_BASE, CANA_mMAILBOX_1))
+                while (!CAN_IsMessageReceived(CANA_BASE, CAN_mMAILBOX_1))
                     ;
-                CAN_readMessage(CANA_BASE, CANA_mMAILBOX_1, uiFlashRxdatabuf);
+                CAN_readMessage(CANA_BASE, CAN_mMAILBOX_1, uiFlashRxdatabuf);
                 if (uiFlashRxdatabuf[0] == 0xA0)
                 {
                     //read checksum
@@ -508,7 +508,7 @@ static bool can_fnEraseFlash(void)
  ============================================================================ */
 static bool can_fnFWupdate_cmd(void)
 {
-    CAN_readMessage(CANA_BASE, CANA_mMAILBOX_1, ui16Rx1MsgDataFlash);
+    CAN_readMessage(CANA_BASE, CAN_mMAILBOX_1, ui16Rx1MsgDataFlash);
 
     if (ui16Rx1MsgDataFlash[0] == 0x90)
     {
@@ -532,7 +532,7 @@ static void can_fnsendACK(uint16_t uiControlByte, uint16_t uiErr,
 
     uint16_t ui16ACK;
 
-    CAN_setupMessageObject(CANA_BASE, CANA_mMAILBOX_2, 0x141101F1,
+    CAN_setupMessageObject(CANA_BASE, CAN_mMAILBOX_2, 0x141101F1,
                            CAN_MSG_FRAME_EXT, CAN_MSG_OBJ_TYPE_TX, 0,
                            CAN_MSG_OBJ_NO_FLAGS,
                            CANA_mEIGHT_BYTE);
@@ -570,7 +570,7 @@ static void can_fnsendACK(uint16_t uiControlByte, uint16_t uiErr,
         ui16TxACKdataFlash[7] = 0x00;
     }
 
-    CAN_sendMessage(CANA_BASE, CANA_mMAILBOX_2, CANA_mEIGHT_BYTE,
+    CAN_sendMessage(CANA_BASE, CAN_mMAILBOX_2, CANA_mEIGHT_BYTE,
                     ui16TxACKdataFlash);
 
 }

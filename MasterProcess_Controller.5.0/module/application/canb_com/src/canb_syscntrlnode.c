@@ -96,10 +96,10 @@ void CANB_fnSite_Event(void)
         {
             CANB_tzSiteRxRegs.Start_cmd = 0x3;  // Stack Power
         }
-        if ((ui16RxMsgDataSite7[0] == 0xDD) && (ui16RxMsgDataSite7[1] == 0xDD))
-        {
-            CANB_tzSiteRxRegs.Start_cmd = 0x4;  // Fault State
-        }
+//        if ((ui16RxMsgDataSite7[0] == 0xDD) && (ui16RxMsgDataSite7[1] == 0xDD))
+//        {
+//            CANB_tzSiteRxRegs.Start_cmd = 0x4;  // Fault State
+//        }
         if ((ui16RxMsgDataSite7[0] == 0xEE) && (ui16RxMsgDataSite7[1] == 0xEE))
         {
             CANB_tzSiteRxRegs.Start_cmd = 0x5;  // Commissioning State

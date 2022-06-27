@@ -5,7 +5,7 @@
 
 /*==============================================================================
  @file  main1.c
- @author OHMLAP0042   
+ @author DEEPTI.K
  @date 13-Jan-2022
 
  @brief Description

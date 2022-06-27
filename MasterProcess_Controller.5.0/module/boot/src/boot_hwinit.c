@@ -351,9 +351,9 @@ static void boot_fnInitPLL(void)
     // Disable windowed functionality, reset counter
     //
     __eallow();
-    WdRegs.WDWCR.all = 0x0;
-    WdRegs.WDKEY.bit.WDKEY = 0x55;
-    WdRegs.WDKEY.bit.WDKEY = 0xAA;
+//    WdRegs.WDWCR.all = 0x0;
+//    WdRegs.WDKEY.bit.WDKEY = 0x55;
+//    WdRegs.WDKEY.bit.WDKEY = 0xAA;
 
     //
     // Disable global interrupts
@@ -385,7 +385,7 @@ static void boot_fnInitPLL(void)
     //
     // Service watchdog
     //
-    ServiceDog();
+   // ServiceDog();
 
     //
     // Slip Bit Monitor and SYSCLK Frequency Check using timers

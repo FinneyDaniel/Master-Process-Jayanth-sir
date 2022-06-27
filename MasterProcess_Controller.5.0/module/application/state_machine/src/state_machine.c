@@ -105,8 +105,13 @@ void STAT_fnFSMCheck(void)
                 stat_IOReset();
             }
 
-            else if (CANB_tzSiteRxRegs.Start_cmd == 1)
+            else if ((CANA_tzMSRegs.StartCmd == 1)
+                    && (CANA_tzIOflags.LPC130Comfail == 0)
+                    && (CANA_tzIOflags.LPC131Comfail == 0)
+                    && (CANA_tzIOflags.LHC110Comfail == 0)
+                    && (CANA_tzIOflags.LHC111Comfail == 0))
             {
+
                 STAT_tzStateMac.Next_st = READY;
             }
 
@@ -307,7 +312,7 @@ void stat_IOReset(void)
     for (ui16temp = 0; ui16temp <= 3; ui16temp++)
     {
 
-        CANA_tzDI_IORegs[ui16temp].all = 0;
+        // CANA_tzDI_IORegs[ui16temp].all = 0;
 
     }
 

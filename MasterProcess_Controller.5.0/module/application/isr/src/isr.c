@@ -105,16 +105,16 @@ __interrupt void cpu_timer0_isr(void)
 
     LEDCount++;
 
-    if(LEDCount > 10000)
+    if(LEDCount > 1000)
     {
         LEDCount = 0;
     }
 
-    if (LEDCount <= 5000)
+    if (LEDCount <= 500)
     {
         GpioDataRegs.GPCSET.bit.GPIO92 = 1;
     }
-    else if ((LEDCount >= 5001) && (LEDCount <= 10000))
+    else if ((LEDCount >= 501) && (LEDCount <= 1000))
     {
         GpioDataRegs.GPCCLEAR.bit.GPIO92 = 1;
     }
@@ -183,7 +183,7 @@ interrupt void canaISR(void)
     //
     // Check if the cause is the receive message object 2
     //
-    else if (status == CANA_mMAILBOX_13)
+    else if (status == CAN_mMAILBOX_13)
     {
         //
         // Get the received message
@@ -194,7 +194,7 @@ interrupt void canaISR(void)
         // message object 2, and the message RX is complete.  Clear the
         // message object interrupt.
         //
-        CAN_clearInterruptStatus(CANA_BASE, CANA_mMAILBOX_13);
+        CAN_clearInterruptStatus(CANA_BASE, CAN_mMAILBOX_13);
 
         //
         // Increment a counter to keep track of how many messages have been
