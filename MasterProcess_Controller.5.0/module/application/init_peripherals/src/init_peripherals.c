@@ -5,7 +5,7 @@
 
 /*==============================================================================
  @file  init_peripherals.c
- @author OHMLAP0042   
+ @author DEEPTI.K
  @date 14-Jan-2022
 
  @brief Description
@@ -28,7 +28,8 @@
 /*==============================================================================
  Defines
  ==============================================================================*/
-
+#define PER_mCPUTIMER0_COUNT           (20000U)
+#define PER_mCPUTIMER1_COUNT           (2000000U) //200000000U - 1SEC    2000000U - 10msec
 /*==============================================================================
  Enums
  ==============================================================================*/
@@ -45,12 +46,12 @@
  Local Function Prototypes
  ==============================================================================*/
 
-void init_fnPWM(void);
-void init_fnPWM1(void);
 void INIT_fnGPIO(void);
 void INIT_fnPeripherals(void);
 static void per_fnIniti2cB(void);
-
+void INIT_fnCpu_Timer(void);
+void init_fnCAN_AB(void);
+void INIT_fnStart_CPUtimers(void);
 /*==============================================================================
  Local Variables
  ==============================================================================*/
@@ -60,7 +61,9 @@ static void per_fnIniti2cB(void);
  ==============================================================================*/
 
 /*=============================================================================
- @brief infinite loop for the main where tasks are executed is defined here
+ @Function name : void INIT_fnPeripherals(void)
+ @brief  configures CANA CANB module with a bitrate @500Kbps
+         GPIO
 
  @param void
  @return void
@@ -72,23 +75,18 @@ void INIT_fnPeripherals(void)
     ClkCfgRegs.PERCLKDIVSEL.bit.EPWMCLKDIV = PER_mCLKDIV_BY_TWO; // Divide by 2 of PLLSYSCLK
     EDIS;
     INIT_fnGPIO();                            // GPIO initialization to the PWMs
-    init_fnPWM();                             // Initialization of EPWMs
+    init_fnCAN_AB();
+}
+/*=============================================================================
+ @Function name : void per_fnInitCAN(void)
+ @brief  configures CANA module with a bitrate @500Kbps
 
-    //
-    // Setup GPIO pin mux for CAN-A TX/RX and CAN-B TX/RX
-    //
-    GPIO_SetupPinMux(62, GPIO_MUX_CPU1, 6); //GPIO30 -  CANRXA
-    GPIO_SetupPinOptions(62, GPIO_INPUT, GPIO_ASYNC);
-    GPIO_SetupPinMux(63, GPIO_MUX_CPU1, 6); //GPIO31 - CANTXA
-    GPIO_SetupPinOptions(63, GPIO_OUTPUT, GPIO_PUSHPULL);
+ @param void
+ @return void
+ ============================================================================ */
+void init_fnCAN_AB(void)
+{
 
-    GPIO_SetupPinMux(73, GPIO_MUX_CPU1, 5); //GPIO73 -  CANRXB
-    GPIO_SetupPinOptions(73, GPIO_INPUT, GPIO_ASYNC);
-    GPIO_SetupPinMux(20, GPIO_MUX_CPU1, 3); //GPIO20 - CANTXB
-    GPIO_SetupPinOptions(20, GPIO_OUTPUT, GPIO_PUSHPULL);
-    //
-    // Initialize the CAN controller
-    //
 
     CAN_initModule(CANA_BASE);
 //    CAN_initModule(CANB_BASE);
@@ -111,7 +109,6 @@ void INIT_fnPeripherals(void)
 
     CAN_startModule(CANB_BASE);
 
-
     GPIO_SetupPinMux(2, GPIO_MUX_CPU1, 6); //GPIO30 -  CANRXA
     GPIO_SetupPinMux(3, GPIO_MUX_CPU1, 6); //GPIO30 -  CANRXA
 
@@ -119,59 +116,14 @@ void INIT_fnPeripherals(void)
 
 
 }
+/*=============================================================================
+ @brief infinite loop for the main where tasks are executed is defined here
 
-void init_fnPWM()
-{
-    EALLOW;
-    CpuSysRegs.PCLKCR0.bit.TBCLKSYNC = 0; // This bit reset to 0 stops all PWM clocks.
-    init_fnPWM1();                                   // Initialization of EPWMs
-    CpuSysRegs.PCLKCR0.bit.TBCLKSYNC = 1; // This bit set to 1 turns ON all pwm clocks at the same time
-    EDIS;
-}
+ @param void
+ @return void
 
-//
-// InitEPwm2Example - Initialize EPWM2 configuration - ADC Start of Conversion
-//
-void init_fnPWM1()
-{
-    //
-    // Setup TBCLK
-    //
-    EPwm1Regs.TBCTL.bit.CTRMODE = TB_COUNT_UPDOWN; // Count up/down and down
-    EPwm1Regs.TBPRD = PER_mPWM1_TBPRD_VALUE;           // Set timer period
-    EPwm1Regs.TBCTL.bit.PHSEN = TB_DISABLE;        // Disable phase loading
-    EPwm1Regs.TBPHS.bit.TBPHS = 0x0000;            // Phase is 0
-    EPwm1Regs.TBCTR = 0x0000;                      // Clear counter
-    EPwm1Regs.TBCTL.bit.HSPCLKDIV = TB_DIV1;       // Clock ratio to SYSCLKOUT
-    EPwm1Regs.TBCTL.bit.CLKDIV = TB_DIV1;
-    EPwm1Regs.TBCTL.bit.PRDLD = TB_SHADOW;
-    //
-    // Setup shadow register load on ZERO
-    //
-    EPwm1Regs.CMPCTL.bit.SHDWAMODE = CC_SHADOW;
-    EPwm1Regs.CMPCTL.bit.SHDWBMODE = CC_SHADOW;
-    EPwm1Regs.CMPCTL.bit.LOADAMODE = CC_CTR_ZERO_PRD;
-    EPwm1Regs.CMPCTL.bit.LOADBMODE = CC_CTR_ZERO_PRD;
+ ============================================================================ */
 
-    //
-    // Set Actions
-    //
-    EPwm1Regs.AQCTLA.bit.CAU = AQ_CLEAR;         // Set PWM2A on period
-    EPwm1Regs.AQCTLA.bit.CAD = AQ_SET;       // Clear PWM2A on event B, down
-                                             // count
-
-    EPwm1Regs.AQCTLB.bit.CBU = AQ_CLEAR;       // Clear PWM2A on period
-    EPwm1Regs.AQCTLB.bit.CBD = AQ_SET;         // Set PWM2A on event A, up
-
-    EPwm1Regs.CMPA.bit.CMPA = 0;
-
-    // Interrupt where we will change the Compare Values
-    //
-    EPwm1Regs.ETSEL.bit.INTSEL = ET_CTR_PRD;    // Select INT on Zero event
-    EPwm1Regs.ETSEL.bit.INTEN = 1;               // Enable INT
-    EPwm1Regs.ETPS.bit.INTPRD = ET_1ST;          // Generate INT on 3rd event
-
-}
 
 void INIT_fnCANAMailBox(void)
 
@@ -186,27 +138,35 @@ void INIT_fnCANAMailBox(void)
 
 // LPCIO
     CAN_setupMessageObject(
-            CANA_BASE, CAN_mMAILBOX_2, CANA_mRX_LPCMSGID1, CAN_MSG_FRAME_EXT,
+            CANA_BASE, CAN_mMAILBOX_3, CANA_mRX_LPCMSGID1, CAN_MSG_FRAME_EXT,
             CAN_MSG_OBJ_TYPE_RX, 0X1F0FFFF0,
             CAN_MSG_OBJ_USE_ID_FILTER | CAN_MSG_OBJ_USE_EXT_FILTER, //QUERY FOR MASTER OPERATING STATE
             CANA_mEIGHT_BYTE);
 
     //LHCIO
     CAN_setupMessageObject(
-            CANA_BASE, CAN_mMAILBOX_3, CANA_mRX_LHCMSGID1, CAN_MSG_FRAME_EXT,
+            CANA_BASE, CAN_mMAILBOX_4, CANA_mRX_LHCMSGID1, CAN_MSG_FRAME_EXT,
             CAN_MSG_OBJ_TYPE_RX, 0X1F0FFFF0,
             CAN_MSG_OBJ_USE_ID_FILTER | CAN_MSG_OBJ_USE_EXT_FILTER, //QUERY FOR MASTER OPERATING STATE
             CANA_mEIGHT_BYTE);
 
-    //LHCIO
+    //MS
     CAN_setupMessageObject(
-            CANA_BASE, CAN_mMAILBOX_7, CANA_mRX_MSMSGID2, CAN_MSG_FRAME_EXT,
-            CAN_MSG_OBJ_TYPE_RX, 0X1F0FFFF0,
+            CANA_BASE, CAN_mMAILBOX_7, CANA_mRX_MSMSGID1, CAN_MSG_FRAME_EXT,
+            CAN_MSG_OBJ_TYPE_RX, 0X1FFFFFFF,
             CAN_MSG_OBJ_USE_ID_FILTER | CAN_MSG_OBJ_USE_EXT_FILTER, //QUERY FOR MASTER OPERATING STATE
             CANA_mEIGHT_BYTE);
 
 
 }
+
+
+/*=============================================================================
+ @brief infinite loop for the main where tasks are executed is defined here
+
+ @param void
+ @return void
+ ============================================================================ */
 
 void INIT_fnCANBMailBox(void)
 
@@ -221,8 +181,8 @@ void INIT_fnCANBMailBox(void)
 }
 
 /*=============================================================================
- @Function Name : void per_fnIniti2cA(void)
- @brief initialize I2CA module with a bit rate @400khz
+ @Function Name : void per_fnIniti2cB(void)
+ @brief initialize I2CB module with a bit rate @400khz
 
  @param void
  @return void
@@ -244,8 +204,55 @@ static void per_fnIniti2cB(void)
     I2cbRegs.I2CFFRX.all = 0x2040;    // Enable RXFIFO, clear RXFFINT,
 
 }
+/*=============================================================================
+ @Function name : void per_fntimerInit(void)
+ @brief  configures Timer module - 10ms
 
+ @param void
+ @return void
+ ============================================================================ */
+void INIT_fnCpu_Timer(void)
+{
+    CpuTimer0Regs.TCR.all = 0;
+    CpuTimer0Regs.TCR.bit.TSS = 1U;
 
+    CpuTimer0Regs.PRD.all = PER_mCPUTIMER0_COUNT;
+    CpuTimer0Regs.TPR.all = 0;
+    CpuTimer0Regs.TPRH.all = 0;
+
+    CpuTimer0Regs.TCR.bit.TIF = 1U;
+    CpuTimer0Regs.TCR.bit.TRB = 1U;
+    CpuTimer0Regs.TCR.bit.TIE = 1U;
+    CpuTimer0Regs.TIM.all = PER_mCPUTIMER0_COUNT;
+
+    //for timer value setting @1ms
+    CpuTimer1Regs.TCR.all = 0;
+    CpuTimer1Regs.TCR.bit.TSS = 1U;
+
+    CpuTimer1Regs.PRD.all = PER_mCPUTIMER1_COUNT;
+    CpuTimer1Regs.TPR.all = 0;
+    CpuTimer1Regs.TPRH.all = 0;
+
+    CpuTimer1Regs.TCR.bit.TIF = 1U;
+    CpuTimer1Regs.TCR.bit.TRB = 1U;
+    CpuTimer1Regs.TCR.bit.TIE = 1U;
+    CpuTimer1Regs.TIM.all = PER_mCPUTIMER1_COUNT;
+
+}
+/*=============================================================================
+ @Function name : void per_fntimerInit(void)
+ @brief  configures Timer module - 10ms
+
+ @param void
+ @return void
+ ============================================================================ */
+
+void INIT_fnStart_CPUtimers(void)
+{
+    CpuTimer0Regs.TCR.bit.TSS = 0;
+    CpuTimer1Regs.TCR.bit.TSS = 0;
+    CpuTimer2Regs.TCR.bit.TSS = 0;
+}
 /*==============================================================================
  End of File
  ==============================================================================*/

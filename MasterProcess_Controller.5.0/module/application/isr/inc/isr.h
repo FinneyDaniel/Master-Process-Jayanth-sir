@@ -46,11 +46,12 @@ extern interrupt void canaISR(void);     // Receive interrupt for CAN-B.
                                          // No Transmit interrupt for CAN-A
 extern interrupt void epwm1_isr(void);
 extern interrupt void cpu_timer0_isr(void);
+extern interrupt void cpu_timer1_isr(void);
 
 /*==============================================================================
  Extern/Public Variables
 ==============================================================================*/
-
+extern uint16_t uiResetTimer;
 /*==============================================================================
  Extern/Public Constants
 ==============================================================================*/

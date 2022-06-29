@@ -23,10 +23,7 @@ All trademarks are owned by Enarka India Private Limited
 /*==============================================================================
  Defines
 ==============================================================================*/
-
-#define PER_mPWM1_TBPRD_VALUE                               5000.0  // Period register
 #define PER_mCLKDIV_BY_TWO                                  1       // PWM Module is divided by System cloc
-
 /*==============================================================================
  Enums
 ==============================================================================*/
@@ -44,9 +41,11 @@ All trademarks are owned by Enarka India Private Limited
 ==============================================================================*/
 
 extern void INIT_fnPeripherals(void);
-extern void init_fnPWM(void);
-extern void init_fnPWM1(void);
 extern void INIT_fnGPIO(void);
+extern void INIT_fnCpu_Timer(void);
+extern void INIT_fnStart_CPUtimers(void);
+extern void INIT_fnCANAMailBox(void);
+extern void INIT_fnCANBMailBox(void);
 /*==============================================================================
  Extern/Public Variables
 ==============================================================================*/

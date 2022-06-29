@@ -5,9 +5,8 @@
 
 /*==============================================================================
  @file  init_system.c
- @author DEEPTI.K
- @date 14-Jan-2022
-
+ @author JOTHI RAMESH
+ @date 26-Jan-2022
  @brief Description System Initialization done here
  ==============================================================================*/
 
@@ -15,33 +14,20 @@
  Includes
  ==============================================================================*/
 
+#include "F2837xS_device.h"
+#include "F2837xS_Examples.h"
 #include "init_peripherals.h"
-#include "isr.h"
-#include "scheduler.h"
-#include <stdint.h>
-#include "inc/hw_types.h"
-#include "inc/hw_memmap.h"
-#include "inc/hw_can.h"
-#include "inc/hw_can.h"
-#include "inc/hw_ints.h"
-#include "inc/hw_memmap.h"
-#include "inc/hw_types.h"
-#include "init_peripherals.h"
-#include "hal/driverlib/can.h"
-#include "hal/driverlib/debug.h"
-#include "hal/driverlib/interrupt.h"
 #include "cana_defs.h"
-#include "math.h"
 #include "isr.h"
 #include "scheduler.h"
 #include "F021_F2837xS_C28x.h"
-#include <stdint.h>
-#include "F2837xS_device.h"
-#include "F2837xS_Examples.h"
-
+#include "safety_lib.h"
+#include "safety_lib_prv.h"
+#include "app_constants.h"
 /*==============================================================================
  Defines
  ==============================================================================*/
+#define PUMPREQUEST *(unsigned long*)(0x00050024)
 
 /*==============================================================================
  Enums
@@ -58,12 +44,8 @@
 /*==============================================================================
  Local Function Prototypes
  ==============================================================================*/
-
-void INIT_fnCANAMailBox(void);
-void INIT_fnCANBMailBox(void);
 void INIT_fnSystem(void);
 static void init_fnFlashSectors(void);
-#define PUMPREQUEST *(unsigned long*)(0x00050024)
 /*==============================================================================
  Local Variables
  ==============================================================================*/
@@ -71,7 +53,7 @@ static void init_fnFlashSectors(void);
 /*==============================================================================
  Local Constants
  ==============================================================================*/
-
+extern const fp_sch_slot_t psch_slots[NUM_mTIME_SLOTS];
 /*=============================================================================
  @brief infinite loop for the main where tasks are executed is defined here
 
@@ -126,6 +108,7 @@ void INIT_fnSystem(void)
     // Step 6: Initialize Peripherals
 
     INIT_fnPeripherals();
+    HW_fnServiceWdog();
 
     // Step 7: Initialize global variables
 
@@ -133,75 +116,57 @@ void INIT_fnSystem(void)
     // Map ISR functions
     //
     EALLOW;
-    PieVectTable.EPWM1_INT = &epwm1_isr; //function of ePWM interrupt
     PieVectTable.TIMER0_INT = &cpu_timer0_isr;
+    PieVectTable.TIMER1_INT = &cpu_timer1_isr;
+
     EDIS;
+    PieCtrlRegs.PIEIER1.bit.INTx7 = 1U;
 
-    Interrupt_register(INT_CANA0, &canaISR);
+    PieCtrlRegs.PIECTRL.bit.ENPIE = 1U;
 
-    InitCpuTimers();   // For this example, only initialize the Cpu Timers
+    IER = M_INT1 | M_INT13;
 
+    /**********************************************************************************/
+    INIT_fnCpu_Timer();
     //
     // Configure CPU-Timer 0, 1, and 2 to interrupt every second:
     // 200MHz CPU Freq, 1 second Period (in uSeconds)
     //
-        ConfigCpuTimer(&CpuTimer0, 200, 1000);
+//        ConfigCpuTimer(&CpuTimer0, 200, 100);
+//        ConfigCpuTimer(&CpuTimer1, 200, 1000000);
+//
+//  // ConfigCpuTimer and InitCpuTimers (in F2837xS_cputimervars.h), the below
+//  // settings must also be updated.
+//  //
+//   CpuTimer0Regs.TCR.all = 0x4000;
+//   CpuTimer1Regs.TCR.all = 0x4000;
 
-    //
-    // To ensure precise timing, use write-only instructions to write to the
-    // entire register. Therefore, if any of the configuration bits are changed in
-    // ConfigCpuTimer and InitCpuTimers (in F2837xS_cputimervars.h), the below
-    // settings must also be updated.
-    //
-            CpuTimer0Regs.TCR.all = 0x4000;
+    safety_fninit();
 
-    //
-    // Enable global Interrupts and higher priority real-time debug events:
-    //
-    IER |= M_INT3; //Enable group 3 interrupts
-    IER |= M_INT1; //Enable group 3 interrupts
+    init_fnFlashSectors();
 
+    // Scheduler variables initialization
+    scheduler_init(NUM_mTIME_SLOTS, &psch_slots[0], &SCH_fnslot_all);
 
-    //
-    // Enable global Interrupts and higher priority real-time debug events:
-    //
+    INIT_fnStart_CPUtimers();
+
     EINT;
 
     // Enable Global interrupt INTM
 
     ERTM;
-
-    // Enable Global real-time interrupt DBGM
-
-    //
-    // enable PIE interrupt
-    //
-
-    PieCtrlRegs.PIEIER3.bit.INTx1 = 1;     // ePWM Interrupt
-    PieCtrlRegs.PIEIER1.bit.INTx7 = 1;     // CPU0 Interrupt
-
-    CAN_enableGlobalInterrupt(CANA_BASE, CAN_GLOBAL_INT_CANINT0);
-
-
-    // Scheduler variables initialization
-
-    SCHR_fnVarInit(SCH_mNO_OF_EVENTS);
-
+    //safety_fnLog_Monitoring_init();
+    /*********************************************************************************/
     // CAN MailBox Initialization
 
     INIT_fnCANAMailBox();
 
     INIT_fnCANBMailBox();
-
-    init_fnFlashSectors();
-
-
 }
 
 /*==============================================================================
  End of File
  ==============================================================================*/
-
 
 /*=============================================================================
  @brief initFlashSectors - Initializes the flash API
@@ -247,13 +212,16 @@ void Init_fnHWreset(void)
     volatile Uint16 temp;
     // Enable watchdog
 
-        __eallow();
-        temp = WdRegs.WDCR.all & 0x0007;
-        WdRegs.WDCR.all = 0x0028 | temp;
-        __eallow();
+    __eallow();
+    temp = WdRegs.WDCR.all & 0x0007;
+    WdRegs.WDCR.all = 0x0028 | temp;
+    __eallow();
 
 //        // Trigger watchdog timeout
-        while(1)
-            ;
+    while (1)
+        ;
 
 }
+/*==============================================================================
+ End of File
+==============================================================================*/

@@ -70,8 +70,7 @@
 
 #define CANA_mRX_LPCMSGID1                                                 (0x11042130)
 #define CANA_mRX_LHCMSGID1                                                 (0x11042110)
-#define CANA_mRX_MSMSGID2                                                  (0x11043100)
-
+#define CANA_mRX_MSMSGID1                                                  (0x11043100)
 
 #define CANA_mTX_MSMSGID1                                                 (0x10043100)
 
@@ -139,8 +138,6 @@
 #define CANA_mTOTAL_LPCNODES                                                                                   (2U)
 #define CANA_mTOTAL_LHCNODES                                                                                   (2U)
 
-
-
 /*==============================================================================
  Enums
  ==============================================================================*/
@@ -199,8 +196,6 @@ typedef struct CANA_zIOREGS
 
 } CANA_tzIOREGS;
 
-
-
 typedef struct CANA_zTIMERIOREGS
 {
 
@@ -214,9 +209,7 @@ typedef struct CANA_zTIMERIOREGS
     uint32_t LHC110ComFailCnt;
     uint32_t LHC111ComFailCnt;
 
-
 } CANA_tzTIMERIOREGS;
-
 
 typedef struct CANA_zMSREGS
 {
@@ -377,7 +370,6 @@ union CANA_tzLHCDIFLT_IOREGS
     struct CANA_tzLHCDIFLT_IOBITS bit;
 };
 
-
 /*==============================================================================
  Macros
  ==============================================================================*/
@@ -398,6 +390,7 @@ extern void CANA_fnInitMBox(void);
 extern void CANA_fnRXevent(void);
 extern void CANA_fnTask(void);
 extern void faultCheck(void);
+extern void CANA_fnTx(void);
 
 /*==============================================================================
  Extern/Public Variables

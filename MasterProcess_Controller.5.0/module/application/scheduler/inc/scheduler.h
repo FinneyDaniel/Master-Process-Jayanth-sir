@@ -5,8 +5,8 @@ All trademarks are owned by Enarka India Private Limited
 
 /*==============================================================================
  @file  oi_scheduler.h
- @author DEEPTI.K
- @date 06-Sep-2021
+ @author    JOTHI RAMESH
+ @date 26-Jan-2022
 
  @brief Description
 ==============================================================================*/
@@ -34,11 +34,6 @@ All trademarks are owned by Enarka India Private Limited
  Structures
 ==============================================================================*/
 
-//// The basic structure is defined here.
-
-// Structure to store Event related Info
-
-
 
 /*==============================================================================
  Macros
@@ -46,47 +41,22 @@ All trademarks are owned by Enarka India Private Limited
 
 #define TRUE                             (1U)
 #define FALSE                            (0U)
-#define SCH_mNO_OF_EVENTS                (6U)
-#define SCH_mSCHEDULER_COUNT             (200U)
 
 /*==============================================================================
  Extern/Public Function Prototypes
 ==============================================================================*/
 
-extern void SCHR_fnSchedulerVariablesInit(void);
-
-// Scheduler events
-
-extern uint16_t schr_fnEvent1();
-extern uint16_t schr_fnEvent2();
-extern uint16_t schr_fnEvent3();
-extern uint16_t schr_fnEvent4();
-extern uint16_t schr_fnEvent5();
-
-extern uint16_t schr_fnCntrlEvent1();
-extern uint16_t schr_fnCntrlEvent2();
-extern uint16_t schr_fnCntrlEvent3();
-extern uint16_t schr_fnCntrlEvent4();
-extern uint16_t schr_fnCntrlEvent5();
-
 /*==============================================================================
  Extern/Public Variables
 ==============================================================================*/
 
-typedef void (*p_fn_EventDriver)(void);
-extern p_fn_EventDriver  sch_fnEvent[SCH_mNO_OF_EVENTS];
-extern void sch_fnTask(void);
-
-extern void SCHR_fnVarInit(uint16_t ui16totalEvents);
 /*==============================================================================
  Extern/Public structures
 ==============================================================================*/
-
-extern uint16_t ui16PresentEvent;
-extern uint16_t ui16PresentEventCmp;
-extern uint16_t ui16totalNumEvents;
-extern uint16_t ui16totalNumEventsCmp;
-
+typedef void (*fp_sch_slot_t)(void);
+void scheduler_init(uint16_t slots, const fp_sch_slot_t *psch_slots, const fp_sch_slot_t SCH_fnslot_all);
+void scheduler_task(void);
+extern void SCH_fnslot_all(void);
 /*==============================================================================
  Extern/Public Constants
 ==============================================================================*/

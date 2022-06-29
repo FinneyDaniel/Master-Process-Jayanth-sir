@@ -4,7 +4,7 @@
  ============================================================================ */
 
 /*==============================================================================
- @file  oi_mathcalc.c
+ @file  state_machine.c
  @author DEEPTI.K
  @date 06-Sep-2021
 
@@ -59,11 +59,11 @@ static void stat_IOReset(void);
 
 uint16_t ui32StateTimer = 0;
 STAT_tzSTATEMAC STAT_tzStateMac;
-
+STAT_tzSTATE_MSMAC STAT_tzStateMacMS;
 /*==============================================================================
  Local Constants
  ==============================================================================*/
-//#################################################################################################################
+
 void stat_fnInitState(void)
 {
     // Global Flags
@@ -85,6 +85,7 @@ void STAT_fnFSMCheck(void)
     {
 
         //  Determine the Next State depending on the flags set/reset in the rest of the code
+
         stat_fnFSMNextState();
 
         switch (STAT_tzStateMac.Present_st)

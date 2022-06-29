@@ -363,8 +363,8 @@ static void boot_fnInitPLL(void)
     //
     // Configure for watchdog reset and to run at max frequency
     //
-    WdRegs.SCSR.all = 0x0;
-    WdRegs.WDCR.all = 0x28;
+//    WdRegs.SCSR.all = 0x0;
+//    WdRegs.WDCR.all = 0x28;
 
     //
     // This bit is reset only by power-on-reset (POR) and will not be cleared
@@ -407,14 +407,14 @@ static void boot_fnInitPLL(void)
     //
     // Restore user watchdog, first resetting counter
     //
-    WdRegs.WDKEY.bit.WDKEY = 0x55;
-    WdRegs.WDKEY.bit.WDKEY = 0xAA;
-
-    WDCR |= 0x28;                     // Setup WD key--KEY bits always read 0
-    WdRegs.WDCR.all = WDCR;
-    WdRegs.WDWCR.all = WDWCR;
-    WdRegs.SCSR.all = SCSR & 0xFFFE;  // Mask write to bit 0 (W1toClr)
-
+//    WdRegs.WDKEY.bit.WDKEY = 0x55;
+//    WdRegs.WDKEY.bit.WDKEY = 0xAA;
+//
+//    WDCR |= 0x28;                     // Setup WD key--KEY bits always read 0
+//    WdRegs.WDCR.all = WDCR;
+//    WdRegs.WDWCR.all = WDWCR;
+//    WdRegs.SCSR.all = SCSR & 0xFFFE;  // Mask write to bit 0 (W1toClr)
+//
 
 
     //

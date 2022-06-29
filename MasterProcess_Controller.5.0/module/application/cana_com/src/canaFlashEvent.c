@@ -5,7 +5,7 @@
 
 /*==============================================================================
  @file  canaFlashEvent.c
- @author OHMLAP0042   
+ @author DEEPTI.K
  @date 24-Jan-2022
 
  @brief Description

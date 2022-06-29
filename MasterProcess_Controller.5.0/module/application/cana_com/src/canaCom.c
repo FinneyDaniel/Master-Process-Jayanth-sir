@@ -5,7 +5,7 @@
 
 /*==============================================================================
  @file  canaEvent.c
- @author DEEPTI.K
+ @author OHMLAP0042
  @date 20-Jun-2022
 
  @brief Description
@@ -57,7 +57,7 @@ CANA_tzTHERMOCOUPLE_DATA CANA_tzThermoCoupleData;
 union CANA_tzDI_IOREGS CANA_tzLPCDI_IORegs[CANA_mTOTAL_LPCNODES],
         CANA_tzLHCDI_IORegs[CANA_mTOTAL_LHCNODES];
 union CANA_tzAIFLT_IOREGS CANA_tzLPCAIFlt_IORegs[CANA_mTOTAL_IONODE],
-        CANA_tzLHAIFlt_IORegs[CANA_mTOTAL_IONODE];
+        CANA_tzLHCAIFlt_IORegs[CANA_mTOTAL_IONODE];
 union CANA_tzLPCDIFLT_IOREGS CANA_tzLPCDIFaultRegs[CANA_mTOTAL_LPCNODES];
 union CANA_tzLHCDIFLT_IOREGS CANA_tzLHCDIFaultRegs[CANA_mTOTAL_LHCNODES];
 
@@ -76,7 +76,7 @@ CIRC_BUF_DEF(uiRxbufferMS, 20);
 void CANA_fnInitMBox(void);
 void CANA_fnRXevent(void);
 void CANA_fnTask(void);
-void cana_fnTx(void);
+void CANA_fnTx(void);
 
 static void cana_fnmsgPrcsLPCIO(uint16_t uimsgID, uint16_t *msgData,
                                 uint16_t uiNodeType);
@@ -97,6 +97,7 @@ static void cana_fnmsgPrcsMS(uint16_t *msgDataMS);
 uint16_t uirxMsgLPCIO[8] = { 0 };
 uint16_t uirxMsgLHCIO[8] = { 0 };
 uint16_t uirxMsgMS[8] = { 0 };
+
 uint16_t uirxPrcsMsgLPCIO[8] = { 0 };
 uint16_t uirxPrcsMsgLHCIO[8] = { 0 };
 uint16_t uirxPrcsMsgMS[8] = { 0 };
@@ -105,6 +106,7 @@ uint32_t u32msgID = 0;
 uint16_t uiDataLength = 0;
 uint16_t uiMsgtype = 0, uiNodeType = 0;
 uint16_t uiCANtxMsgDataMS[8] = { 0 };
+
 /*==============================================================================
  Local Constants
  ==============================================================================*/
@@ -183,25 +185,25 @@ void CANA_fnRXevent(void)
 {
 
     //any commands for AO/DO control
-    if (CAN_readMessage(CANA_BASE, CAN_mMAILBOX_2, uirxMsgLPCIO))
+    if (CAN_IsMessageReceived(CANA_BASE, CAN_mMAILBOX_3))
     {
-        CAN_readMessage(CANA_BASE, CAN_mMAILBOX_2, uirxMsgLPCIO);
+        CAN_readMessage(CANA_BASE, CAN_mMAILBOX_3, uirxMsgLPCIO);
 
         can_fnEnquedata(&uiRxbufferLPCIO, uirxMsgLPCIO,
                         CanaRegs.CAN_IF2ARB.bit.ID,
                         CanaRegs.CAN_IF2MCTL.bit.DLC);
     }
 
-    if (CAN_readMessage(CANA_BASE, CAN_mMAILBOX_3, uirxMsgLHCIO))
+    if (CAN_IsMessageReceived(CANA_BASE, CAN_mMAILBOX_4))
     {
-        CAN_readMessage(CANA_BASE, CAN_mMAILBOX_3, uirxMsgLHCIO);
+        CAN_readMessage(CANA_BASE, CAN_mMAILBOX_4, uirxMsgLHCIO);
 
         can_fnEnquedata(&uiRxbufferLHCIO, uirxMsgLHCIO,
                         CanaRegs.CAN_IF2ARB.bit.ID,
                         CanaRegs.CAN_IF2MCTL.bit.DLC);
     }
 
-    if (CAN_readMessage(CANA_BASE, CAN_mMAILBOX_7, uirxMsgMS))
+    if (CAN_IsMessageReceived(CANA_BASE, CAN_mMAILBOX_7))
     {
         CAN_readMessage(CANA_BASE, CAN_mMAILBOX_7, uirxMsgMS);
 
@@ -254,7 +256,8 @@ void CANA_fnTask(void)
     cana_fnmsgPrcsMS(uirxPrcsMsgMS);
 
     //can transmit event
-    cana_fnTx();
+
+//
 }
 
 /*=============================================================================
@@ -467,7 +470,6 @@ static void cana_fnmsgPrcsLPCIO(uint16_t uiMsgtype, uint16_t *msgDataIO,
         CANA_tzIOtimers.LPC131ComFailCnt = 90001;
         CANA_tzIOflags.LPC131Comfail = 0;
     }
-
 }
 
 /*=============================================================================
@@ -496,13 +498,10 @@ static void cana_fnmsgPrcsLHCIO(uint16_t uiMsgtype, uint16_t *msgDataIO,
 
                 if (msgDataIO[1] == msgDataIO[2])
                 {
-                    CANA_tzLPCDI_IORegs[CANA_mLHC110_IO].all = msgDataIO[1];
+                    CANA_tzLHCDI_IORegs[CANA_mLHC110_IO].all = msgDataIO[1];
                     CANA_tzIORegs.CJC[CANA_mLHC110_IO] = ((msgDataIO[3] << 8)
                             | (msgDataIO[4])) * 0.001;
-                    CANA_tzLPCAIFlt_IORegs[CANA_mLHC110_IO].all = msgDataIO[7];
-
-                    CANA_tzIOflags.btLHC110CommnStart = true;
-                    CANA_tzIOtimers.LHC110ComFailCnt = 0;
+                    CANA_tzLHCAIFlt_IORegs[CANA_mLHC110_IO].all = msgDataIO[7];
 
                 }
             }
@@ -516,11 +515,8 @@ static void cana_fnmsgPrcsLHCIO(uint16_t uiMsgtype, uint16_t *msgDataIO,
 
                 if (msgDataIO[1] == msgDataIO[2])
                 {
-                    CANA_tzLPCDI_IORegs[CANA_mLHC111_IO].all = msgDataIO[1];
-                    CANA_tzLPCAIFlt_IORegs[CANA_mLHC111_IO].all = msgDataIO[7];
-
-                    CANA_tzIOflags.btLHC111CommnStart = true;
-                    CANA_tzIOtimers.LHC111ComFailCnt = 0;
+                    CANA_tzLHCDI_IORegs[CANA_mLHC111_IO].all = msgDataIO[1];
+                    CANA_tzLHCAIFlt_IORegs[CANA_mLHC111_IO].all = msgDataIO[7];
                 }
             }
             break;
@@ -655,20 +651,6 @@ static void cana_fnmsgPrcsLHCIO(uint16_t uiMsgtype, uint16_t *msgDataIO,
         break;
 
     }
-
-    CANA_tzIOtimers.LHC110ComFailCnt++;
-    if (CANA_tzIOtimers.LHC110ComFailCnt >= 90000)
-    {
-        CANA_tzIOtimers.LHC110ComFailCnt = 90001;
-        CANA_tzIOflags.LHC110Comfail = 0;
-    }
-
-    CANA_tzIOtimers.LHC111ComFailCnt++;
-    if (CANA_tzIOtimers.LHC111ComFailCnt >= 90000)
-    {
-        CANA_tzIOtimers.LHC111ComFailCnt = 90001;
-        CANA_tzIOflags.LHC111Comfail = 0;
-    }
 }
 
 /*=============================================================================
@@ -697,9 +679,34 @@ static void cana_fnmsgPrcsMS(uint16_t *msgDataMS)
         CANA_tzMSRegs.MSComFailCnt = 90000;
     }
 
+    switch (CANA_tzMSRegs.PresentStMS)
+    {
+    case 0:
+        STAT_tzStateMacMS.Present_st = MS_STANDBY;
+        break;
+
+    case 1:
+        STAT_tzStateMacMS.Present_st = MS_PURGE;
+        break;
+    case 2:
+        STAT_tzStateMacMS.Present_st = MS_IOPOWER;
+        break;
+    case 3:
+        STAT_tzStateMacMS.Present_st = MS_ARMED_POWER;
+        break;
+    case 4:
+        STAT_tzStateMacMS.Present_st = MS_FAULT;
+        break;
+    case 5:
+        STAT_tzStateMacMS.Present_st = MS_SHUTDOWN;
+        break;
+    default:
+        break;
+    }
+
 }
 
-void cana_fnTx()
+void CANA_fnTx()
 {
     // Common Messages Irrespective of States
 

@@ -106,6 +106,7 @@ extern void eep_fnCalibWrite_TI(uint16_t *msgData, uint16_t uiadrs);
 extern void eep_fnCalibWrite_AI(uint16_t *msgData, uint16_t uiadrs);
 extern void eep_fnBootvalues(void);
 extern void eep_fnCaliboffset_CJC(uint16_t *msgData);
+
 /*==============================================================================
  Extern/Public Variables
 ==============================================================================*/

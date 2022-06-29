@@ -37,6 +37,22 @@ All trademarks are owned by Enarka India Private Limited
 
 typedef enum
 {
+    MS_STANDBY,
+    MS_PURGE,
+    MS_IOPOWER,
+    MS_ARMED_POWER,
+    MS_FAULT,
+    MS_SHUTDOWN,
+}STATE_enumVALMS;
+
+typedef struct STAT_zSTATE_MSMAC
+{
+    STATE_enumVALMS Present_st;
+
+}STAT_tzSTATE_MSMAC;
+
+typedef enum
+{
     ST_INIT,
     STAND_BY,
     READY,
@@ -52,8 +68,10 @@ typedef struct STAT_zSTATEMAC
     STATE_enumVAL Next_st;
     STATE_enumVAL Present_st;
     STATE_enumVAL Previous_st;
-
 }STAT_tzSTATEMAC;
+
+
+
 /*==============================================================================
  Macros
 ==============================================================================*/
@@ -69,6 +87,8 @@ extern void STAT_fnFSMCheck(void);
 ==============================================================================*/
 
 extern STAT_tzSTATEMAC STAT_tzStateMac;
+extern STAT_tzSTATE_MSMAC STAT_tzStateMacMS;
+
 
 /*==============================================================================
  Extern/Public Constants

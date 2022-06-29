@@ -1,7 +1,7 @@
 /*=============================================================================
-Copyright Enarka India Pvt Ltd (EIPL) All Rights Reserved.
-All trademarks are owned by Enarka India Private Limited
-============================================================================ */
+ Copyright Enarka India Pvt Ltd (EIPL) All Rights Reserved.
+ All trademarks are owned by Enarka India Private Limited
+ ============================================================================ */
 
 /*==============================================================================
  @file  boot_flash.c
@@ -9,11 +9,11 @@ All trademarks are owned by Enarka India Private Limited
  @date 18-Jan-2022
 
  @brief Description
-==============================================================================*/
+ ==============================================================================*/
 
 /*==============================================================================
  Includes
-==============================================================================*/
+ ==============================================================================*/
 
 #include <stdint.h>
 #include "F2837xS_device.h"
@@ -26,40 +26,41 @@ All trademarks are owned by Enarka India Private Limited
 #include "eep.h"
 /*==============================================================================
  Defines
-==============================================================================*/
+ ==============================================================================*/
 
 /*==============================================================================
  Enums
-==============================================================================*/
+ ==============================================================================*/
 
 /*==============================================================================
  Structures
-==============================================================================*/
- Fapi_StatusType boot_ReturnCheck;
- Fapi_FlashStatusWordType boot_FlashStatusWord;
+ ==============================================================================*/
+Fapi_StatusType boot_ReturnCheck;
+Fapi_FlashStatusWordType boot_FlashStatusWord;
 // Fapi_FlashStatusType boot_FlashStatus;
 /*==============================================================================
  Macros
-==============================================================================*/
+ ==============================================================================*/
 
 /*==============================================================================
  Local Function Prototypes
-==============================================================================*/
+ ==============================================================================*/
 static bool boot_fnEraseFlash(void);
 static void boot_fnFlashSectors(void);
 static bool boot_fnProgarm_Flash(void);
-static uint32_t boot_fncomputecodeCRC(uint32_t seed, const uint16_t *data, uint32_t len);
+static uint32_t boot_fncomputecodeCRC(uint32_t seed, const uint16_t *data,
+                                      uint32_t len);
 static bool boot_fnProgarm_Flash(void);
 #define PUMPREQUEST *(unsigned long*)(0x00050024)
 
 /*==============================================================================
  Local Variables
-==============================================================================*/
+ ==============================================================================*/
 
 /*==============================================================================
  Local Constants
-==============================================================================*/
-uint16_t u16CRCdata[8] = {0};
+ ==============================================================================*/
+uint16_t u16CRCdata[8] = { 0 };
 uint32_t u32CRCread = 0;
 uint32_t u32CRCcalculated = 0;
 uint32_t Boot_checksum = 0;
@@ -165,18 +166,15 @@ bool boot_fnFlashprocess(void)
     bool bt_done = false;
     uint16_t uidata, i = 0;
 
-    if (is_can_flash_cmd_received())
+    // if (is_can_flash_cmd_received())
     {
         //initialize Flash
         boot_fnFlashSectors();
-
-
 
         for (i = 0; i < 4; i++)
         {
             boot_hw_eeprom_read(EEP_mCAN_CRC32_ADDR + i, &u16CRCdata[i]);
         }
-
 
         u32CRCread = (((uint32_t) u16CRCdata[0]) << 24)
                 | (((uint32_t) u16CRCdata[1]) << 16)
@@ -188,11 +186,10 @@ bool boot_fnFlashprocess(void)
 //                                              (uint16_t*) 0x0C8000UL,
 //                                              BOOTm_FLASH_SIZE);
 
-
-        uint16_t *uisrcLoc = (uint16_t *)0x0C8000UL;
+        uint16_t *uisrcLoc = (uint16_t*) 0x0C8000UL;
         Boot_checksum = 0xFFFFFFFFUL;
         Boot_checksum = boot_fncomputecodeCRC(Boot_checksum, uisrcLoc,
-                                         BOOTm_FLASH_SIZE);
+        BOOTm_FLASH_SIZE);
 
         if (u32CRCread == Boot_checksum)
         {
@@ -228,7 +225,7 @@ bool boot_fnFlashprocess(void)
             uint16_t *uisrcLoc = (uint16_t*) 0x088000UL;
             Boot_checksum = 0xFFFFFFFFUL;
             Boot_checksum = boot_fncomputecodeCRC(Boot_checksum, uisrcLoc,
-                                                  BOOTm_FLASH_SIZE);
+            BOOTm_FLASH_SIZE);
 
             if (u32CRCread == Boot_checksum)
             {
@@ -244,7 +241,6 @@ bool boot_fnFlashprocess(void)
             }
 
         }
-
 
 //        return bt_done;
     }
@@ -273,7 +269,7 @@ static bool boot_fnEraseFlash(void)
         //
 //        oReturnCheck = 0;
         boot_ReturnCheck = Fapi_issueAsyncCommandWithAddress(
-                Fapi_EraseSector, (uint32_t *) ui32sectorAddress);
+                Fapi_EraseSector, (uint32_t*) ui32sectorAddress);
 
         //
         // Wait until the Flash State Machine is ready
@@ -286,7 +282,7 @@ static bool boot_fnEraseFlash(void)
         // Perform a blank check on the recently erased sector to ensure it was erased
         //
 //        oReturnCheck = 0;
-        boot_ReturnCheck = Fapi_doBlankCheck((uint32_t *) ui32sectorAddress,
+        boot_ReturnCheck = Fapi_doBlankCheck((uint32_t*) ui32sectorAddress,
                                              0x4000, &boot_FlashStatusWord);
 
         //
@@ -410,7 +406,8 @@ static bool boot_fnProgarm_Flash(void)
  @param crc_accum : checksum,data_blk_ptr,data_blk_size
  @return void
  ============================================================================ */
-static uint32_t boot_fncomputecodeCRC(uint32_t seed, const uint16_t *data, uint32_t len)
+static uint32_t boot_fncomputecodeCRC(uint32_t seed, const uint16_t *data,
+                                      uint32_t len)
 {
     uint16_t byte;
     uint32_t crc = seed;
@@ -430,4 +427,4 @@ static uint32_t boot_fncomputecodeCRC(uint32_t seed, const uint16_t *data, uint3
 }
 /*==============================================================================
  End of File
-==============================================================================*/
+ ==============================================================================*/
