@@ -74,6 +74,11 @@
 
 #define CANA_mTX_MSMSGID1                                                 (0x10043100)
 
+#define CANA_mTX_IOMSGID1                                                 (0x10142100)
+#define CANA_mTX_IOMSGID2                                                 (0x10243100)
+#define CANA_mTX_IOMSGID3                                                 (0x10343100)
+
+
 #define CAN_mMAILBOX_1                                                  (1U)
 #define CAN_mMAILBOX_2                                                  (2U)
 #define CAN_mMAILBOX_3                                                  (3U)
@@ -123,6 +128,11 @@
 #define CANA_mLHC110_IO                                                  (0U)
 #define CANA_mLHC111_IO                                                  (1U)
 
+#define CANA_mLPC_CABID                                                   (3U)
+#define CANA_mLHC_CABID                                                   (1U)
+
+
+
 #define    IO_DI_MSGID                          (0U)
 #define    IO_AIBLK1_MSGID                      (1U)
 #define    IO_AIBLK2_MSGID                      (2U)
@@ -134,6 +144,34 @@
 #define LPC_131                                 (1U)
 #define LHC_110                                 (0U)
 #define LHC_111                                 (1U)
+
+#define CANA_mDIG0_SET  (1U)
+#define CANA_mDIG1_SET  (2U)
+#define CANA_mDIG2_SET  (3U)
+#define CANA_mDIG3_SET  (4U)
+#define CANA_mDIG4_SET  (5U)
+#define CANA_mDIG5_SET  (6U)
+#define CANA_mDIG6_SET  (7U)
+#define CANA_mDIG7_SET  (8U)
+
+
+#define CANA_mDIG0_CLEAR  (0U)
+#define CANA_mDIG1_CLEAR  (0U)
+#define CANA_mDIG2_CLEAR  (0U)
+#define CANA_mDIG3_CLEAR  (0U)
+#define CANA_mDIG4_CLEAR  (0U)
+#define CANA_mDIG5_CLEAR  (0U)
+#define CANA_mDIG6_CLEAR  (0U)
+#define CANA_mDIG7_CLEAR  (0U)
+
+
+
+
+
+
+
+
+
 
 #define CANA_mTOTAL_LPCNODES                                                                                   (2U)
 #define CANA_mTOTAL_LHCNODES                                                                                   (2U)
@@ -162,14 +200,33 @@ typedef struct can_zcirc_buff
     const int16_t i_maxlen;
 } can_tzcirc_buff;
 
-typedef struct CANA_zAO_IOREGS
+typedef struct CANA_zAO_VOLT
 {
-    uint16_t AO_1;
-    uint16_t AO_2;
-    uint16_t AO_3;
-    uint16_t AO_4;
+    uint16_t AOV1;
+    uint16_t AOV2;
+    uint16_t AOV3;
+    uint16_t AOV4;
 
-} CANA_tzAO_IOREGS;
+} CANA_tzAO_VOLT;
+
+typedef struct CANA_zAO_CURR
+{
+    uint16_t AOI1;
+    uint16_t AOI2;
+    uint16_t AOI3;
+    uint16_t AOI4;
+
+} CANA_tzAO_CURR;
+
+typedef struct can_zAnaOPParams
+{
+    CANA_tzAO_VOLT CANA_tzAOV[2][2];
+    CANA_tzAO_CURR CANA_tzAOI[2][2];
+
+
+} can_tzAnaOPParams;
+
+
 
 typedef struct CANA_zAI_IOREGS
 {
@@ -208,6 +265,10 @@ typedef struct CANA_zTIMERIOREGS
 
     uint32_t LHC110ComFailCnt;
     uint32_t LHC111ComFailCnt;
+    uint16_t TxCntIOCom;
+    uint16_t TxCntWaterloop;
+
+
 
 } CANA_tzTIMERIOREGS;
 
@@ -370,7 +431,42 @@ union CANA_tzLHCDIFLT_IOREGS
     struct CANA_tzLHCDIFLT_IOBITS bit;
 };
 
-/*==============================================================================
+
+struct CANA_tzDO_IO_BITS
+{
+    uint16_t DO_bit0 :1;
+    uint16_t DO_bit1 :1;
+    uint16_t DO_bit2 :1;
+    uint16_t DO_bit3 :1;
+    uint16_t DO_bit4 :1;
+    uint16_t DO_bit5 :1;
+    uint16_t DO_bit6 :1;
+    uint16_t DO_bit7 :1;
+};
+
+union CANA_tzDO_IOREGS
+{
+    Uint16 all;
+    struct CANA_tzDO_IO_BITS bit;
+};
+
+
+struct CANA_tzAO_IO_BITS
+
+{
+
+};
+
+typedef struct CANA_zAO_IOREGS
+{
+        uint16_t ANA_VOUT1;
+        uint16_t ANA_VOUT2;
+        uint16_t ANA_VOUT3;
+        uint16_t ANA_VOUT4;
+}CANA_tzAO_IOREGS;
+
+
+/*============================================================================
  Macros
  ==============================================================================*/
 
@@ -391,6 +487,9 @@ extern void CANA_fnRXevent(void);
 extern void CANA_fnTask(void);
 extern void faultCheck(void);
 extern void CANA_fnTx(void);
+extern void CANA_fnCmdsForDigIOs(uint16_t ui16cabinetID, uint16_t ui16nodeID, uint16_t digitalIO);
+
+
 
 /*==============================================================================
  Extern/Public Variables
@@ -402,8 +501,7 @@ extern CANA_tzIOFLAGS CANA_tzIOflags;
 
 extern CANA_tzMSREGS CANA_tzMSRegs;
 
-extern CANA_tzAO_IOREGS CANA_tzAOData_IORegs[CANA_mTOTAL_IONODE],
-        CANA_tzSetAOData_IORegs[CANA_mTOTAL_IONODE];
+
 
 extern CANA_tzTHERMAL_IOREGS CANA_tzThermal_IORegs[CANA_mTOTAL_IONODE];
 extern CANA_tzAISENSOR_DATA CANA_tzAISensorData;
@@ -417,7 +515,14 @@ extern union CANA_tzAIFLT_IOREGS CANA_tzLPCAIFlt_IORegs[CANA_mTOTAL_IONODE],
         CANA_tzLHCAIFlt_IORegs[CANA_mTOTAL_IONODE];
 extern union CANA_tzLPCDIFLT_IOREGS CANA_tzLPCDIFaultRegs[CANA_mTOTAL_LPCNODES];
 extern union CANA_tzLHCDIFLT_IOREGS CANA_tzLHCDIFaultRegs[CANA_mTOTAL_LHCNODES];
+extern union CANA_tzDO_IOREGS CANA_tzSetDO_IORegs[2][2];
+extern CANA_tzAO_IOREGS CANA_tzSetAO_IORegs[2][2];
+extern can_tzAnaOPParams CANA_tzAnaOPParams;
+extern void CANA_fnCmdsForAnaOPVs(uint16_t ui16cabinetID, uint16_t ui16nodeID,
+                          can_tzAnaOPParams *ptrAO_V);
 
+extern void CANA_fnCmdsForAnaOPIs(uint16_t ui16cabinetID, uint16_t ui16nodeID,
+                          can_tzAnaOPParams *ptrAO_I);
 /*==============================================================================
  Extern/Public Constants
  ==============================================================================*/

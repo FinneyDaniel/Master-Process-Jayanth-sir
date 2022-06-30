@@ -25,7 +25,7 @@
 #include "cana_defs.h"
 #include "hal/driverlib/can.h"
 #include "state_machine.h"
-
+#include "control_defs.h"
 /*==============================================================================
  Defines
  ==============================================================================*/
@@ -43,8 +43,6 @@ CANA_tzIOFLAGS CANA_tzIOflags;
 CANA_tzTIMERIOREGS CANA_tzIOtimers;
 CANA_tzMSREGS CANA_tzMSRegs;
 
-CANA_tzAO_IOREGS CANA_tzAOData_IORegs[CANA_mTOTAL_IONODE],
-        CANA_tzSetAOData_IORegs[CANA_mTOTAL_IONODE];
 CANA_tzAI_IOREGS CANA_tzAIData_IORegs[CANA_mTOTAL_IONODE];
 CANA_tzDIFREQ_IOREGS CANA_tzAIDataFreq_IORegs[CANA_mTOTAL_IONODE];
 
@@ -61,6 +59,10 @@ union CANA_tzAIFLT_IOREGS CANA_tzLPCAIFlt_IORegs[CANA_mTOTAL_IONODE],
 union CANA_tzLPCDIFLT_IOREGS CANA_tzLPCDIFaultRegs[CANA_mTOTAL_LPCNODES];
 union CANA_tzLHCDIFLT_IOREGS CANA_tzLHCDIFaultRegs[CANA_mTOTAL_LHCNODES];
 
+union CANA_tzDO_IOREGS CANA_tzSetDO_IORegs[2][2];
+
+CANA_tzAO_IOREGS CANA_tzSetAO_IORegs[2][2];
+can_tzAnaOPParams CANA_tzAnaOPParams;
 /*==============================================================================
  Macros
  ==============================================================================*/
@@ -84,11 +86,20 @@ static void cana_fnmsgPrcsLPCIO(uint16_t uimsgID, uint16_t *msgData,
 static void cana_fnmsgPrcsLHCIO(uint16_t uimsgID, uint16_t *msgData,
                                 uint16_t uiNodeType);
 
+static void cana_fnmsgPrcsMS(uint16_t *msgDataMS);
+
 bool can_fnEnquedata(can_tzcirc_buff *ptr, uint16_t *data, uint32_t msgID,
                      uint16_t DLC);
 bool can_fndequedata(can_tzcirc_buff *ptr, uint16_t *data, uint32_t *msgID,
                      uint16_t *DLC);
-static void cana_fnmsgPrcsMS(uint16_t *msgDataMS);
+void CANA_fnCmdsForDigIOs(uint16_t ui16cabinetID, uint16_t ui16nodeID,
+                          uint16_t digitalIO);
+
+void CANA_fnCmdsForAnaOPVs(uint16_t ui16cabinetID, uint16_t ui16nodeID,
+                           can_tzAnaOPParams *ptrAO_V);
+
+void CANA_fnCmdsForAnaOPIs(uint16_t ui16cabinetID, uint16_t ui16nodeID,
+                           can_tzAnaOPParams *ptrAO_I);
 
 /*==============================================================================
  Local Variables
@@ -97,7 +108,7 @@ static void cana_fnmsgPrcsMS(uint16_t *msgDataMS);
 uint16_t uirxMsgLPCIO[8] = { 0 };
 uint16_t uirxMsgLHCIO[8] = { 0 };
 uint16_t uirxMsgMS[8] = { 0 };
-
+uint16_t ui16txMsgDataIO[8] = { 0 };
 uint16_t uirxPrcsMsgLPCIO[8] = { 0 };
 uint16_t uirxPrcsMsgLHCIO[8] = { 0 };
 uint16_t uirxPrcsMsgMS[8] = { 0 };
@@ -106,6 +117,7 @@ uint32_t u32msgID = 0;
 uint16_t uiDataLength = 0;
 uint16_t uiMsgtype = 0, uiNodeType = 0;
 uint16_t uiCANtxMsgDataMS[8] = { 0 };
+uint16_t ui16CabID = 0;
 
 /*==============================================================================
  Local Constants
@@ -118,9 +130,11 @@ uint16_t uiCANtxMsgDataMS[8] = { 0 };
  @param void
  @return void
  ============================================================================ */
+
 bool can_fnEnquedata(can_tzcirc_buff *ptr, uint16_t *data, uint32_t msgID,
                      uint16_t DLC)
 {
+
     int16_t i_count;
 
     i_count = ptr->i_head + 1;
@@ -748,9 +762,15 @@ void CANA_fnTx()
         break;
 
     case STACK_CHECK:
+
+        control_waterloop();
+
         break;
 
     case STACK_POWER:
+
+        control_waterloop();
+
         break;
 
     default:
@@ -764,6 +784,114 @@ void CANA_fnTx()
 
 }
 
+//void CANA_fnCmdsForAnaOPs(uint16_t ui16cabinetID, uint16_t ui16nodeID, uint16_t *msgDataMS)
+//{
+//
+//}
+
+void CANA_fnCmdsForDigIOs(uint16_t ui16cabinetID, uint16_t ui16nodeID,
+                          uint16_t digitalIOStatus)
+{
+    CAN_setupMessageObject(
+            CANA_BASE, CAN_mMAILBOX_11,
+            (ui16cabinetID << 4) | (ui16nodeID) | CANA_mTX_IOMSGID1,
+            CAN_MSG_FRAME_EXT, CAN_MSG_OBJ_TYPE_TX, 0x1FFFFFFF,
+            CAN_MSG_OBJ_NO_FLAGS,
+            CANA_mTHREE_BYTE);
+
+    CANA_tzIOtimers.TxCntIOCom++;
+
+    if (ui16cabinetID == 3)
+    {
+        ui16CabID = 0; // filling LPC Cabinet array
+    }
+    else if (ui16cabinetID == 1)
+    {
+        ui16CabID = 1; // filling LHC Cabinet array
+    }
+
+    CANA_tzSetDO_IORegs[ui16CabID][ui16nodeID].all =
+            (CANA_tzSetDO_IORegs[ui16CabID][ui16nodeID].all) | digitalIOStatus;
+
+    ui16txMsgDataIO[0] = CANA_tzIOtimers.TxCntIOCom;
+    ui16txMsgDataIO[1] = CANA_tzSetDO_IORegs[ui16CabID][ui16nodeID].all;
+    ui16txMsgDataIO[2] = CANA_tzSetDO_IORegs[ui16CabID][ui16nodeID].all;
+
+    if (CANA_tzIOtimers.TxCntIOCom == 255)
+    {
+        CANA_tzIOtimers.TxCntIOCom = 0;
+    }
+
+    CAN_sendMessage(CANA_BASE, CAN_mMAILBOX_11, CANA_mTHREE_BYTE,
+                    ui16txMsgDataIO);
+
+}
+
+void CANA_fnCmdsForAnaOPVs(uint16_t ui16cab_ID, uint16_t ui16nodeID,
+                           can_tzAnaOPParams *ptrAOV)
+{
+
+    CAN_setupMessageObject(
+    CANA_BASE,
+                           CAN_mMAILBOX_8,
+                           CANA_mTX_IOMSGID3 | ui16cab_ID << 4 | ui16nodeID,
+                           CAN_MSG_FRAME_EXT, CAN_MSG_OBJ_TYPE_TX, 0,
+                           CAN_MSG_OBJ_NO_FLAGS,
+                           CAN_mLEN8);
+
+    if (ui16cab_ID == 3)
+    {
+        ui16CabID = 0; // filling LPC Cabinet array
+    }
+    else if (ui16cab_ID == 1)
+    {
+        ui16CabID = 1; // filling LHC Cabinet array
+    }
+
+    uiCANtxMsgDataMS[0] = (ptrAOV->CANA_tzAOV[ui16CabID][ui16nodeID].AOV1) >> 8;
+    uiCANtxMsgDataMS[1] = (ptrAOV->CANA_tzAOV[ui16CabID][ui16nodeID].AOV1);
+    uiCANtxMsgDataMS[2] = (ptrAOV->CANA_tzAOV[ui16CabID][ui16nodeID].AOV2) >> 8;
+    uiCANtxMsgDataMS[3] = (ptrAOV->CANA_tzAOV[ui16CabID][ui16nodeID].AOV2);
+    uiCANtxMsgDataMS[4] = (ptrAOV->CANA_tzAOV[ui16CabID][ui16nodeID].AOV3) >> 8;
+    uiCANtxMsgDataMS[5] = (ptrAOV->CANA_tzAOV[ui16CabID][ui16nodeID].AOV3);
+    uiCANtxMsgDataMS[6] = (ptrAOV->CANA_tzAOV[ui16CabID][ui16nodeID].AOV4) >> 8;
+    uiCANtxMsgDataMS[7] = (ptrAOV->CANA_tzAOV[ui16CabID][ui16nodeID].AOV4);
+
+    CAN_sendMessage(CANA_BASE, CAN_mMAILBOX_8, CAN_mLEN8, uiCANtxMsgDataMS);
+}
+
+void CANA_fnCmdsForAnaOPIs(uint16_t ui16cab_ID, uint16_t ui16nodeID,
+                           can_tzAnaOPParams *ptrAOI)
+{
+
+    CAN_setupMessageObject(
+    CANA_BASE,
+                           CAN_mMAILBOX_8,
+                           CANA_mTX_IOMSGID2 | ui16cab_ID << 4 | ui16nodeID,
+                           CAN_MSG_FRAME_EXT, CAN_MSG_OBJ_TYPE_TX, 0,
+                           CAN_MSG_OBJ_NO_FLAGS,
+                           CAN_mLEN8);
+
+    if (ui16cab_ID == 3)
+    {
+        ui16CabID = 0; // filling LPC Cabinet array
+    }
+    else if (ui16cab_ID == 1)
+    {
+        ui16CabID = 1; // filling LHC Cabinet array
+    }
+
+    uiCANtxMsgDataMS[0] = (ptrAOI->CANA_tzAOI[ui16CabID][ui16nodeID].AOI1) >> 8;
+    uiCANtxMsgDataMS[1] = (ptrAOI->CANA_tzAOI[ui16CabID][ui16nodeID].AOI1);
+    uiCANtxMsgDataMS[2] = (ptrAOI->CANA_tzAOI[ui16CabID][ui16nodeID].AOI2) >> 8;
+    uiCANtxMsgDataMS[3] = (ptrAOI->CANA_tzAOI[ui16CabID][ui16nodeID].AOI2);
+    uiCANtxMsgDataMS[4] = (ptrAOI->CANA_tzAOI[ui16CabID][ui16nodeID].AOI3) >> 8;
+    uiCANtxMsgDataMS[5] = (ptrAOI->CANA_tzAOI[ui16CabID][ui16nodeID].AOI3);
+    uiCANtxMsgDataMS[6] = (ptrAOI->CANA_tzAOI[ui16CabID][ui16nodeID].AOI4) >> 8;
+    uiCANtxMsgDataMS[7] = (ptrAOI->CANA_tzAOI[ui16CabID][ui16nodeID].AOI4);
+
+    CAN_sendMessage(CANA_BASE, CAN_mMAILBOX_8, CAN_mLEN8, uiCANtxMsgDataMS);
+}
 /*==============================================================================
  End of File
  ==============================================================================*/

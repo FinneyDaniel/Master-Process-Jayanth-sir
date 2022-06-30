@@ -55,6 +55,7 @@ MATHCONV_tzREGS MATHConvtzRegs;
 //==============================================================================*/
 
 void MATH_fnCalc(void);
+static limitAnalogSensorData(float32 SensorType);
 
 ///*==============================================================================
 // Local Variables
@@ -115,8 +116,6 @@ inline float32 math_fnCOSmAtouSpercm(float32 COS_mV)
             + MATH_mCOS_LRV;
 }
 
-
-
 //inline float32 math_fnDPmAtoTemp(float32 DP_mA)
 //{
 //    return (((DP_mA -  MATH_mDP_MIN)* MATH_mDP_GAIN) - MATH_mDP_TEMPOFFSET);
@@ -141,16 +140,37 @@ inline float32 math_fnTTCCJCtomV(float32 CJC_temp)
 void MATH_fnCalc(void)
 {
 
-    if (CANA_tzAISensorData.OXS_101 < 4.0f)
-        CANA_tzAISensorData.OXS_101 = 4.0f;
-    if (CANA_tzAISensorData.OXS_101 > 20.0f)
-        CANA_tzAISensorData.OXS_101 = 20.0f;
+    CANA_tzAISensorData.DPT_401 = limitAnalogSensorData(
+            CANA_tzAISensorData.DPT_401);
+    CANA_tzAISensorData.HYS_101 = limitAnalogSensorData(
+            CANA_tzAISensorData.HYS_101);
+    CANA_tzAISensorData.HYS_102 = limitAnalogSensorData(
+            CANA_tzAISensorData.HYS_102);
+    CANA_tzAISensorData.HYS_501 = limitAnalogSensorData(
+            CANA_tzAISensorData.HYS_501);
+    CANA_tzAISensorData.HYS_401 = limitAnalogSensorData(
+            CANA_tzAISensorData.HYS_401);
+    CANA_tzAISensorData.LVL_101 = limitAnalogSensorData(
+            CANA_tzAISensorData.LVL_101);
+    CANA_tzAISensorData.PRT_101 = limitAnalogSensorData(
+            CANA_tzAISensorData.PRT_101);
+    CANA_tzAISensorData.PRT_102 = limitAnalogSensorData(
+            CANA_tzAISensorData.PRT_102);
+    CANA_tzAISensorData.PRT_401 = limitAnalogSensorData(
+            CANA_tzAISensorData.PRT_401);
+    CANA_tzAISensorData.PRT_402 = limitAnalogSensorData(
+            CANA_tzAISensorData.PRT_402);
+    CANA_tzAISensorData.TE_401 = limitAnalogSensorData(
+            CANA_tzAISensorData.TE_401);
+    CANA_tzAISensorData.COS_101 = limitAnalogSensorData(
+            CANA_tzAISensorData.COS_101);
+    CANA_tzAISensorData.OXS_101 = limitAnalogSensorData(
+            CANA_tzAISensorData.OXS_101);
 
     MATHConvtzRegs.AISensorLVL101 = math_fnLVLmAtoPercent(
             CANA_tzAISensorData.LVL_101);
 
-   // MATHConvtzRegs.AISensorEBV801 = math_fnLVLmAtoPercent(f32EBVOutvalue);
-
+    // MATHConvtzRegs.AISensorEBV801 = math_fnLVLmAtoPercent(f32EBVOutvalue);
 
     MATHConvtzRegs.AISensorHYS101 = math_fnHYSmAtoPercent(
             CANA_tzAISensorData.HYS_101, 0.0);
@@ -202,14 +222,11 @@ void MATH_fnCalc(void)
             math_fnKTCCJCtomV(CANA_tzIORegs.CJC[CANA_mLHC110_IO])
                     + CANA_tzThermoCoupleData.KTC_401);
 
-
     MATHConvtzRegs.AISensorPRT101 = math_fnPRTmAtoBar(
             CANA_tzAISensorData.PRT_101, 4, 3.9);
 
     MATHConvtzRegs.AISensorPRT102 = math_fnPRTmAtoBar(
             CANA_tzAISensorData.PRT_102, 4, 4.4);
-
-
 
     MATHConvtzRegs.AISensorPRT401 = math_fnPRTmAtoBar(
             CANA_tzAISensorData.PRT_401, 40, 3.9);
@@ -220,8 +237,19 @@ void MATH_fnCalc(void)
     MATHConvtzRegs.AISensorCOS101 = math_fnCOSmAtouSpercm(
             CANA_tzAISensorData.COS_101);
 
+}
 
-
+static limitAnalogSensorData(float32 SensorType)
+{
+    if (SensorType > 20.0)
+    {
+        SensorType = 20.0;
+    }
+    else if (SensorType < 4.0)
+    {
+        SensorType = 4.0;
+    }
+    return SensorType;
 }
 //
 ///*==============================================================================
