@@ -60,7 +60,7 @@ void canb_fnReadMBox_Site(void);
  ==============================================================================*/
 
 uint16_t ui16RxMsgDataSite7[8] = { 0 };
-
+uint16_t ui16RxMsgDataSite8[8] = { 0 };
 /*==============================================================================
  Local Constants
  ==============================================================================*/
@@ -112,6 +112,28 @@ void CANB_fnSite_Event(void)
 
         CANB_tzSiteRegs.MBox7 = 0;
     }
+
+
+    /*****************************************************************************************************/
+
+    if (CANB_tzSiteRegs.MBox8 == 1) //set current and set voltage from site controller
+    {
+        CAN_readMessage(CANB_BASE, CAN_mMAILBOX_8, ui16RxMsgDataSite8);
+
+        CANB_tzSiteRegs.MsgID8 = CanbRegs.CAN_IF2ARB.bit.ID;
+
+
+
+        CANB_tzSiteRxRegs.H2Percent = ((ui16RxMsgDataSite8[0] << 8)
+                | (ui16RxMsgDataSite8[1])) * 0.01;
+
+        CANB_tzSiteRxRegs.f32VoltSet = 400.0; //CV limit changed after connecting 15 power Supplies 15 cell voltages
+        CANB_tzSiteRxRegs.f32CurrSet = (CANB_tzSiteRxRegs.H2Percent * 0.01
+                * 1000.0);
+
+        CANB_tzSiteRegs.MBox8 = 0;
+
+    }
 }
 
 void canb_fnReadMBox_Site(void)
@@ -123,6 +145,13 @@ void canb_fnReadMBox_Site(void)
 
     CANB_tzSiteRegs.MBox7 = CAN_readMessage(CANB_BASE, CAN_mMAILBOX_7,
                                             ui16RxMsgDataSite7); //
+
+    // RX ID is 0x141601A1 - MAILBOX8
+    // RECEIVE QUERY for H2 Percentage Set and Voltage Set
+
+        CANB_tzSiteRegs.MBox8 = CAN_readMessage(CANB_BASE, CAN_mMAILBOX_8,
+                                                ui16RxMsgDataSite8); //
+
 
 }
 

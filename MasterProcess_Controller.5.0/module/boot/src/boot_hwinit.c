@@ -266,7 +266,6 @@ static void boot_fnInitPLL(void)
 {
 
 
-    Uint16 SCSR, WDCR, WDWCR;
     Uint16 imult = 20, fmult = 0, divsel = 1;
 
 
@@ -343,9 +342,9 @@ static void boot_fnInitPLL(void)
     //
     // Backup User Watchdog
     //
-    SCSR = WdRegs.SCSR.all;
-    WDCR = WdRegs.WDCR.all;
-    WDWCR = WdRegs.WDWCR.all;
+//    SCSR = WdRegs.SCSR.all;
+//    WDCR = WdRegs.WDCR.all;
+//    WDWCR = WdRegs.WDWCR.all;
 
     //
     // Disable windowed functionality, reset counter

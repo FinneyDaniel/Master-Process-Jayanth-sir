@@ -31,7 +31,6 @@
  Defines
  ==============================================================================*/
 
-#define CANA_mTOTAL_PSUNODE                                                                                  (28U)
 #define CANA_mTOTAL_IONODE                                                                                   (4U)
 #define CANA_mTOTAL_VSNODE                                                                                   (12U)
 

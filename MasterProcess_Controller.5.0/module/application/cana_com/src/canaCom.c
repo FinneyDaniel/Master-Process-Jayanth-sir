@@ -88,6 +88,9 @@ static void cana_fnmsgPrcsLHCIO(uint16_t uimsgID, uint16_t *msgData,
 
 static void cana_fnmsgPrcsMS(uint16_t *msgDataMS);
 
+static void canaTX_fnMS();
+
+
 bool can_fnEnquedata(can_tzcirc_buff *ptr, uint16_t *data, uint32_t msgID,
                      uint16_t DLC);
 bool can_fndequedata(can_tzcirc_buff *ptr, uint16_t *data, uint32_t *msgID,
@@ -107,6 +110,7 @@ void CANA_fnCmdsForAnaOPIs(uint16_t ui16cabinetID, uint16_t ui16nodeID,
 
 uint16_t uirxMsgLPCIO[8] = { 0 };
 uint16_t uirxMsgLHCIO[8] = { 0 };
+
 uint16_t uirxMsgMS[8] = { 0 };
 uint16_t ui16txMsgDataIO[8] = { 0 };
 uint16_t uirxPrcsMsgLPCIO[8] = { 0 };
@@ -515,7 +519,7 @@ static void cana_fnmsgPrcsLHCIO(uint16_t uiMsgtype, uint16_t *msgDataIO,
                     CANA_tzLHCDI_IORegs[CANA_mLHC110_IO].all = msgDataIO[1];
                     CANA_tzIORegs.CJC[CANA_mLHC110_IO] = ((msgDataIO[3] << 8)
                             | (msgDataIO[4])) * 0.001;
-                    CANA_tzLHCAIFlt_IORegs[CANA_mLHC110_IO].all = msgDataIO[7];
+                    CANA_tzLHCAIFlt_IORegs[CANA_mLHC110_IO].all = msgDataIO[5];
 
                 }
             }
@@ -724,32 +728,7 @@ void CANA_fnTx()
 {
     // Common Messages Irrespective of States
 
-    // Master Process to Master Safety
-
-    CANA_tzMSRegs.TxCntMS++;
-
-    CAN_setupMessageObject(
-    CANA_BASE,
-                           CAN_mMAILBOX_8,
-                           CANA_mTX_MSMSGID1,
-                           CAN_MSG_FRAME_EXT, CAN_MSG_OBJ_TYPE_TX, 0,
-                           CAN_MSG_OBJ_NO_FLAGS,
-                           CAN_mLEN8);
-
-    uiCANtxMsgDataMS[0] = CANA_tzMSRegs.TxCntMS;
-
-    uiCANtxMsgDataMS[1] = STAT_tzStateMac.Present_st;
-    uiCANtxMsgDataMS[2] = 0;
-
-    uiCANtxMsgDataMS[3] = 0;
-    uiCANtxMsgDataMS[4] = 0;
-
-    uiCANtxMsgDataMS[5] = 0;
-
-    uiCANtxMsgDataMS[6] = 0;
-    uiCANtxMsgDataMS[7] = 0;
-
-    CAN_sendMessage(CANA_BASE, CAN_mMAILBOX_8, CAN_mLEN8, uiCANtxMsgDataMS);
+    canaTX_fnMS();
 
     switch (STAT_tzStateMac.Present_st)
     {
@@ -783,11 +762,6 @@ void CANA_fnTx()
     }
 
 }
-
-//void CANA_fnCmdsForAnaOPs(uint16_t ui16cabinetID, uint16_t ui16nodeID, uint16_t *msgDataMS)
-//{
-//
-//}
 
 void CANA_fnCmdsForDigIOs(uint16_t ui16cabinetID, uint16_t ui16nodeID,
                           uint16_t digitalIOStatus)
@@ -848,16 +822,16 @@ void CANA_fnCmdsForAnaOPVs(uint16_t ui16cab_ID, uint16_t ui16nodeID,
         ui16CabID = 1; // filling LHC Cabinet array
     }
 
-    uiCANtxMsgDataMS[0] = (ptrAOV->CANA_tzAOV[ui16CabID][ui16nodeID].AOV1) >> 8;
-    uiCANtxMsgDataMS[1] = (ptrAOV->CANA_tzAOV[ui16CabID][ui16nodeID].AOV1);
-    uiCANtxMsgDataMS[2] = (ptrAOV->CANA_tzAOV[ui16CabID][ui16nodeID].AOV2) >> 8;
-    uiCANtxMsgDataMS[3] = (ptrAOV->CANA_tzAOV[ui16CabID][ui16nodeID].AOV2);
-    uiCANtxMsgDataMS[4] = (ptrAOV->CANA_tzAOV[ui16CabID][ui16nodeID].AOV3) >> 8;
-    uiCANtxMsgDataMS[5] = (ptrAOV->CANA_tzAOV[ui16CabID][ui16nodeID].AOV3);
-    uiCANtxMsgDataMS[6] = (ptrAOV->CANA_tzAOV[ui16CabID][ui16nodeID].AOV4) >> 8;
-    uiCANtxMsgDataMS[7] = (ptrAOV->CANA_tzAOV[ui16CabID][ui16nodeID].AOV4);
+    ui16txMsgDataIO[0] = (ptrAOV->CANA_tzAOV[ui16CabID][ui16nodeID].AOV1) >> 8;
+    ui16txMsgDataIO[1] = (ptrAOV->CANA_tzAOV[ui16CabID][ui16nodeID].AOV1);
+    ui16txMsgDataIO[2] = (ptrAOV->CANA_tzAOV[ui16CabID][ui16nodeID].AOV2) >> 8;
+    ui16txMsgDataIO[3] = (ptrAOV->CANA_tzAOV[ui16CabID][ui16nodeID].AOV2);
+    ui16txMsgDataIO[4] = (ptrAOV->CANA_tzAOV[ui16CabID][ui16nodeID].AOV3) >> 8;
+    ui16txMsgDataIO[5] = (ptrAOV->CANA_tzAOV[ui16CabID][ui16nodeID].AOV3);
+    ui16txMsgDataIO[6] = (ptrAOV->CANA_tzAOV[ui16CabID][ui16nodeID].AOV4) >> 8;
+    ui16txMsgDataIO[7] = (ptrAOV->CANA_tzAOV[ui16CabID][ui16nodeID].AOV4);
 
-    CAN_sendMessage(CANA_BASE, CAN_mMAILBOX_8, CAN_mLEN8, uiCANtxMsgDataMS);
+    CAN_sendMessage(CANA_BASE, CAN_mMAILBOX_8, CAN_mLEN8, ui16txMsgDataIO);
 }
 
 void CANA_fnCmdsForAnaOPIs(uint16_t ui16cab_ID, uint16_t ui16nodeID,
@@ -881,14 +855,44 @@ void CANA_fnCmdsForAnaOPIs(uint16_t ui16cab_ID, uint16_t ui16nodeID,
         ui16CabID = 1; // filling LHC Cabinet array
     }
 
-    uiCANtxMsgDataMS[0] = (ptrAOI->CANA_tzAOI[ui16CabID][ui16nodeID].AOI1) >> 8;
-    uiCANtxMsgDataMS[1] = (ptrAOI->CANA_tzAOI[ui16CabID][ui16nodeID].AOI1);
-    uiCANtxMsgDataMS[2] = (ptrAOI->CANA_tzAOI[ui16CabID][ui16nodeID].AOI2) >> 8;
-    uiCANtxMsgDataMS[3] = (ptrAOI->CANA_tzAOI[ui16CabID][ui16nodeID].AOI2);
-    uiCANtxMsgDataMS[4] = (ptrAOI->CANA_tzAOI[ui16CabID][ui16nodeID].AOI3) >> 8;
-    uiCANtxMsgDataMS[5] = (ptrAOI->CANA_tzAOI[ui16CabID][ui16nodeID].AOI3);
-    uiCANtxMsgDataMS[6] = (ptrAOI->CANA_tzAOI[ui16CabID][ui16nodeID].AOI4) >> 8;
-    uiCANtxMsgDataMS[7] = (ptrAOI->CANA_tzAOI[ui16CabID][ui16nodeID].AOI4);
+    ui16txMsgDataIO[0] = (ptrAOI->CANA_tzAOI[ui16CabID][ui16nodeID].AOI1) >> 8;
+    ui16txMsgDataIO[1] = (ptrAOI->CANA_tzAOI[ui16CabID][ui16nodeID].AOI1);
+    ui16txMsgDataIO[2] = (ptrAOI->CANA_tzAOI[ui16CabID][ui16nodeID].AOI2) >> 8;
+    ui16txMsgDataIO[3] = (ptrAOI->CANA_tzAOI[ui16CabID][ui16nodeID].AOI2);
+    ui16txMsgDataIO[4] = (ptrAOI->CANA_tzAOI[ui16CabID][ui16nodeID].AOI3) >> 8;
+    ui16txMsgDataIO[5] = (ptrAOI->CANA_tzAOI[ui16CabID][ui16nodeID].AOI3);
+    ui16txMsgDataIO[6] = (ptrAOI->CANA_tzAOI[ui16CabID][ui16nodeID].AOI4) >> 8;
+    ui16txMsgDataIO[7] = (ptrAOI->CANA_tzAOI[ui16CabID][ui16nodeID].AOI4);
+
+    CAN_sendMessage(CANA_BASE, CAN_mMAILBOX_8, CAN_mLEN8, ui16txMsgDataIO);
+}
+
+static void canaTX_fnMS()
+{
+// Master Process to Master Safety
+
+    CANA_tzMSRegs.TxCntMS++;
+
+    CAN_setupMessageObject(
+    CANA_BASE,
+                           CAN_mMAILBOX_8,
+                           CANA_mTX_MSMSGID1,
+                           CAN_MSG_FRAME_EXT, CAN_MSG_OBJ_TYPE_TX, 0,
+                           CAN_MSG_OBJ_NO_FLAGS,
+                           CAN_mLEN8);
+
+    uiCANtxMsgDataMS[0] = CANA_tzMSRegs.TxCntMS;
+
+    uiCANtxMsgDataMS[1] = STAT_tzStateMac.Present_st;
+    uiCANtxMsgDataMS[2] = 0;
+
+    uiCANtxMsgDataMS[3] = 0;
+    uiCANtxMsgDataMS[4] = 0;
+
+    uiCANtxMsgDataMS[5] = 0;
+
+    uiCANtxMsgDataMS[6] = 0;
+    uiCANtxMsgDataMS[7] = 0;
 
     CAN_sendMessage(CANA_BASE, CAN_mMAILBOX_8, CAN_mLEN8, uiCANtxMsgDataMS);
 }

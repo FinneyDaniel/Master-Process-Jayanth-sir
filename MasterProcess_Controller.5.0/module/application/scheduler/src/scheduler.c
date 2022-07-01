@@ -40,6 +40,7 @@
 #include "safety_lib_prv.h"
 #include "app_constants.h"
 #include "mathcalc.h"
+#include "cana_PSUCom.h"
 
 /*==============================================================================
  Defines
@@ -82,7 +83,7 @@ const fp_sch_slot_t psch_slots[NUM_mTIME_SLOTS] =
 /*==============================================================================
  Local Variables
  ==============================================================================*/
-uint16_t ui16txMsgDataPSU[8] = { 0 };
+
 uint16_t i2cChk = 0;
 uint16_t i2cChkRead = 0;
 static const fp_sch_slot_t pevery_sch_slot;
@@ -148,28 +149,43 @@ void SCH_fnslot_1(void)
 void SCH_fnslot_2(void)
 {
     MATH_fnCalc();
+
     //safety_fnLog_monitoring_slot_exe(2);
  }
 
 void SCH_fnslot_3(void)
 {
+//    CANA_tzTimerRegs.tzPSU.TxCntPSUCmds++;
+//    if(CANA_tzTimerRegs.tzPSU.TxCntPSUCmds > 6)
+//    {
+
+    CANA_fnPSUTX_Event();
+//    CANA_tzTimerRegs.tzPSU.TxCntPSUCmds = 0;
+//    }
     //safety_fnLog_monitoring_slot_exe(3);
  }
 
 void SCH_fnslot_4(void)
 {
+//    CANA_tzTimerRegs.tzPSU.RxCntPSUCmds++;
+//    if(CANA_tzTimerRegs.tzPSU.RxCntPSUCmds > 6)
+//    {
+    CANA_fnPSURX_Event();
+//    CANA_tzTimerRegs.tzPSU.RxCntPSUCmds = 0;
+//    }
     //safety_fnLog_monitoring_slot_exe(4);
 }
 
 void SCH_fnslot_5(void)
 {
-
+    CONTROL_fnPSU_IRef();
 }
 
 
 
 void SCH_fnslot_all(void)
 {
+  //  cana_fnTurnON_PSU(0, CANA_mTURNOFF_DCDC, 1);
     yy++;
 }
 

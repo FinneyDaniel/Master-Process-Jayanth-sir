@@ -50,9 +50,25 @@ All trademarks are owned by Enarka India Private Limited
 typedef struct CANB_zSITERXREGS
 {
     uint16_t Start_cmd;
-    uint16_t RUT_Command;
+    uint16_t RUTHandShake;
     uint16_t Start_H2Cmd;
+    uint16_t StartSpectroscopy;
+    uint16_t ImpAmpVar;
+    uint16_t ImpFreqVar;
     uint16_t StateChngStandBy;
+    uint16_t uiVoltInt;
+    uint16_t uiVoltFrac;
+    float32_t f32VoltSet;
+    float32_t H2Percent;
+
+    uint16_t uiCurrInt;
+    uint16_t uiCurrFrac;
+    float32_t f32CurrSet;
+
+
+
+    uint16_t queryfaults;
+
 
 } CANB_tzSITERXREGS;
 
@@ -62,6 +78,9 @@ typedef struct CANB_zSITEREGS
 
    uint16_t MsgID7;
    uint16_t MBox7;
+   uint16_t MBox8;
+   uint16_t MsgID8;
+
 
 } CANB_tzSITEREGS;
 

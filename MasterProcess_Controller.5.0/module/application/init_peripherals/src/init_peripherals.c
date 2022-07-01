@@ -130,6 +130,33 @@ void INIT_fnCANAMailBox(void)
 {
     // CAN-A RX  message IDs
 
+    // PSU - Mailbox 5-7 Receive Mailbox, Mailbox 1 Transmit Mailbox
+
+    CAN_setupMessageObject(
+            CANA_BASE, CAN_mMAILBOX_5, 0x111B0962, CAN_MSG_FRAME_EXT,
+            CAN_MSG_OBJ_TYPE_RX, 0x1FFF00FF,
+            CAN_MSG_OBJ_USE_ID_FILTER | CAN_MSG_OBJ_USE_EXT_FILTER,  //
+            CANA_mEIGHT_BYTE);
+
+    CAN_setupMessageObject(
+            CANA_BASE, CAN_mMAILBOX_6, 0x111B096C, CAN_MSG_FRAME_EXT,
+            CAN_MSG_OBJ_TYPE_RX, 0x1FFF00FF,
+            CAN_MSG_OBJ_USE_ID_FILTER | CAN_MSG_OBJ_USE_EXT_FILTER,
+            CANA_mEIGHT_BYTE);
+
+    CAN_setupMessageObject(
+            CANA_BASE, CAN_mMAILBOX_7, 0x111B0961, CAN_MSG_FRAME_EXT,
+            CAN_MSG_OBJ_TYPE_RX, 0x1FFF00FF,
+            CAN_MSG_OBJ_USE_ID_FILTER | CAN_MSG_OBJ_USE_EXT_FILTER,
+            CANA_mEIGHT_BYTE);
+
+    CAN_setupMessageObject(
+            CANA_BASE, CAN_mMAILBOX_8, 0x111B0972, CAN_MSG_FRAME_EXT,
+            CAN_MSG_OBJ_TYPE_RX, 0x1FFF00FF,
+            CAN_MSG_OBJ_USE_ID_FILTER | CAN_MSG_OBJ_USE_EXT_FILTER,
+            CANA_mEIGHT_BYTE);
+
+
 
     // TO RECEIVE CAN FLASHING
     CAN_setupMessageObject(CANA_BASE, CAN_mMAILBOX_1, 0x141101F2,
@@ -177,6 +204,12 @@ void INIT_fnCANBMailBox(void)
             CANB_BASE, CAN_mMAILBOX_7, 0x14160103, CAN_MSG_FRAME_EXT,
             CAN_MSG_OBJ_TYPE_RX, 0X1FFF00FF,
             CAN_MSG_OBJ_USE_ID_FILTER | CAN_MSG_OBJ_USE_EXT_FILTER, // RUT
+            CANA_mTWO_BYTE);
+
+    CAN_setupMessageObject(
+            CANB_BASE, CAN_mMAILBOX_8, 0x141601A1, CAN_MSG_FRAME_EXT,
+            CAN_MSG_OBJ_TYPE_RX, 0X1FFF00FF,
+            CAN_MSG_OBJ_USE_ID_FILTER | CAN_MSG_OBJ_USE_EXT_FILTER, // set volt ,set H2 percent
             CANA_mTWO_BYTE);
 }
 

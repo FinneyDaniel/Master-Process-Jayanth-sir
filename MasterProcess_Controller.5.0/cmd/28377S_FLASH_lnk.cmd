@@ -55,7 +55,7 @@ PAGE 1 : /* Data Memory */
    RAMM1           : origin = 0x000400, length = 0x000400     /* on-chip RAM block M1 */
    RAMD1           : origin = 0x00B800, length = 0x000800
 
-   RAMLS5      : origin = 0x00A800, length = 0x000800
+   RAMLS5      : origin = 0x00A800, length = 0x001000
 
    RAMGS0      : origin = 0x00C000, length = 0x001000
    RAMGS1      : origin = 0x00D000, length = 0x001000
@@ -85,7 +85,7 @@ SECTIONS
    .reset           : > RESET,     PAGE = 0, TYPE = DSECT /* not used, */
 
    .stack           : > RAMM1,     PAGE = 1
-   .ebss            : > RAMLS5,    PAGE = 1
+   .ebss               : >> RAMLS5 | RAMGS0 | RAMGS1       PAGE = 1
     					START(_start_ebss)
    						END(_end_ebss)
 
