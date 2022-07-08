@@ -93,6 +93,7 @@ static const fp_sch_slot_t pevery_sch_slot_cmp;
 static int16_t icurrent_slot;
 extern const fp_sch_slot_t psch_slots[NUM_mTIME_SLOTS];
 uint16_t xx=0,yy=0;
+uint16_t ui32GlycolLpCnt = 0;
 /*==============================================================================
  Local Constants
  ==============================================================================*/
@@ -154,29 +155,28 @@ void SCH_fnslot_2(void)
     faultCheck();
     MATH_fnCalc();
 
+    ui32GlycolLpCnt++;
+    if(ui32GlycolLpCnt >= 3)
+    {
+        CONTROL_fnGlycolLoop();
+        ui32GlycolLpCnt = 0;
+    }
+
     //safety_fnLog_monitoring_slot_exe(2);
  }
 
 void SCH_fnslot_3(void)
 {
-//    CANA_tzTimerRegs.tzPSU.TxCntPSUCmds++;
-//    if(CANA_tzTimerRegs.tzPSU.TxCntPSUCmds > 6)
-//    {
+    CANA_fnPSUTX_Event();
 
-   // CANA_fnPSUTX_Event();
-//    CANA_tzTimerRegs.tzPSU.TxCntPSUCmds = 0;
-//    }
     //safety_fnLog_monitoring_slot_exe(3);
  }
 
 void SCH_fnslot_4(void)
 {
-//    CANA_tzTimerRegs.tzPSU.RxCntPSUCmds++;
-//    if(CANA_tzTimerRegs.tzPSU.RxCntPSUCmds > 6)
-//    {
-    //CANA_fnPSURX_Event();
-//    CANA_tzTimerRegs.tzPSU.RxCntPSUCmds = 0;
-//    }
+
+    CANA_fnPSURX_Event();
+
     //safety_fnLog_monitoring_slot_exe(4);
 }
 

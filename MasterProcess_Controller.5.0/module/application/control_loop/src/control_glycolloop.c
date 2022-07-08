@@ -63,6 +63,8 @@ void CONTROL_fnGlycolLoop(void);
 uint16_t ui16GlycolTref = 80;
 uint16_t ui16PIgain = 20;
 float32_t xvar = 79;
+float32_t f32EBVOutvalue = 0;
+
 /*==============================================================================
  Local Constants
 ==============================================================================*/
@@ -81,9 +83,12 @@ void CONTROL_fnGlycolLoop(void)
 
     PI_MACRO(CONTROL_tzGlycolLp);  // Change Ti to speed up the process
 
-    f32EBVOutvalue = -(CONTROL_tzGlycolLp.Out) + 20.0;  //  ScaleConvFromTempToVolt
+    f32EBVOutvalue = -(CONTROL_tzGlycolLp.Out) + 20.0;
 
-    cana_fncmdIO_Node_EBV_Valve(CANA_mTXLHC101_IO, f32EBVOutvalue); // Turn OFF VFD valve
+    CANA_tzAnaOPParams.CANA_tzAOI[1][0].AOI1 = (f32EBVOutvalue * 10);
+
+    CANA_fnCmdsForAnaOPIs(CANA_tzIORegs.uiUnitID, 3, 0, &CANA_tzAnaOPParams);
+
 
 }
 

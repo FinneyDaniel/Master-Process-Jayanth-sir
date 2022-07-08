@@ -105,13 +105,15 @@ void control_waterloop(void)
         {
             CANA_tzAnaOPParams.CANA_tzAOV[0][0].AOV1 = 35000;
 
-            //CANA_fnCmdsForAnaOPVs(CANA_tzIORegs.uiUnitID, 3 , 0, &CANA_tzAnaOPParams);
+            CANA_fnCmdsForAnaOPVs(CANA_tzIORegs.uiUnitID, 3, 0,
+                                  &CANA_tzAnaOPParams);
         }
         else if (MATHConvtzRegs.AISensorLVL101 <= 58.0)
         {
             CANA_tzAnaOPParams.CANA_tzAOV[0][0].AOV1 = 0;
 
-            //CANA_fnCmdsForAnaOPVs(CANA_tzIORegs.uiUnitID, 3, 0, &CANA_tzAnaOPParams);
+            CANA_fnCmdsForAnaOPVs(CANA_tzIORegs.uiUnitID, 3, 0,
+                                  &CANA_tzAnaOPParams);
         }
     }
 //    else if (CANA_tzIOtimers.TxCntWaterloop == 3)

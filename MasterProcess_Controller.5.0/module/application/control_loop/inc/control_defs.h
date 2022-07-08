@@ -144,6 +144,7 @@ union H2_tzVALVES
 extern void control_waterloop(void);
 extern void CONTROL_fnPSU_IRef(void);
 extern void H2_fnSVcontrol(void);
+extern void CONTROL_fnGlycolLoop(void);
 
 /*==============================================================================
  Extern/Public Variables
