@@ -56,13 +56,29 @@ union CANA_tzDI_IOREGS CANA_tzLPCDI_IORegs[CANA_mTOTAL_LPCNODES],
         CANA_tzLHCDI_IORegs[CANA_mTOTAL_LHCNODES];
 union CANA_tzAIFLT_IOREGS CANA_tzLPCAIFlt_IORegs[CANA_mTOTAL_IONODE],
         CANA_tzLHCAIFlt_IORegs[CANA_mTOTAL_IONODE];
-union CANA_tzLPCDIFLT_IOREGS CANA_tzLPCDIFaultRegs[CANA_mTOTAL_LPCNODES];
-union CANA_tzLHCDIFLT_IOREGS CANA_tzLHCDIFaultRegs[CANA_mTOTAL_LHCNODES];
 
-union CANA_tzDO_IOREGS CANA_tzSetDO_IORegs[2][2];
+union CANA_tzLPCIO1_DIFLT_IOREGS CANA_tzLPCIO1_DIFaultRegs;
+union CANA_tzLPCIO2_DIFLT_IOREGS CANA_tzLPCIO2_DIFaultRegs;
 
-CANA_tzAO_IOREGS CANA_tzSetAO_IORegs[2][2];
+union CANA_tzLHCIO1_DIFLT_IOREGS CANA_tzLHCIO1_DIFaultRegs;
+union CANA_tzLHCIO2_DIFLT_IOREGS CANA_tzLHCIO2_DIFaultRegs;
+
+union CANA_tzLPCIO1_AIFLT_IOREGS CANA_tzLPCIO1_AIFaultRegs;
+union CANA_tzLPCIO2_AIFLT_IOREGS CANA_tzLPCIO2_AIFaultRegs;
+
+union CANA_tzLHCIO1_AIFLT_IOREGS CANA_tzLHCIO1_AIFaultRegs;
+union CANA_tzLHCIO2_AIFLT_IOREGS CANA_tzLHCIO2_AIFaultRegs;
+
+union CANA_tzTHERMALFLT_IOREGS CANA_tzThermalFaultRegs;
+
+CANA_tzDO_IOREGS CANA_tzSetDO_IORegs;
+
 can_tzAnaOPParams CANA_tzAnaOPParams;
+
+//can_tzDigOPParams CANA_tzDigOPParams;
+
+CANA_tzDIG_OP CANA_tzDO[2][2];
+
 /*==============================================================================
  Macros
  ==============================================================================*/
@@ -90,19 +106,23 @@ static void cana_fnmsgPrcsMS(uint16_t *msgDataMS);
 
 static void canaTX_fnMS();
 
-
 bool can_fnEnquedata(can_tzcirc_buff *ptr, uint16_t *data, uint32_t msgID,
                      uint16_t DLC);
 bool can_fndequedata(can_tzcirc_buff *ptr, uint16_t *data, uint32_t *msgID,
                      uint16_t *DLC);
-void CANA_fnCmdsForDigIOs(uint16_t ui16cabinetID, uint16_t ui16nodeID,
-                          uint16_t digitalIO);
+//void CANA_fnCmdsForDigIOs(uint16_t ui16unitID, uint16_t ui16cab_ID,
+//                          uint16_t ui16nodeID, uint16_t digitalIO);
 
-void CANA_fnCmdsForAnaOPVs(uint16_t ui16cabinetID, uint16_t ui16nodeID,
-                           can_tzAnaOPParams *ptrAO_V);
+//void CANA_fnCmdsForDigOPs(uint16_t ui16unitID, uint16_t ui16cab_ID,
+//                           uint16_t ui16nodeID, can_tzDigOPParams *ptrDigOP);
+void CANA_fnCmdsForDigOPs(uint16_t ui16unitID, uint16_t ui16cab_ID,
+                          uint16_t ui16nodeID, CANA_tzDIG_OP *ptrDigOP);
 
-void CANA_fnCmdsForAnaOPIs(uint16_t ui16cabinetID, uint16_t ui16nodeID,
-                           can_tzAnaOPParams *ptrAO_I);
+void CANA_fnCmdsForAnaOPVs(uint16_t ui16unitID, uint16_t ui16cab_ID,
+                           uint16_t ui16nodeID, can_tzAnaOPParams *ptrAO_V);
+
+void CANA_fnCmdsForAnaOPIs(uint16_t ui16unitID, uint16_t ui16cab_ID,
+                           uint16_t ui16nodeID, can_tzAnaOPParams *ptrAO_I);
 
 /*==============================================================================
  Local Variables
@@ -121,7 +141,7 @@ uint32_t u32msgID = 0;
 uint16_t uiDataLength = 0;
 uint16_t uiMsgtype = 0, uiNodeType = 0;
 uint16_t uiCANtxMsgDataMS[8] = { 0 };
-uint16_t ui16CabID = 0;
+uint16_t ui16CabID = 0, ui16prev_value = 0;
 
 /*==============================================================================
  Local Constants
@@ -221,9 +241,9 @@ void CANA_fnRXevent(void)
                         CanaRegs.CAN_IF2MCTL.bit.DLC);
     }
 
-    if (CAN_IsMessageReceived(CANA_BASE, CAN_mMAILBOX_7))
+    if (CAN_IsMessageReceived(CANA_BASE, CAN_mMAILBOX_11))
     {
-        CAN_readMessage(CANA_BASE, CAN_mMAILBOX_7, uirxMsgMS);
+        CAN_readMessage(CANA_BASE, CAN_mMAILBOX_11, uirxMsgMS);
 
         can_fnEnquedata(&uiRxbufferMS, uirxMsgMS, CanaRegs.CAN_IF2ARB.bit.ID,
                         CanaRegs.CAN_IF2MCTL.bit.DLC);
@@ -248,8 +268,10 @@ void CANA_fnTask(void)
 
     //extracting msgID for individual messages of LPC
 
-    ui32temp = (u32msgID & 0x00F0000F);
-    CANA_tzIORegs.uiMsgtypeLPCIO = (uint16_t) (ui32temp >> 20);
+    ui32temp = (u32msgID & 0x00F00F0F);
+    CANA_tzIORegs.uiMsgtypeLPCIO = (uint16_t) ((ui32temp & 0x00F00000) >> 20);
+    CANA_tzIORegs.uiUnitID = (uint16_t) ((ui32temp & 0x00000F00) >> 8);
+
     CANA_tzIORegs.uiNodeLPCIO = (uint16_t) (ui32temp & 0x0F);
 
     //processing received messages of LPC
@@ -296,37 +318,37 @@ static void cana_fnmsgPrcsLPCIO(uint16_t uiMsgtype, uint16_t *msgDataIO,
         switch (uiNodeType)
         {
 
-        case LPC_130:
+        case LPC_30:
 
-            if (CANA_tzIOtimers.RxCntLPC130 != msgDataIO[0])
+            if (CANA_tzIOtimers.RxCntLPC30 != msgDataIO[0])
             {
-                CANA_tzIOtimers.RxCntLPC130 = msgDataIO[0];
+                CANA_tzIOtimers.RxCntLPC30 = msgDataIO[0];
 
                 if (msgDataIO[1] == msgDataIO[2])
                 {
-                    CANA_tzLPCDI_IORegs[CANA_mLPC130_IO].all = msgDataIO[1];
-                    CANA_tzLPCAIFlt_IORegs[CANA_mLPC130_IO].all = msgDataIO[7];
+                    CANA_tzLPCDI_IORegs[CANA_mLPC30_IO].all = msgDataIO[1];
+                    CANA_tzLPCAIFlt_IORegs[CANA_mLPC30_IO].all = msgDataIO[7];
 
-                    CANA_tzIOflags.btLPC130CommnStart = true;
-                    CANA_tzIOtimers.LPC130ComFailCnt = 0;
+                    CANA_tzIOflags.btLPC30CommnStart = true;
+                    CANA_tzIOtimers.LPC30ComFailCnt = 0;
 
                 }
             }
             break;
 
-        case LPC_131:
+        case LPC_31:
 
-            if (CANA_tzIOtimers.RxCntLPC131 != msgDataIO[0])
+            if (CANA_tzIOtimers.RxCntLPC31 != msgDataIO[0])
             {
-                CANA_tzIOtimers.RxCntLPC131 = msgDataIO[0];
+                CANA_tzIOtimers.RxCntLPC31 = msgDataIO[0];
 
                 if (msgDataIO[1] == msgDataIO[2])
                 {
-                    CANA_tzLPCDI_IORegs[CANA_mLPC131_IO].all = msgDataIO[1];
-                    CANA_tzLPCAIFlt_IORegs[CANA_mLPC131_IO].all = msgDataIO[7];
+                    CANA_tzLPCDI_IORegs[CANA_mLPC31_IO].all = msgDataIO[1];
+                    CANA_tzLPCAIFlt_IORegs[CANA_mLPC31_IO].all = msgDataIO[7];
 
-                    CANA_tzIOflags.btLPC131CommnStart = true;
-                    CANA_tzIOtimers.LPC131ComFailCnt = 0;
+                    CANA_tzIOflags.btLPC31CommnStart = true;
+                    CANA_tzIOtimers.LPC31ComFailCnt = 0;
                 }
             }
             break;
@@ -338,31 +360,31 @@ static void cana_fnmsgPrcsLPCIO(uint16_t uiMsgtype, uint16_t *msgDataIO,
         switch (uiNodeType)
         {
 
-        case LPC_130:
+        case LPC_30:
 
-            CANA_tzAIData_IORegs[CANA_mLPC130_IO].AI0_Data =
-                    ((msgDataIO[0] << 8) | (msgDataIO[1])) * 0.001;
-            CANA_tzAIData_IORegs[CANA_mLPC130_IO].AI1_Data =
-                    ((msgDataIO[2] << 8) | (msgDataIO[3])) * 0.001;
-            CANA_tzAIData_IORegs[CANA_mLPC130_IO].AI2_Data =
-                    ((msgDataIO[4] << 8) | (msgDataIO[5])) * 0.001;
-            CANA_tzAIData_IORegs[CANA_mLPC130_IO].AI3_Data =
-                    ((msgDataIO[6] << 8) | (msgDataIO[7])) * 0.001;
+            CANA_tzAIData_IORegs[CANA_mLPC30_IO].AI0_Data = ((msgDataIO[0] << 8)
+                    | (msgDataIO[1])) * 0.001;
+            CANA_tzAIData_IORegs[CANA_mLPC30_IO].AI1_Data = ((msgDataIO[2] << 8)
+                    | (msgDataIO[3])) * 0.001;
+            CANA_tzAIData_IORegs[CANA_mLPC30_IO].AI2_Data = ((msgDataIO[4] << 8)
+                    | (msgDataIO[5])) * 0.001;
+            CANA_tzAIData_IORegs[CANA_mLPC30_IO].AI3_Data = ((msgDataIO[6] << 8)
+                    | (msgDataIO[7])) * 0.001;
             break;
 
-        case LPC_131:
+        case LPC_31:
 
-            CANA_tzAIData_IORegs[CANA_mLPC131_IO].AI0_Data =
-                    ((msgDataIO[0] << 8) | (msgDataIO[1])) * 0.001;
-            CANA_tzAIData_IORegs[CANA_mLPC131_IO].AI1_Data =
-                    ((msgDataIO[2] << 8) | (msgDataIO[3])) * 0.001;
-            CANA_tzAIData_IORegs[CANA_mLPC131_IO].AI2_Data =
-                    ((msgDataIO[4] << 8) | (msgDataIO[5])) * 0.001;
-            CANA_tzAIData_IORegs[CANA_mLPC131_IO].AI3_Data =
-                    ((msgDataIO[6] << 8) | (msgDataIO[7])) * 0.001;
+            CANA_tzAIData_IORegs[CANA_mLPC31_IO].AI0_Data = ((msgDataIO[0] << 8)
+                    | (msgDataIO[1])) * 0.001;
+            CANA_tzAIData_IORegs[CANA_mLPC31_IO].AI1_Data = ((msgDataIO[2] << 8)
+                    | (msgDataIO[3])) * 0.001;
+            CANA_tzAIData_IORegs[CANA_mLPC31_IO].AI2_Data = ((msgDataIO[4] << 8)
+                    | (msgDataIO[5])) * 0.001;
+            CANA_tzAIData_IORegs[CANA_mLPC31_IO].AI3_Data = ((msgDataIO[6] << 8)
+                    | (msgDataIO[7])) * 0.001;
 
             CANA_tzAISensorData.OXS_101 =
-                    CANA_tzAIData_IORegs[CANA_mLPC131_IO].AI3_Data;
+                    CANA_tzAIData_IORegs[CANA_mLPC31_IO].AI3_Data;
 
             break;
         default:
@@ -375,37 +397,37 @@ static void cana_fnmsgPrcsLPCIO(uint16_t uiMsgtype, uint16_t *msgDataIO,
         switch (uiNodeType)
         {
 
-        case LPC_130:
+        case LPC_30:
 
-            CANA_tzAIData_IORegs[CANA_mLPC130_IO].AI4_Data =
-                    ((msgDataIO[0] << 8) | (msgDataIO[1])) * 0.001;
-            CANA_tzAIData_IORegs[CANA_mLPC130_IO].AI5_Data =
-                    ((msgDataIO[2] << 8) | (msgDataIO[3])) * 0.001;
-            CANA_tzAIData_IORegs[CANA_mLPC130_IO].AI6_Data =
-                    ((msgDataIO[4] << 8) | (msgDataIO[5])) * 0.001;
-            CANA_tzAIData_IORegs[CANA_mLPC130_IO].AI7_Data =
-                    ((msgDataIO[6] << 8) | (msgDataIO[7])) * 0.001;
+            CANA_tzAIData_IORegs[CANA_mLPC30_IO].AI4_Data = ((msgDataIO[0] << 8)
+                    | (msgDataIO[1])) * 0.001;
+            CANA_tzAIData_IORegs[CANA_mLPC30_IO].AI5_Data = ((msgDataIO[2] << 8)
+                    | (msgDataIO[3])) * 0.001;
+            CANA_tzAIData_IORegs[CANA_mLPC30_IO].AI6_Data = ((msgDataIO[4] << 8)
+                    | (msgDataIO[5])) * 0.001;
+            CANA_tzAIData_IORegs[CANA_mLPC30_IO].AI7_Data = ((msgDataIO[6] << 8)
+                    | (msgDataIO[7])) * 0.001;
             break;
 
-        case LPC_131:
+        case LPC_31:
 
-            CANA_tzAIData_IORegs[CANA_mLPC131_IO].AI4_Data =
-                    ((msgDataIO[0] << 8) | (msgDataIO[1])) * 0.001;
-            CANA_tzAIData_IORegs[CANA_mLPC131_IO].AI5_Data =
-                    ((msgDataIO[2] << 8) | (msgDataIO[3])) * 0.001;
-            CANA_tzAIData_IORegs[CANA_mLPC131_IO].AI6_Data =
-                    ((msgDataIO[4] << 8) | (msgDataIO[5])) * 0.001;
-            CANA_tzAIData_IORegs[CANA_mLPC131_IO].AI7_Data =
-                    ((msgDataIO[6] << 8) | (msgDataIO[7])) * 0.001;
+            CANA_tzAIData_IORegs[CANA_mLPC31_IO].AI4_Data = ((msgDataIO[0] << 8)
+                    | (msgDataIO[1])) * 0.001;
+            CANA_tzAIData_IORegs[CANA_mLPC31_IO].AI5_Data = ((msgDataIO[2] << 8)
+                    | (msgDataIO[3])) * 0.001;
+            CANA_tzAIData_IORegs[CANA_mLPC31_IO].AI6_Data = ((msgDataIO[4] << 8)
+                    | (msgDataIO[5])) * 0.001;
+            CANA_tzAIData_IORegs[CANA_mLPC31_IO].AI7_Data = ((msgDataIO[6] << 8)
+                    | (msgDataIO[7])) * 0.001;
 
             CANA_tzAISensorData.HYS_101 =
-                    CANA_tzAIData_IORegs[CANA_mLPC131_IO].AI4_Data;
+                    CANA_tzAIData_IORegs[CANA_mLPC31_IO].AI4_Data;
             CANA_tzAISensorData.HYS_501 =
-                    CANA_tzAIData_IORegs[CANA_mLPC131_IO].AI5_Data;
+                    CANA_tzAIData_IORegs[CANA_mLPC31_IO].AI5_Data;
             CANA_tzAISensorData.HYS_401 =
-                    CANA_tzAIData_IORegs[CANA_mLPC131_IO].AI6_Data;
+                    CANA_tzAIData_IORegs[CANA_mLPC31_IO].AI6_Data;
             CANA_tzAISensorData.HYS_102 =
-                    CANA_tzAIData_IORegs[CANA_mLPC131_IO].AI7_Data;
+                    CANA_tzAIData_IORegs[CANA_mLPC31_IO].AI7_Data;
 
             break;
         default:
@@ -421,25 +443,25 @@ static void cana_fnmsgPrcsLPCIO(uint16_t uiMsgtype, uint16_t *msgDataIO,
 
         switch (uiNodeType)
         {
-        case LPC_131:
+        case LPC_31:
 
-            CANA_tzAIDataFreq_IORegs[CANA_mLPC131_IO].DI0_FreqData =
+            CANA_tzAIDataFreq_IORegs[CANA_mLPC31_IO].DI0_FreqData =
                     ((msgDataIO[0] << 8) | (msgDataIO[1])) * 0.001;
-            CANA_tzAIDataFreq_IORegs[CANA_mLPC131_IO].DI1_FreqData =
+            CANA_tzAIDataFreq_IORegs[CANA_mLPC31_IO].DI1_FreqData =
                     ((msgDataIO[2] << 8) | (msgDataIO[3])) * 0.001;
-            CANA_tzAIDataFreq_IORegs[CANA_mLPC131_IO].DI2_FreqData =
+            CANA_tzAIDataFreq_IORegs[CANA_mLPC31_IO].DI2_FreqData =
                     ((msgDataIO[4] << 8) | (msgDataIO[5])) * 0.001;
-            CANA_tzAIDataFreq_IORegs[CANA_mLPC131_IO].DI3_FreqData =
+            CANA_tzAIDataFreq_IORegs[CANA_mLPC31_IO].DI3_FreqData =
                     ((msgDataIO[6] << 8) | (msgDataIO[7])) * 0.001;
 
             CANA_tzDISensorData.PURGE101 =
-                    CANA_tzAIDataFreq_IORegs[CANA_mLPC131_IO].DI0_FreqData;
+                    CANA_tzAIDataFreq_IORegs[CANA_mLPC31_IO].DI0_FreqData;
             CANA_tzDISensorData.PURGE102 =
-                    CANA_tzAIDataFreq_IORegs[CANA_mLPC131_IO].DI1_FreqData;
+                    CANA_tzAIDataFreq_IORegs[CANA_mLPC31_IO].DI1_FreqData;
             CANA_tzDISensorData.PURGE501 =
-                    CANA_tzAIDataFreq_IORegs[CANA_mLPC131_IO].DI2_FreqData;
+                    CANA_tzAIDataFreq_IORegs[CANA_mLPC31_IO].DI2_FreqData;
             CANA_tzDISensorData.PURGE502 =
-                    CANA_tzAIDataFreq_IORegs[CANA_mLPC131_IO].DI3_FreqData;
+                    CANA_tzAIDataFreq_IORegs[CANA_mLPC31_IO].DI3_FreqData;
 
             break;
         default:
@@ -451,21 +473,21 @@ static void cana_fnmsgPrcsLPCIO(uint16_t uiMsgtype, uint16_t *msgDataIO,
 
         switch (uiNodeType)
         {
-        case LPC_131:
+        case LPC_31:
 
-            CANA_tzAIDataFreq_IORegs[CANA_mLPC131_IO].DI4_FreqData =
+            CANA_tzAIDataFreq_IORegs[CANA_mLPC31_IO].DI4_FreqData =
                     ((msgDataIO[0] << 8) | (msgDataIO[1])) * 0.001;
-            CANA_tzAIDataFreq_IORegs[CANA_mLPC131_IO].DI5_FreqData =
+            CANA_tzAIDataFreq_IORegs[CANA_mLPC31_IO].DI5_FreqData =
                     ((msgDataIO[2] << 8) | (msgDataIO[3])) * 0.001;
-            CANA_tzAIDataFreq_IORegs[CANA_mLPC131_IO].DI6_FreqData =
+            CANA_tzAIDataFreq_IORegs[CANA_mLPC31_IO].DI6_FreqData =
                     ((msgDataIO[4] << 8) | (msgDataIO[5])) * 0.001;
-            CANA_tzAIDataFreq_IORegs[CANA_mLPC131_IO].DI7_FreqData =
+            CANA_tzAIDataFreq_IORegs[CANA_mLPC31_IO].DI7_FreqData =
                     ((msgDataIO[6] << 8) | (msgDataIO[7])) * 0.001;
 
             CANA_tzDISensorData.PURGE401 =
-                    CANA_tzAIDataFreq_IORegs[CANA_mLPC131_IO].DI4_FreqData;
+                    CANA_tzAIDataFreq_IORegs[CANA_mLPC31_IO].DI4_FreqData;
             CANA_tzDISensorData.PURGE402 =
-                    CANA_tzAIDataFreq_IORegs[CANA_mLPC131_IO].DI5_FreqData;
+                    CANA_tzAIDataFreq_IORegs[CANA_mLPC31_IO].DI5_FreqData;
 
             break;
         default:
@@ -475,18 +497,18 @@ static void cana_fnmsgPrcsLPCIO(uint16_t uiMsgtype, uint16_t *msgDataIO,
 
     }
 
-    CANA_tzIOtimers.LPC130ComFailCnt++;
-    if (CANA_tzIOtimers.LPC130ComFailCnt >= 90000)
+    CANA_tzIOtimers.LPC30ComFailCnt++;
+    if (CANA_tzIOtimers.LPC30ComFailCnt >= 90000)
     {
-        CANA_tzIOtimers.LPC130ComFailCnt = 90001;
-        CANA_tzIOflags.LPC130Comfail = 0;
+        CANA_tzIOtimers.LPC30ComFailCnt = 90001;
+        CANA_tzIOflags.LPC30Comfail = 0;
     }
 
-    CANA_tzIOtimers.LPC131ComFailCnt++;
-    if (CANA_tzIOtimers.LPC131ComFailCnt >= 90000)
+    CANA_tzIOtimers.LPC31ComFailCnt++;
+    if (CANA_tzIOtimers.LPC31ComFailCnt >= 90000)
     {
-        CANA_tzIOtimers.LPC131ComFailCnt = 90001;
-        CANA_tzIOflags.LPC131Comfail = 0;
+        CANA_tzIOtimers.LPC31ComFailCnt = 90001;
+        CANA_tzIOflags.LPC31Comfail = 0;
     }
 }
 
@@ -508,33 +530,33 @@ static void cana_fnmsgPrcsLHCIO(uint16_t uiMsgtype, uint16_t *msgDataIO,
         switch (uiNodeType)
         {
 
-        case LHC_110:
+        case LHC_10:
 
-            if (CANA_tzIOtimers.RxCntLHC110 != msgDataIO[0])
+            if (CANA_tzIOtimers.RxCntLHC10 != msgDataIO[0])
             {
-                CANA_tzIOtimers.RxCntLHC110 = msgDataIO[0];
+                CANA_tzIOtimers.RxCntLHC10 = msgDataIO[0];
 
                 if (msgDataIO[1] == msgDataIO[2])
                 {
-                    CANA_tzLHCDI_IORegs[CANA_mLHC110_IO].all = msgDataIO[1];
-                    CANA_tzIORegs.CJC[CANA_mLHC110_IO] = ((msgDataIO[3] << 8)
+                    CANA_tzLHCDI_IORegs[CANA_mLHC10_IO].all = msgDataIO[1];
+                    CANA_tzIORegs.CJC[CANA_mLHC10_IO] = ((msgDataIO[3] << 8)
                             | (msgDataIO[4])) * 0.001;
-                    CANA_tzLHCAIFlt_IORegs[CANA_mLHC110_IO].all = msgDataIO[5];
+                    CANA_tzLHCAIFlt_IORegs[CANA_mLHC10_IO].all = msgDataIO[5];
 
                 }
             }
             break;
 
-        case LHC_111:
+        case LHC_11:
 
-            if (CANA_tzIOtimers.RxCntLHC111 != msgDataIO[0])
+            if (CANA_tzIOtimers.RxCntLHC11 != msgDataIO[0])
             {
-                CANA_tzIOtimers.RxCntLHC111 = msgDataIO[0];
+                CANA_tzIOtimers.RxCntLHC11 = msgDataIO[0];
 
                 if (msgDataIO[1] == msgDataIO[2])
                 {
-                    CANA_tzLHCDI_IORegs[CANA_mLHC111_IO].all = msgDataIO[1];
-                    CANA_tzLHCAIFlt_IORegs[CANA_mLHC111_IO].all = msgDataIO[7];
+                    CANA_tzLHCDI_IORegs[CANA_mLHC11_IO].all = msgDataIO[1];
+                    CANA_tzLHCAIFlt_IORegs[CANA_mLHC11_IO].all = msgDataIO[7];
                 }
             }
             break;
@@ -546,31 +568,31 @@ static void cana_fnmsgPrcsLHCIO(uint16_t uiMsgtype, uint16_t *msgDataIO,
         switch (uiNodeType)
         {
 
-        case LHC_110:
+        case LHC_10:
 
-            CANA_tzAIData_IORegs[CANA_mLHC110_IO].AI0_Data =
-                    ((msgDataIO[0] << 8) | (msgDataIO[1])) * 0.001;
-            CANA_tzAIData_IORegs[CANA_mLHC110_IO].AI1_Data =
-                    ((msgDataIO[2] << 8) | (msgDataIO[3])) * 0.001;
-            CANA_tzAIData_IORegs[CANA_mLHC110_IO].AI2_Data =
-                    ((msgDataIO[4] << 8) | (msgDataIO[5])) * 0.001;
-            CANA_tzAIData_IORegs[CANA_mLHC110_IO].AI3_Data =
-                    ((msgDataIO[6] << 8) | (msgDataIO[7])) * 0.001;
+            CANA_tzAIData_IORegs[CANA_mLHC10_IO].AI0_Data = ((msgDataIO[0] << 8)
+                    | (msgDataIO[1])) * 0.001;
+            CANA_tzAIData_IORegs[CANA_mLHC10_IO].AI1_Data = ((msgDataIO[2] << 8)
+                    | (msgDataIO[3])) * 0.001;
+            CANA_tzAIData_IORegs[CANA_mLHC10_IO].AI2_Data = ((msgDataIO[4] << 8)
+                    | (msgDataIO[5])) * 0.001;
+            CANA_tzAIData_IORegs[CANA_mLHC10_IO].AI3_Data = ((msgDataIO[6] << 8)
+                    | (msgDataIO[7])) * 0.001;
             break;
 
-        case LHC_111:
+        case LHC_11:
 
-            CANA_tzAIData_IORegs[CANA_mLHC111_IO].AI0_Data =
-                    ((msgDataIO[0] << 8) | (msgDataIO[1])) * 0.001;
-            CANA_tzAIData_IORegs[CANA_mLHC111_IO].AI1_Data =
-                    ((msgDataIO[2] << 8) | (msgDataIO[3])) * 0.001;
-            CANA_tzAIData_IORegs[CANA_mLHC111_IO].AI2_Data =
-                    ((msgDataIO[4] << 8) | (msgDataIO[5])) * 0.001;
-            CANA_tzAIData_IORegs[CANA_mLHC111_IO].AI3_Data =
-                    ((msgDataIO[6] << 8) | (msgDataIO[7])) * 0.001;
+            CANA_tzAIData_IORegs[CANA_mLHC11_IO].AI0_Data = ((msgDataIO[0] << 8)
+                    | (msgDataIO[1])) * 0.001;
+            CANA_tzAIData_IORegs[CANA_mLHC11_IO].AI1_Data = ((msgDataIO[2] << 8)
+                    | (msgDataIO[3])) * 0.001;
+            CANA_tzAIData_IORegs[CANA_mLHC11_IO].AI2_Data = ((msgDataIO[4] << 8)
+                    | (msgDataIO[5])) * 0.001;
+            CANA_tzAIData_IORegs[CANA_mLHC11_IO].AI3_Data = ((msgDataIO[6] << 8)
+                    | (msgDataIO[7])) * 0.001;
 
             CANA_tzAISensorData.PRT_402 =
-                    CANA_tzAIData_IORegs[CANA_mLHC111_IO].AI3_Data;
+                    CANA_tzAIData_IORegs[CANA_mLHC11_IO].AI3_Data;
 
             break;
         default:
@@ -583,45 +605,45 @@ static void cana_fnmsgPrcsLHCIO(uint16_t uiMsgtype, uint16_t *msgDataIO,
         switch (uiNodeType)
         {
 
-        case LHC_110:
+        case LHC_10:
 
-            CANA_tzAIData_IORegs[CANA_mLHC110_IO].AI4_Data =
-                    ((msgDataIO[0] << 8) | (msgDataIO[1])) * 0.001;
-            CANA_tzAIData_IORegs[CANA_mLHC110_IO].AI5_Data =
-                    ((msgDataIO[2] << 8) | (msgDataIO[3])) * 0.001;
-            CANA_tzAIData_IORegs[CANA_mLHC110_IO].AI6_Data =
-                    ((msgDataIO[4] << 8) | (msgDataIO[5])) * 0.001;
-            CANA_tzAIData_IORegs[CANA_mLHC110_IO].AI7_Data =
-                    ((msgDataIO[6] << 8) | (msgDataIO[7])) * 0.001;
+            CANA_tzAIData_IORegs[CANA_mLHC10_IO].AI4_Data = ((msgDataIO[0] << 8)
+                    | (msgDataIO[1])) * 0.001;
+            CANA_tzAIData_IORegs[CANA_mLHC10_IO].AI5_Data = ((msgDataIO[2] << 8)
+                    | (msgDataIO[3])) * 0.001;
+            CANA_tzAIData_IORegs[CANA_mLHC10_IO].AI6_Data = ((msgDataIO[4] << 8)
+                    | (msgDataIO[5])) * 0.001;
+            CANA_tzAIData_IORegs[CANA_mLHC10_IO].AI7_Data = ((msgDataIO[6] << 8)
+                    | (msgDataIO[7])) * 0.001;
 
             CANA_tzAISensorData.LVL_101 =
-                    CANA_tzAIData_IORegs[CANA_mLHC110_IO].AI4_Data;
+                    CANA_tzAIData_IORegs[CANA_mLHC10_IO].AI4_Data;
             CANA_tzAISensorData.PRT_101 =
-                    CANA_tzAIData_IORegs[CANA_mLHC110_IO].AI5_Data;
+                    CANA_tzAIData_IORegs[CANA_mLHC10_IO].AI5_Data;
             CANA_tzAISensorData.PRT_102 =
-                    CANA_tzAIData_IORegs[CANA_mLHC110_IO].AI6_Data;
+                    CANA_tzAIData_IORegs[CANA_mLHC10_IO].AI6_Data;
             CANA_tzAISensorData.COS_101 =
-                    CANA_tzAIData_IORegs[CANA_mLHC110_IO].AI7_Data;
+                    CANA_tzAIData_IORegs[CANA_mLHC10_IO].AI7_Data;
 
             break;
 
-        case LHC_111:
+        case LHC_11:
 
-            CANA_tzAIData_IORegs[CANA_mLHC111_IO].AI4_Data =
-                    ((msgDataIO[0] << 8) | (msgDataIO[1])) * 0.001;
-            CANA_tzAIData_IORegs[CANA_mLHC111_IO].AI5_Data =
-                    ((msgDataIO[2] << 8) | (msgDataIO[3])) * 0.001;
-            CANA_tzAIData_IORegs[CANA_mLHC111_IO].AI6_Data =
-                    ((msgDataIO[4] << 8) | (msgDataIO[5])) * 0.001;
-            CANA_tzAIData_IORegs[CANA_mLHC111_IO].AI7_Data =
-                    ((msgDataIO[6] << 8) | (msgDataIO[7])) * 0.001;
+            CANA_tzAIData_IORegs[CANA_mLHC11_IO].AI4_Data = ((msgDataIO[0] << 8)
+                    | (msgDataIO[1])) * 0.001;
+            CANA_tzAIData_IORegs[CANA_mLHC11_IO].AI5_Data = ((msgDataIO[2] << 8)
+                    | (msgDataIO[3])) * 0.001;
+            CANA_tzAIData_IORegs[CANA_mLHC11_IO].AI6_Data = ((msgDataIO[4] << 8)
+                    | (msgDataIO[5])) * 0.001;
+            CANA_tzAIData_IORegs[CANA_mLHC11_IO].AI7_Data = ((msgDataIO[6] << 8)
+                    | (msgDataIO[7])) * 0.001;
 
             CANA_tzAISensorData.PRT_401 =
-                    CANA_tzAIData_IORegs[CANA_mLHC111_IO].AI5_Data;
+                    CANA_tzAIData_IORegs[CANA_mLHC11_IO].AI5_Data;
             CANA_tzAISensorData.TE_401 =
-                    CANA_tzAIData_IORegs[CANA_mLHC111_IO].AI6_Data;
+                    CANA_tzAIData_IORegs[CANA_mLHC11_IO].AI6_Data;
             CANA_tzAISensorData.DPT_401 =
-                    CANA_tzAIData_IORegs[CANA_mLHC111_IO].AI7_Data;
+                    CANA_tzAIData_IORegs[CANA_mLHC11_IO].AI7_Data;
 
             break;
         default:
@@ -633,25 +655,25 @@ static void cana_fnmsgPrcsLHCIO(uint16_t uiMsgtype, uint16_t *msgDataIO,
 
         switch (uiNodeType)
         {
-        case LHC_110:
+        case LHC_10:
 
-            CANA_tzThermal_IORegs[CANA_mLHC110_IO].T0_Data =
-                    ((msgDataIO[0] << 8) | (msgDataIO[1])) * 0.001;
-            CANA_tzThermal_IORegs[CANA_mLHC110_IO].T1_Data =
-                    ((msgDataIO[2] << 8) | (msgDataIO[3])) * 0.001;
-            CANA_tzThermal_IORegs[CANA_mLHC110_IO].T2_Data =
-                    ((msgDataIO[4] << 8) | (msgDataIO[5])) * 0.001;
-            CANA_tzThermal_IORegs[CANA_mLHC110_IO].T3_Data =
-                    ((msgDataIO[6] << 8) | (msgDataIO[7])) * 0.001;
+            CANA_tzThermal_IORegs[CANA_mLHC10_IO].T0_Data = ((msgDataIO[0] << 8)
+                    | (msgDataIO[1])) * 0.001;
+            CANA_tzThermal_IORegs[CANA_mLHC10_IO].T1_Data = ((msgDataIO[2] << 8)
+                    | (msgDataIO[3])) * 0.001;
+            CANA_tzThermal_IORegs[CANA_mLHC10_IO].T2_Data = ((msgDataIO[4] << 8)
+                    | (msgDataIO[5])) * 0.001;
+            CANA_tzThermal_IORegs[CANA_mLHC10_IO].T3_Data = ((msgDataIO[6] << 8)
+                    | (msgDataIO[7])) * 0.001;
 
             CANA_tzThermoCoupleData.KTC_401 =
-                    CANA_tzThermal_IORegs[CANA_mLHC110_IO].T0_Data;
+                    CANA_tzThermal_IORegs[CANA_mLHC10_IO].T0_Data;
             CANA_tzThermoCoupleData.TTC_101 =
-                    CANA_tzThermal_IORegs[CANA_mLHC110_IO].T1_Data;
+                    CANA_tzThermal_IORegs[CANA_mLHC10_IO].T1_Data;
             CANA_tzThermoCoupleData.TTC_301 =
-                    CANA_tzThermal_IORegs[CANA_mLHC110_IO].T2_Data;
+                    CANA_tzThermal_IORegs[CANA_mLHC10_IO].T2_Data;
             CANA_tzThermoCoupleData.TTC_102 =
-                    CANA_tzThermal_IORegs[CANA_mLHC110_IO].T3_Data;
+                    CANA_tzThermal_IORegs[CANA_mLHC10_IO].T3_Data;
 
             break;
         default:
@@ -738,6 +760,9 @@ void CANA_fnTx()
         break;
 
     case READY:
+
+        control_waterloop();
+
         break;
 
     case STACK_CHECK:
@@ -763,55 +788,54 @@ void CANA_fnTx()
 
 }
 
-void CANA_fnCmdsForDigIOs(uint16_t ui16cabinetID, uint16_t ui16nodeID,
-                          uint16_t digitalIOStatus)
+void CANA_fnCmdsForDigOPs(uint16_t ui16unitID, uint16_t ui16cab_ID,
+                          uint16_t ui16nodeID, CANA_tzDIG_OP *ptrDigOP)
 {
     CAN_setupMessageObject(
-            CANA_BASE, CAN_mMAILBOX_11,
-            (ui16cabinetID << 4) | (ui16nodeID) | CANA_mTX_IOMSGID1,
-            CAN_MSG_FRAME_EXT, CAN_MSG_OBJ_TYPE_TX, 0x1FFFFFFF,
+            CANA_BASE,
+            CAN_mMAILBOX_8,
+            (ui16unitID << 8) | (ui16cab_ID << 4) | (ui16nodeID)
+                    | CANA_mTX_IOMSGID1,
+            CAN_MSG_FRAME_EXT, CAN_MSG_OBJ_TYPE_TX, 0,
             CAN_MSG_OBJ_NO_FLAGS,
-            CANA_mTHREE_BYTE);
+            CAN_mLEN8);
 
     CANA_tzIOtimers.TxCntIOCom++;
 
-    if (ui16cabinetID == 3)
+    if (ui16cab_ID == 3)
     {
         ui16CabID = 0; // filling LPC Cabinet array
     }
-    else if (ui16cabinetID == 1)
+    else if (ui16cab_ID == 1)
     {
         ui16CabID = 1; // filling LHC Cabinet array
     }
 
-    CANA_tzSetDO_IORegs[ui16CabID][ui16nodeID].all =
-            (CANA_tzSetDO_IORegs[ui16CabID][ui16nodeID].all) | digitalIOStatus;
-
     ui16txMsgDataIO[0] = CANA_tzIOtimers.TxCntIOCom;
-    ui16txMsgDataIO[1] = CANA_tzSetDO_IORegs[ui16CabID][ui16nodeID].all;
-    ui16txMsgDataIO[2] = CANA_tzSetDO_IORegs[ui16CabID][ui16nodeID].all;
+    ui16txMsgDataIO[1] = ptrDigOP->all;
+    ui16txMsgDataIO[2] = ptrDigOP->all;
 
     if (CANA_tzIOtimers.TxCntIOCom == 255)
     {
         CANA_tzIOtimers.TxCntIOCom = 0;
     }
 
-    CAN_sendMessage(CANA_BASE, CAN_mMAILBOX_11, CANA_mTHREE_BYTE,
-                    ui16txMsgDataIO);
+    CAN_sendMessage(CANA_BASE, CAN_mMAILBOX_8, CAN_mLEN8, ui16txMsgDataIO);
 
 }
 
-void CANA_fnCmdsForAnaOPVs(uint16_t ui16cab_ID, uint16_t ui16nodeID,
-                           can_tzAnaOPParams *ptrAOV)
+void CANA_fnCmdsForAnaOPVs(uint16_t ui16unitID, uint16_t ui16cab_ID,
+                           uint16_t ui16nodeID, can_tzAnaOPParams *ptrAOV)
 {
 
     CAN_setupMessageObject(
-    CANA_BASE,
-                           CAN_mMAILBOX_8,
-                           CANA_mTX_IOMSGID3 | ui16cab_ID << 4 | ui16nodeID,
-                           CAN_MSG_FRAME_EXT, CAN_MSG_OBJ_TYPE_TX, 0,
-                           CAN_MSG_OBJ_NO_FLAGS,
-                           CAN_mLEN8);
+            CANA_BASE,
+            CAN_mMAILBOX_8,
+            (ui16unitID << 8) | (ui16cab_ID << 4) | (ui16nodeID)
+                    | CANA_mTX_IOMSGID3,
+            CAN_MSG_FRAME_EXT, CAN_MSG_OBJ_TYPE_TX, 0,
+            CAN_MSG_OBJ_NO_FLAGS,
+            CAN_mLEN8);
 
     if (ui16cab_ID == 3)
     {
@@ -834,17 +858,18 @@ void CANA_fnCmdsForAnaOPVs(uint16_t ui16cab_ID, uint16_t ui16nodeID,
     CAN_sendMessage(CANA_BASE, CAN_mMAILBOX_8, CAN_mLEN8, ui16txMsgDataIO);
 }
 
-void CANA_fnCmdsForAnaOPIs(uint16_t ui16cab_ID, uint16_t ui16nodeID,
-                           can_tzAnaOPParams *ptrAOI)
+void CANA_fnCmdsForAnaOPIs(uint16_t ui16unitID, uint16_t ui16cab_ID,
+                           uint16_t ui16nodeID, can_tzAnaOPParams *ptrAOI)
 {
 
     CAN_setupMessageObject(
-    CANA_BASE,
-                           CAN_mMAILBOX_8,
-                           CANA_mTX_IOMSGID2 | ui16cab_ID << 4 | ui16nodeID,
-                           CAN_MSG_FRAME_EXT, CAN_MSG_OBJ_TYPE_TX, 0,
-                           CAN_MSG_OBJ_NO_FLAGS,
-                           CAN_mLEN8);
+            CANA_BASE,
+            CAN_mMAILBOX_8,
+            (ui16unitID << 8) | (ui16cab_ID << 4) | (ui16nodeID)
+                    | CANA_mTX_IOMSGID2,
+            CAN_MSG_FRAME_EXT, CAN_MSG_OBJ_TYPE_TX, 0,
+            CAN_MSG_OBJ_NO_FLAGS,
+            CAN_mLEN8);
 
     if (ui16cab_ID == 3)
     {
@@ -875,7 +900,7 @@ static void canaTX_fnMS()
 
     CAN_setupMessageObject(
     CANA_BASE,
-                           CAN_mMAILBOX_8,
+                           CAN_mMAILBOX_11,
                            CANA_mTX_MSMSGID1,
                            CAN_MSG_FRAME_EXT, CAN_MSG_OBJ_TYPE_TX, 0,
                            CAN_MSG_OBJ_NO_FLAGS,
@@ -894,7 +919,7 @@ static void canaTX_fnMS()
     uiCANtxMsgDataMS[6] = 0;
     uiCANtxMsgDataMS[7] = 0;
 
-    CAN_sendMessage(CANA_BASE, CAN_mMAILBOX_8, CAN_mLEN8, uiCANtxMsgDataMS);
+    CAN_sendMessage(CANA_BASE, CAN_mMAILBOX_11, CAN_mLEN8, uiCANtxMsgDataMS);
 }
 /*==============================================================================
  End of File

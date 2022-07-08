@@ -77,7 +77,7 @@ void control_waterloop(void)
 
     CANA_tzIOtimers.TxCntWaterloop++;
 
-    if(CANA_tzIOtimers.TxCntWaterloop > 3)
+    if (CANA_tzIOtimers.TxCntWaterloop > 3)
     {
         CANA_tzIOtimers.TxCntWaterloop = 1;
     }
@@ -87,14 +87,16 @@ void control_waterloop(void)
     {
         if (MATHConvtzRegs.AISensorLVL101 >= 85.0) // greater than 85 % turn OFF
         {
-            CANA_fnCmdsForDigIOs(CANA_mLHC_CABID, CANA_mLHC110_IO,
-                                 (CANA_mDIG0_CLEAR)); // Turn OFF WSV101
+            CANA_tzDO[CANA_mLHC_CABID][CANA_mLHC10_IO].bit.DO0 = 0x0;
+
+            CANA_fnCmdsForDigOPs(CANA_tzIORegs.uiUnitID, 1, 0,
+                                 &CANA_tzDO[CANA_mLHC_CABID][CANA_mLHC10_IO]); //Turn OFF WSV101
         }
         else if (MATHConvtzRegs.AISensorLVL101 <= 70.0) // lesser than 70 % turn ON
         {
-
-            CANA_fnCmdsForDigIOs(CANA_mLHC_CABID, CANA_mLHC110_IO,
-                                 (CANA_mDIG0_SET)); // Turn ON WSV101
+            CANA_tzDO[CANA_mLHC_CABID][CANA_mLHC10_IO].bit.DO0 = 0x1;
+            CANA_fnCmdsForDigOPs(CANA_tzIORegs.uiUnitID, 1, 0,
+                                 &CANA_tzDO[CANA_mLHC_CABID][CANA_mLHC10_IO]); //Turn OFF WSV101
         }
     }
     else if (CANA_tzIOtimers.TxCntWaterloop == 2)
@@ -103,13 +105,13 @@ void control_waterloop(void)
         {
             CANA_tzAnaOPParams.CANA_tzAOV[0][0].AOV1 = 35000;
 
-            CANA_fnCmdsForAnaOPVs(3, 0, &CANA_tzAnaOPParams);
+            //CANA_fnCmdsForAnaOPVs(CANA_tzIORegs.uiUnitID, 3 , 0, &CANA_tzAnaOPParams);
         }
         else if (MATHConvtzRegs.AISensorLVL101 <= 58.0)
         {
             CANA_tzAnaOPParams.CANA_tzAOV[0][0].AOV1 = 0;
 
-            CANA_fnCmdsForAnaOPVs(3, 0, &CANA_tzAnaOPParams);
+            //CANA_fnCmdsForAnaOPVs(CANA_tzIORegs.uiUnitID, 3, 0, &CANA_tzAnaOPParams);
         }
     }
 //    else if (CANA_tzIOtimers.TxCntWaterloop == 3)
@@ -128,8 +130,6 @@ void control_waterloop(void)
 //        }
 //
 //    }
-
-
 
 }
 

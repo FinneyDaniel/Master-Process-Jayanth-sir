@@ -108,7 +108,7 @@
 						</toolChain>
 					</folderInfo>
 					<sourceEntries>
-						<entry excluding="module/application/control_loop/src/control_H2Dryer2.c|module/application/control_loop/src/control_glycolloop.c|hal/ti/src/F2837xS_CodeStartBranch.asm|hal/ti/src/F2837xS_SWPrioritizedPieVect.c" flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="sourcePath" name=""/>
+						<entry excluding="module/application/control_loop/src/control_glycolloop.c|hal/ti/src/F2837xS_CodeStartBranch.asm|hal/ti/src/F2837xS_SWPrioritizedPieVect.c" flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="sourcePath" name=""/>
 					</sourceEntries>
 				</configuration>
 			</storageModule>

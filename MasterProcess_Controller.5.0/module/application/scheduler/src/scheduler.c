@@ -34,6 +34,8 @@
 #include "hal/driverlib/debug.h"
 #include "hal/driverlib/interrupt.h"
 #include "cana_defs.h"
+#include "canb_defs.h"
+
 #include "i2c.h"
 #include "eep.h"
 #include "safety_lib.h"
@@ -41,7 +43,7 @@
 #include "app_constants.h"
 #include "mathcalc.h"
 #include "cana_PSUCom.h"
-
+#include "control_defs.h"
 /*==============================================================================
  Defines
  ==============================================================================*/
@@ -135,6 +137,7 @@ void scheduler_task(void)
 void SCH_fnslot_0(void)
 {
     xx++;
+    H2_fnSVcontrol();
     safety_fnlog_monitoring_chk();
 
     safety_fnLog_monitoring_slot_exe(0);
@@ -148,6 +151,7 @@ void SCH_fnslot_1(void)
 
 void SCH_fnslot_2(void)
 {
+    faultCheck();
     MATH_fnCalc();
 
     //safety_fnLog_monitoring_slot_exe(2);
@@ -159,7 +163,7 @@ void SCH_fnslot_3(void)
 //    if(CANA_tzTimerRegs.tzPSU.TxCntPSUCmds > 6)
 //    {
 
-    CANA_fnPSUTX_Event();
+   // CANA_fnPSUTX_Event();
 //    CANA_tzTimerRegs.tzPSU.TxCntPSUCmds = 0;
 //    }
     //safety_fnLog_monitoring_slot_exe(3);
@@ -170,7 +174,7 @@ void SCH_fnslot_4(void)
 //    CANA_tzTimerRegs.tzPSU.RxCntPSUCmds++;
 //    if(CANA_tzTimerRegs.tzPSU.RxCntPSUCmds > 6)
 //    {
-    CANA_fnPSURX_Event();
+    //CANA_fnPSURX_Event();
 //    CANA_tzTimerRegs.tzPSU.RxCntPSUCmds = 0;
 //    }
     //safety_fnLog_monitoring_slot_exe(4);
@@ -179,6 +183,8 @@ void SCH_fnslot_4(void)
 void SCH_fnslot_5(void)
 {
     CONTROL_fnPSU_IRef();
+
+    CANB_fnSite_Event();
 }
 
 

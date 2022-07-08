@@ -73,9 +73,9 @@
 
 #define CANA_mTX_MSMSGID1                                                 (0x10043100)
 
-#define CANA_mTX_IOMSGID1                                                 (0x10142100)
-#define CANA_mTX_IOMSGID2                                                 (0x10243100)
-#define CANA_mTX_IOMSGID3                                                 (0x10343100)
+#define CANA_mTX_IOMSGID1                                                 (0x10142000)
+#define CANA_mTX_IOMSGID2                                                 (0x10243000)
+#define CANA_mTX_IOMSGID3                                                 (0x10343000)
 
 
 #define CAN_mMAILBOX_1                                                  (1U)
@@ -122,10 +122,10 @@
 
 // General msg IDs used for msg id creation
 
-#define CANA_mLPC130_IO                                                  (0U)
-#define CANA_mLPC131_IO                                                  (1U)
-#define CANA_mLHC110_IO                                                  (0U)
-#define CANA_mLHC111_IO                                                  (1U)
+#define CANA_mLPC30_IO                                                  (0U)
+#define CANA_mLPC31_IO                                                  (1U)
+#define CANA_mLHC10_IO                                                  (0U)
+#define CANA_mLHC11_IO                                                  (1U)
 
 #define CANA_mLPC_CABID                                                   (3U)
 #define CANA_mLHC_CABID                                                   (1U)
@@ -139,19 +139,19 @@
 #define    IO_DI1_FREQ_MSGID                    (4U)
 #define    IO_DI2_FREQ_MSGID                    (5U)
 
-#define LPC_130                                 (0U)
-#define LPC_131                                 (1U)
-#define LHC_110                                 (0U)
-#define LHC_111                                 (1U)
+#define LPC_30                                 (0U)
+#define LPC_31                                 (1U)
+#define LHC_10                                 (0U)
+#define LHC_11                                 (1U)
 
-#define CANA_mDIG0_SET  (1U)
-#define CANA_mDIG1_SET  (2U)
-#define CANA_mDIG2_SET  (3U)
-#define CANA_mDIG3_SET  (4U)
-#define CANA_mDIG4_SET  (5U)
-#define CANA_mDIG5_SET  (6U)
-#define CANA_mDIG6_SET  (7U)
-#define CANA_mDIG7_SET  (8U)
+#define CANA_mDIG0_SET  (0x01U)
+#define CANA_mDIG1_SET  (0x02U)
+#define CANA_mDIG2_SET  (0x04U)
+#define CANA_mDIG3_SET  (0x80U)
+#define CANA_mDIG4_SET  (0x10U)
+#define CANA_mDIG5_SET  (0x20U)
+#define CANA_mDIG6_SET  (0x40U)
+#define CANA_mDIG7_SET  (0x80U)
 
 
 #define CANA_mDIG0_CLEAR  (0U)
@@ -226,6 +226,32 @@ typedef struct can_zAnaOPParams
 } can_tzAnaOPParams;
 
 
+ struct IO_tzDIG_OP
+{
+    uint16_t DO0:1;
+    uint16_t DO1:1;
+    uint16_t DO2:1;
+    uint16_t DO3:1;
+    uint16_t DO4:1;
+    uint16_t DO5:1;
+    uint16_t DO6:1;
+    uint16_t DO7:1;
+
+} ;
+
+typedef union
+{
+    uint16_t all;
+   struct IO_tzDIG_OP bit;
+}CANA_tzDIG_OP;
+
+
+//union can_tzDigOPParams
+//{
+//    struct CANA_tzDIG_OP CANA_tzDO[2][2];
+//};
+
+
 
 typedef struct CANA_zAI_IOREGS
 {
@@ -245,6 +271,8 @@ typedef struct CANA_zIOREGS
     uint16_t Node;
 
     uint16_t uiMsgtypeLPCIO;
+    uint16_t uiUnitID;
+
     uint16_t uiMsgtypeLHCIO;
     uint16_t uiNodeLPCIO;
     uint16_t uiNodeLHCIO;
@@ -255,15 +283,15 @@ typedef struct CANA_zIOREGS
 typedef struct CANA_zTIMERIOREGS
 {
 
-    uint32_t RxCntLPC130;
-    uint32_t RxCntLPC131;
-    uint32_t RxCntLHC110;
-    uint32_t RxCntLHC111;
-    uint32_t LPC130ComFailCnt;
-    uint32_t LPC131ComFailCnt;
+    uint32_t RxCntLPC30;
+    uint32_t RxCntLPC31;
+    uint32_t RxCntLHC10;
+    uint32_t RxCntLHC11;
+    uint32_t LPC30ComFailCnt;
+    uint32_t LPC31ComFailCnt;
 
-    uint32_t LHC110ComFailCnt;
-    uint32_t LHC111ComFailCnt;
+    uint32_t LHC10ComFailCnt;
+    uint32_t LHC11ComFailCnt;
     uint16_t TxCntIOCom;
     uint16_t TxCntWaterloop;
 
@@ -287,14 +315,14 @@ typedef struct CANA_zMSREGS
 typedef struct CANA_zIOFLAGS
 {
 
-    uint16_t btLPC130CommnStart;
-    uint16_t LPC130Comfail;
-    uint16_t btLPC131CommnStart;
-    uint16_t LPC131Comfail;
-    uint16_t btLHC110CommnStart;
-    uint16_t LHC110Comfail;
-    uint16_t btLHC111CommnStart;
-    uint16_t LHC111Comfail;
+    uint16_t btLPC30CommnStart;
+    uint16_t LPC30Comfail;
+    uint16_t btLPC31CommnStart;
+    uint16_t LPC31Comfail;
+    uint16_t btLHC10CommnStart;
+    uint16_t LHC10Comfail;
+    uint16_t btLHC11CommnStart;
+    uint16_t LHC11Comfail;
 
 } CANA_tzIOFLAGS;
 
@@ -396,7 +424,7 @@ typedef struct CANA_zDIFREQ_IOREGS
     float32_t DI7_FreqData;
 } CANA_tzDIFREQ_IOREGS;
 
-struct CANA_tzLPCDIFLT_IOBITS
+struct CANA_tzLPCIO1_DIFLT_IOBITS
 {
     uint16_t WLS_101 :1;
     uint16_t WLS_102 :1;
@@ -406,13 +434,26 @@ struct CANA_tzLPCDIFLT_IOBITS
     uint16_t Rsvd4 :1;
 };
 
-union CANA_tzLPCDIFLT_IOREGS
+union CANA_tzLPCIO1_DIFLT_IOREGS
 {
     uint16_t all;
-    struct CANA_tzLPCDIFLT_IOBITS bit;
+    struct CANA_tzLPCIO1_DIFLT_IOBITS bit;
 };
 
-struct CANA_tzLHCDIFLT_IOBITS
+struct CANA_tzLPCIO2_DIFLT_IOBITS
+{
+
+    uint16_t Rsvd1 :1;
+};
+
+union CANA_tzLPCIO2_DIFLT_IOREGS
+{
+    uint16_t all;
+    struct CANA_tzLPCIO2_DIFLT_IOBITS bit;
+};
+
+
+struct CANA_tzLHCIO1_DIFLT_IOBITS
 {
     uint16_t DOS101_103 :1;
     uint16_t LGT101_402 :1;
@@ -424,30 +465,45 @@ struct CANA_tzLHCDIFLT_IOBITS
     uint16_t Rsvd8 :1;
 };
 
-union CANA_tzLHCDIFLT_IOREGS
+union CANA_tzLHCIO1_DIFLT_IOREGS
 {
     uint16_t all;
-    struct CANA_tzLHCDIFLT_IOBITS bit;
+    struct CANA_tzLHCIO1_DIFLT_IOBITS bit;
 };
 
-
-struct CANA_tzDO_IO_BITS
+struct CANA_tzLHCIO2_DIFLT_IOBITS
 {
-    uint16_t DO_bit0 :1;
-    uint16_t DO_bit1 :1;
-    uint16_t DO_bit2 :1;
-    uint16_t DO_bit3 :1;
-    uint16_t DO_bit4 :1;
-    uint16_t DO_bit5 :1;
-    uint16_t DO_bit6 :1;
-    uint16_t DO_bit7 :1;
+    uint16_t Rsvd1 :1;
+    uint16_t Rsvd2 :1;
+    uint16_t Rsvd3 :1;
+    uint16_t Rsvd4 :1;
+    uint16_t Rsvd5 :1;
+    uint16_t Rsvd6 :1;
+    uint16_t Rsvd7 :1;
+    uint16_t Rsvd8 :1;
 };
 
-union CANA_tzDO_IOREGS
+union CANA_tzLHCIO2_DIFLT_IOREGS
 {
-    Uint16 all;
-    struct CANA_tzDO_IO_BITS bit;
+    uint16_t all;
+    struct CANA_tzLHCIO2_DIFLT_IOBITS bit;
 };
+
+
+typedef struct CANA_zDO_IOREGS
+{
+    uint16_t DO_bit0;
+    uint16_t DO_bit1;
+    uint16_t DO_bit2;
+    uint16_t DO_bit3;
+    uint16_t DO_bit4;
+    uint16_t DO_bit5;
+    uint16_t DO_bit6;
+    uint16_t DO_bit7;
+
+}CANA_tzDO_IOREGS;
+
+
 
 
 struct CANA_tzAO_IO_BITS
@@ -456,13 +512,92 @@ struct CANA_tzAO_IO_BITS
 
 };
 
-typedef struct CANA_zAO_IOREGS
+
+struct CANA_tzLPCIO1_AIFLT_IOBITS
 {
-        uint16_t ANA_VOUT1;
-        uint16_t ANA_VOUT2;
-        uint16_t ANA_VOUT3;
-        uint16_t ANA_VOUT4;
-}CANA_tzAO_IOREGS;
+    uint16_t Rsvd1 :1;
+};
+
+union CANA_tzLPCIO1_AIFLT_IOREGS
+{
+    Uint16 all;
+    struct CANA_tzLPCIO1_AIFLT_IOBITS bit;
+};
+
+struct CANA_tzLPCIO2_AIFLT_IOBITS
+{
+    uint16_t HYS_101 :1;
+    uint16_t HYS_501 :1;
+    uint16_t HYS_401 :1;
+    uint16_t HYS_102_ShtDwn :1;
+    uint16_t OXS_101_ShtDwn :1;
+    uint16_t HYS_102_RmpDwn :1;
+    uint16_t OXS_101_RmpDwn :1;
+    uint16_t Rsvd4 :1;
+};
+
+union CANA_tzLPCIO2_AIFLT_IOREGS
+{
+    Uint16 all;
+    struct CANA_tzLPCIO2_AIFLT_IOBITS bit;
+};
+
+struct CANA_tzLHCIO1_AIFLT_IOBITS
+{
+    uint16_t LVL_101 :1;
+    uint16_t PRT_101 :1;
+    uint16_t PRT_102 :1;
+    uint16_t COS_101 :1;
+    uint16_t Rsvd1 :1;
+    uint16_t Rsvd2 :1;
+    uint16_t Rsvd3 :1;
+    uint16_t Rsvd4 :1;
+};
+
+union CANA_tzLHCIO1_AIFLT_IOREGS
+{
+    Uint16 all;
+    struct CANA_tzLHCIO1_AIFLT_IOBITS bit;
+};
+
+
+struct CANA_tzLHCIO2_AIFLT_IOBITS
+{
+    uint16_t PRT_401 :1;
+    uint16_t PRT_402 :1;
+    uint16_t TE_401 :1;
+    uint16_t DPT_401 :1;
+    uint16_t Rsvd1 :1;
+    uint16_t Rsvd2 :1;
+    uint16_t Rsvd3 :1;
+    uint16_t Rsvd4 :1;
+};
+
+union CANA_tzLHCIO2_AIFLT_IOREGS
+{
+    Uint16 all;
+    struct CANA_tzLHCIO2_AIFLT_IOBITS bit;
+};
+
+struct CANA_tzTHERMALFLT_BITS
+{
+    uint16_t TTC_101 :1;
+    uint16_t TTC_102 :1;
+    uint16_t TTC_301 :1;
+    uint16_t KTC_401 :1;
+    uint16_t Rsvd1 :1;
+    uint16_t Rsvd2 :1;
+    uint16_t Rsvd3 :1;
+    uint16_t Rsvd4 :1;
+
+};
+
+union CANA_tzTHERMALFLT_IOREGS
+{
+    uint16_t all;
+    struct CANA_tzTHERMALFLT_BITS bit;
+};
+
 
 
 /*============================================================================
@@ -486,7 +621,7 @@ extern void CANA_fnRXevent(void);
 extern void CANA_fnTask(void);
 extern void faultCheck(void);
 extern void CANA_fnTx(void);
-extern void CANA_fnCmdsForDigIOs(uint16_t ui16cabinetID, uint16_t ui16nodeID, uint16_t digitalIO);
+
 
 
 
@@ -512,16 +647,39 @@ extern union CANA_tzDI_IOREGS CANA_tzLPCDI_IORegs[CANA_mTOTAL_LPCNODES],
         CANA_tzLHCDI_IORegs[CANA_mTOTAL_LHCNODES];
 extern union CANA_tzAIFLT_IOREGS CANA_tzLPCAIFlt_IORegs[CANA_mTOTAL_IONODE],
         CANA_tzLHCAIFlt_IORegs[CANA_mTOTAL_IONODE];
-extern union CANA_tzLPCDIFLT_IOREGS CANA_tzLPCDIFaultRegs[CANA_mTOTAL_LPCNODES];
-extern union CANA_tzLHCDIFLT_IOREGS CANA_tzLHCDIFaultRegs[CANA_mTOTAL_LHCNODES];
-extern union CANA_tzDO_IOREGS CANA_tzSetDO_IORegs[2][2];
-extern CANA_tzAO_IOREGS CANA_tzSetAO_IORegs[2][2];
-extern can_tzAnaOPParams CANA_tzAnaOPParams;
-extern void CANA_fnCmdsForAnaOPVs(uint16_t ui16cabinetID, uint16_t ui16nodeID,
-                          can_tzAnaOPParams *ptrAO_V);
 
-extern void CANA_fnCmdsForAnaOPIs(uint16_t ui16cabinetID, uint16_t ui16nodeID,
-                          can_tzAnaOPParams *ptrAO_I);
+extern union CANA_tzLPCIO1_DIFLT_IOREGS CANA_tzLPCIO1_DIFaultRegs;
+extern union CANA_tzLPCIO2_DIFLT_IOREGS CANA_tzLPCIO2_DIFaultRegs;
+extern union CANA_tzLHCIO1_DIFLT_IOREGS CANA_tzLHCIO1_DIFaultRegs;
+extern union CANA_tzLHCIO2_DIFLT_IOREGS CANA_tzLHCIO2_DIFaultRegs;
+
+
+extern union CANA_tzLPCIO1_AIFLT_IOREGS CANA_tzLPCIO1_AIFaultRegs;
+extern union CANA_tzLPCIO2_AIFLT_IOREGS CANA_tzLPCIO2_AIFaultRegs;
+extern union CANA_tzLHCIO1_AIFLT_IOREGS CANA_tzLHCIO1_AIFaultRegs;
+extern union CANA_tzLHCIO2_AIFLT_IOREGS CANA_tzLHCIO2_AIFaultRegs;
+extern union CANA_tzTHERMALFLT_IOREGS CANA_tzThermalFaultRegs;
+
+
+ //union CANA_tzDO_IOREGS CANA_tzSetDO_IORegs[2][2];
+ extern CANA_tzDO_IOREGS CANA_tzSetDO_IORegs;
+
+extern union CANA_tzLPCAIFLT_IOREGS CANA_tzLPCAIFaultRegs[CANA_mTOTAL_LPCNODES];
+extern union CANA_tzLHCAIFLT_IOREGS CANA_tzLHCAIFaultRegs[CANA_mTOTAL_LHCNODES];
+
+extern can_tzAnaOPParams CANA_tzAnaOPParams;
+
+extern void CANA_fnCmdsForDigOPs(uint16_t ui16unitID, uint16_t ui16cab_ID,
+                           uint16_t ui16nodeID, CANA_tzDIG_OP *ptrDigOP);
+
+extern void CANA_fnCmdsForAnaOPVs(uint16_t ui16unitID, uint16_t ui16cabinetID, uint16_t ui16nodeID,
+                           can_tzAnaOPParams *ptrAO_V);
+
+extern void CANA_fnCmdsForAnaOPIs(uint16_t ui16unitID, uint16_t ui16cabinetID, uint16_t ui16nodeID,
+                           can_tzAnaOPParams *ptrAO_I);
+
+
+extern CANA_tzDIG_OP CANA_tzDO[2][2];
 /*==============================================================================
  Extern/Public Constants
  ==============================================================================*/
