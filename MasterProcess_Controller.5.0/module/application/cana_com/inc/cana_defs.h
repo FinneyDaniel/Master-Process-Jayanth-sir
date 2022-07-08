@@ -292,8 +292,9 @@ typedef struct CANA_zTIMERIOREGS
 
     uint32_t LHC10ComFailCnt;
     uint32_t LHC11ComFailCnt;
-    uint16_t TxCntIOCom;
+    uint16_t TxCntIOCom[2][2];
     uint16_t TxCntWaterloop;
+    uint16_t HrtbtCntIOCom;
 
 
 
@@ -678,7 +679,7 @@ extern void CANA_fnCmdsForAnaOPVs(uint16_t ui16unitID, uint16_t ui16cabinetID, u
 extern void CANA_fnCmdsForAnaOPIs(uint16_t ui16unitID, uint16_t ui16cabinetID, uint16_t ui16nodeID,
                            can_tzAnaOPParams *ptrAO_I);
 
-
+extern void CANA_fnIOHrtBt();
 extern CANA_tzDIG_OP CANA_tzDO[2][2];
 /*==============================================================================
  Extern/Public Constants

@@ -21,6 +21,7 @@ All trademarks are owned by Enarka India Private Limited
 #include "F28x_Project.h"
 #include <stdint.h>
 #include <stdbool.h>
+#include "state_machine.h"
 /*==============================================================================
  Defines
 ==============================================================================*/

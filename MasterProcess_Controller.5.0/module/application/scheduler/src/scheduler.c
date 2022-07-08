@@ -44,6 +44,8 @@
 #include "mathcalc.h"
 #include "cana_PSUCom.h"
 #include "control_defs.h"
+#include "state_machine.h"
+
 /*==============================================================================
  Defines
  ==============================================================================*/
@@ -93,7 +95,7 @@ static const fp_sch_slot_t pevery_sch_slot_cmp;
 static int16_t icurrent_slot;
 extern const fp_sch_slot_t psch_slots[NUM_mTIME_SLOTS];
 uint16_t xx=0,yy=0;
-uint16_t ui32GlycolLpCnt = 0;
+uint16_t ui16GlycolLpCnt = 0, ui16hrtbtCnt = 0;
 /*==============================================================================
  Local Constants
  ==============================================================================*/
@@ -155,11 +157,18 @@ void SCH_fnslot_2(void)
     faultCheck();
     MATH_fnCalc();
 
-    ui32GlycolLpCnt++;
-    if(ui32GlycolLpCnt >= 3)
+    ui16GlycolLpCnt++;
+    if((ui16GlycolLpCnt >= 3) && (STAT_tzStateMac.Present_st == STACK_POWER))
     {
         CONTROL_fnGlycolLoop();
-        ui32GlycolLpCnt = 0;
+        ui16GlycolLpCnt = 0;
+    }
+
+    ui16hrtbtCnt++;
+    if(ui16hrtbtCnt > 3)
+    {
+    CANA_fnIOHrtBt();
+    ui16hrtbtCnt = 0;
     }
 
     //safety_fnLog_monitoring_slot_exe(2);

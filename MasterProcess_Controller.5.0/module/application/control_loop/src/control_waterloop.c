@@ -83,6 +83,7 @@ void control_waterloop(void)
     }
 
     // Operating Water Solenoid Valve based on LVL101
+
     if (CANA_tzIOtimers.TxCntWaterloop == 1)
     {
         if (MATHConvtzRegs.AISensorLVL101 >= 85.0) // greater than 85 % turn OFF
@@ -99,42 +100,56 @@ void control_waterloop(void)
                                  &CANA_tzDO[CANA_mLHC_CABID][CANA_mLHC10_IO]); //Turn OFF WSV101
         }
     }
-    else if (CANA_tzIOtimers.TxCntWaterloop == 2)
+    else if ((CANA_tzIOtimers.TxCntWaterloop == 2)
+            || (CANA_tzIOtimers.TxCntWaterloop == 3))
     {
         if (MATHConvtzRegs.AISensorLVL101 >= 60.0) // greater than 85 % turn OFF
         {
-            CANA_tzAnaOPParams.CANA_tzAOV[0][0].AOV1 = 35000;
+            if (CANA_tzIOtimers.TxCntWaterloop == 2)
+            {
+                CANA_tzDO[0][1].bit.DO1 = 0x1;
 
-            CANA_fnCmdsForAnaOPVs(CANA_tzIORegs.uiUnitID, 3, 0,
-                                  &CANA_tzAnaOPParams);
+                CANA_fnCmdsForDigOPs(
+                        CANA_tzIORegs.uiUnitID, 3, 1,
+                        &CANA_tzDO[0][1]); //  Turn ON CTR302
+
+            }
+            else if (CANA_tzIOtimers.TxCntWaterloop == 3)
+            {
+                CANA_tzAnaOPParams.CANA_tzAOV[0][0].AOV1 = 7000;
+
+                CANA_fnCmdsForAnaOPVs(CANA_tzIORegs.uiUnitID, 3, 0,
+                                      &CANA_tzAnaOPParams);  // Turn ON PMP101 VFD
+            }
+
         }
         else if (MATHConvtzRegs.AISensorLVL101 <= 58.0)
         {
-            CANA_tzAnaOPParams.CANA_tzAOV[0][0].AOV1 = 0;
+            if (CANA_tzIOtimers.TxCntWaterloop == 2)
+            {
+                CANA_tzDO[0][1].bit.DO1 = 0;
 
-            CANA_fnCmdsForAnaOPVs(CANA_tzIORegs.uiUnitID, 3, 0,
-                                  &CANA_tzAnaOPParams);
+                CANA_fnCmdsForDigOPs(
+                        CANA_tzIORegs.uiUnitID, 3, 1,
+                        &CANA_tzDO[0][1]); //Turn OFF CTR302
+
+            }
+            else if (CANA_tzIOtimers.TxCntWaterloop == 3)
+            {
+                CANA_tzAnaOPParams.CANA_tzAOV[0][0].AOV1 = 0;
+
+                CANA_fnCmdsForAnaOPVs(CANA_tzIORegs.uiUnitID, 3, 0,
+                                      &CANA_tzAnaOPParams);// Turn OFF PMP101 VFD
+            }
+
         }
     }
-//    else if (CANA_tzIOtimers.TxCntWaterloop == 3)
-//    {
-//        if (MATHConvtzRegs.AISensorLVL101 >= 60.0) // greater than 85 % turn OFF
-//        {
-//            CANA_tzAnaOPParams.CANA_tzAOI[0][0].AOI1 = 35000;
-//
-//            CANA_fnCmdsForAnaOPIs(3, 0, &CANA_tzAnaOPParams);
-//        }
-//        else if (MATHConvtzRegs.AISensorLVL101 <= 58.0)
-//        {
-//            CANA_tzAnaOPParams.CANA_tzAOI[0][0].AOI1 = 0;
-//
-//            CANA_fnCmdsForAnaOPIs(3, 0, &CANA_tzAnaOPParams);
-//        }
-//
-//    }
 
 }
 
 /*==============================================================================
  End of File
  ==============================================================================*/
+
+
+

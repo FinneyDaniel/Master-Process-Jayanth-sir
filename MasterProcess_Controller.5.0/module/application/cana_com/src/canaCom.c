@@ -106,6 +106,8 @@ static void cana_fnmsgPrcsMS(uint16_t *msgDataMS);
 
 static void canaTX_fnMS();
 
+void CANA_fnIOHrtBt();
+
 bool can_fnEnquedata(can_tzcirc_buff *ptr, uint16_t *data, uint32_t msgID,
                      uint16_t DLC);
 bool can_fndequedata(can_tzcirc_buff *ptr, uint16_t *data, uint32_t *msgID,
@@ -800,8 +802,6 @@ void CANA_fnCmdsForDigOPs(uint16_t ui16unitID, uint16_t ui16cab_ID,
             CAN_MSG_OBJ_NO_FLAGS,
             CAN_mLEN8);
 
-    CANA_tzIOtimers.TxCntIOCom++;
-
     if (ui16cab_ID == 3)
     {
         ui16CabID = 0; // filling LPC Cabinet array
@@ -811,13 +811,15 @@ void CANA_fnCmdsForDigOPs(uint16_t ui16unitID, uint16_t ui16cab_ID,
         ui16CabID = 1; // filling LHC Cabinet array
     }
 
-    ui16txMsgDataIO[0] = CANA_tzIOtimers.TxCntIOCom;
+    CANA_tzIOtimers.TxCntIOCom[ui16CabID][ui16nodeID]++;
+
+    ui16txMsgDataIO[0] = CANA_tzIOtimers.TxCntIOCom[ui16CabID][ui16nodeID];
     ui16txMsgDataIO[1] = ptrDigOP->all;
     ui16txMsgDataIO[2] = ptrDigOP->all;
 
-    if (CANA_tzIOtimers.TxCntIOCom == 255)
+    if (CANA_tzIOtimers.TxCntIOCom[ui16CabID][ui16nodeID] == 255)
     {
-        CANA_tzIOtimers.TxCntIOCom = 0;
+        CANA_tzIOtimers.TxCntIOCom[ui16CabID][ui16nodeID] = 0;
     }
 
     CAN_sendMessage(CANA_BASE, CAN_mMAILBOX_8, CAN_mLEN8, ui16txMsgDataIO);
@@ -920,6 +922,39 @@ static void canaTX_fnMS()
     uiCANtxMsgDataMS[7] = 0;
 
     CAN_sendMessage(CANA_BASE, CAN_mMAILBOX_11, CAN_mLEN8, uiCANtxMsgDataMS);
+}
+
+void CANA_fnIOHrtBt()
+{
+    CANA_tzIOtimers.HrtbtCntIOCom++;
+
+    switch (CANA_tzIOtimers.HrtbtCntIOCom)
+    {
+    case 1:
+
+        CANA_fnCmdsForDigOPs(CANA_tzIORegs.uiUnitID, 3, 0, &CANA_tzDO[0][0]); //LPCIO1
+        break;
+
+    case 2:
+
+        CANA_fnCmdsForDigOPs(CANA_tzIORegs.uiUnitID, 3, 1, &CANA_tzDO[0][1]); //LPCIO2
+        break;
+
+    case 3:
+
+        CANA_fnCmdsForDigOPs(CANA_tzIORegs.uiUnitID, 1, 0, &CANA_tzDO[1][0]); //LHCIO1
+        break;
+
+    case 4:
+
+        CANA_fnCmdsForDigOPs(CANA_tzIORegs.uiUnitID, 1, 1, &CANA_tzDO[1][1]); //LHCIO2
+        CANA_tzIOtimers.HrtbtCntIOCom = 0;
+
+        break;
+
+    default:
+        break;
+    }
 }
 /*==============================================================================
  End of File
