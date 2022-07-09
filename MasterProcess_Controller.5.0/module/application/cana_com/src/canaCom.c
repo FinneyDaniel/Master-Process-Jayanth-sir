@@ -5,7 +5,7 @@
 
 /*==============================================================================
  @file  canaEvent.c
- @author OHMLAP0042
+ @author DEEPTI.K
  @date 20-Jun-2022
 
  @brief Description
@@ -79,6 +79,8 @@ can_tzAnaOPParams CANA_tzAnaOPParams;
 
 CANA_tzDIG_OP CANA_tzDO[2][2];
 
+CANA_tzDOREGS CANA_tzDOParams;
+
 /*==============================================================================
  Macros
  ==============================================================================*/
@@ -104,21 +106,17 @@ static void cana_fnmsgPrcsLHCIO(uint16_t uimsgID, uint16_t *msgData,
 
 static void cana_fnmsgPrcsMS(uint16_t *msgDataMS);
 
-static void canaTX_fnMS();
-
 void CANA_fnIOHrtBt();
 
 bool can_fnEnquedata(can_tzcirc_buff *ptr, uint16_t *data, uint32_t msgID,
                      uint16_t DLC);
 bool can_fndequedata(can_tzcirc_buff *ptr, uint16_t *data, uint32_t *msgID,
                      uint16_t *DLC);
-//void CANA_fnCmdsForDigIOs(uint16_t ui16unitID, uint16_t ui16cab_ID,
-//                          uint16_t ui16nodeID, uint16_t digitalIO);
 
-//void CANA_fnCmdsForDigOPs(uint16_t ui16unitID, uint16_t ui16cab_ID,
-//                           uint16_t ui16nodeID, can_tzDigOPParams *ptrDigOP);
-void CANA_fnCmdsForDigOPs(uint16_t ui16unitID, uint16_t ui16cab_ID,
-                          uint16_t ui16nodeID, CANA_tzDIG_OP *ptrDigOP);
+void CANA_fnMSTxCmds(uint16_t ui16CabiD, uint16_t NodeID,
+                     CANA_tzDIG_OP *ptrDigOP);
+
+//void CANA_fnMSTXCmds(uint16_t ui16CabiD, uint16_t NodeID,CANA_tzDOREGS  *ptrDO);
 
 void CANA_fnCmdsForAnaOPVs(uint16_t ui16unitID, uint16_t ui16cab_ID,
                            uint16_t ui16nodeID, can_tzAnaOPParams *ptrAO_V);
@@ -144,6 +142,8 @@ uint16_t uiDataLength = 0;
 uint16_t uiMsgtype = 0, uiNodeType = 0;
 uint16_t uiCANtxMsgDataMS[8] = { 0 };
 uint16_t ui16CabID = 0, ui16prev_value = 0;
+uint16_t uiCabIDAO = 0, uiNodeIDAO = 0;
+uint16_t ui16Cnt = 0;
 
 /*==============================================================================
  Local Constants
@@ -709,6 +709,10 @@ static void cana_fnmsgPrcsMS(uint16_t *msgDataMS)
         CANA_tzMSRegs.RxCntMS = msgDataMS[0];
         CANA_tzMSRegs.StartCmd = msgDataMS[1];
         CANA_tzMSRegs.PresentStMS = msgDataMS[2];
+        uiCabIDAO = msgDataMS[3];
+        uiNodeIDAO = msgDataMS[4];
+        CANA_tzMSRegs.AOCmd = msgDataMS[5];
+
         CANA_tzMSRegs.btMSComStart = true;
         CANA_tzMSRegs.MSComFailCnt = 0;
 
@@ -729,6 +733,33 @@ static void cana_fnmsgPrcsMS(uint16_t *msgDataMS)
 
     case 1:
         STAT_tzStateMacMS.Present_st = MS_PURGE;
+
+        if (CANA_tzMSRegs.AOCmd & 0x0001 == 0x0001)
+        {
+            CANA_tzMSRegs.TurnONPurge101 = 1;
+        }
+        else
+        {
+            CANA_tzMSRegs.TurnONPurge101 = 0;
+        }
+
+        if (CANA_tzMSRegs.AOCmd & 0x0002 == 0x0002)
+        {
+            CANA_tzMSRegs.TurnONPurge501 = 1;
+        }
+        else
+        {
+            CANA_tzMSRegs.TurnONPurge501 = 0;
+        }
+
+        if (CANA_tzMSRegs.AOCmd & 0x0004 == 0x0004)
+        {
+            CANA_tzMSRegs.TurnONPurge401 = 1;
+        }
+        else
+        {
+            CANA_tzMSRegs.TurnONPurge401 = 0;
+        }
         break;
     case 2:
         STAT_tzStateMacMS.Present_st = MS_IOPOWER;
@@ -752,12 +783,131 @@ void CANA_fnTx()
 {
     // Common Messages Irrespective of States
 
-    canaTX_fnMS();
+    //  CANA_fnMSTxCmds(&CANA_tzDO[0][0]);
 
     switch (STAT_tzStateMac.Present_st)
     {
 
     case STAND_BY:
+
+        ui16Cnt++;
+
+        if (ui16Cnt >= 50)
+        {
+
+            if (CANA_tzMSRegs.TurnONPurge101 == 1)
+            {
+                CANA_tzMSRegs.fan101ResetCnt = 0;
+                CANA_tzMSRegs.fan101SetCnt++;
+                if (CANA_tzMSRegs.fan101SetCnt < 2)
+                {
+                    CANA_tzAnaOPParams.CANA_tzAOV[0][0].AOV3 = 2000;
+
+                    CANA_fnCmdsForAnaOPVs(CANA_tzIORegs.uiUnitID, 3, 0,
+                                          &CANA_tzAnaOPParams); // Control Speed of Purge fan1
+                }
+                else if (CANA_tzMSRegs.fan101SetCnt >= 2)
+                {
+                    CANA_tzMSRegs.fan101SetCnt = 2;
+                }
+            }
+            else
+            {
+
+                CANA_tzMSRegs.fan101SetCnt = 0;
+
+                CANA_tzMSRegs.fan101ResetCnt++;
+
+                if (CANA_tzMSRegs.fan101ResetCnt < 2)
+                {
+                    CANA_tzAnaOPParams.CANA_tzAOV[0][0].AOV3 = 0;
+
+                    CANA_fnCmdsForAnaOPVs(CANA_tzIORegs.uiUnitID, 3, 0,
+                                          &CANA_tzAnaOPParams); // Control Speed of Purge fan1
+                }
+
+                else if (CANA_tzMSRegs.fan101ResetCnt >= 2)
+                {
+                    CANA_tzMSRegs.fan101ResetCnt = 2;
+                }
+            }
+
+            if (CANA_tzMSRegs.TurnONPurge501 == 1)
+            {
+                CANA_tzMSRegs.fan501ResetCnt = 0;
+                CANA_tzMSRegs.fan501SetCnt++;
+                if (CANA_tzMSRegs.fan501SetCnt < 2)
+                {
+                    CANA_tzAnaOPParams.CANA_tzAOI[0][0].AOI1 = 2000;
+
+                    CANA_fnCmdsForAnaOPIs(CANA_tzIORegs.uiUnitID, 3, 0,
+                                          &CANA_tzAnaOPParams); // Control Speed of Purge fan2
+                }
+                else if (CANA_tzMSRegs.fan501SetCnt >= 2)
+                {
+                    CANA_tzMSRegs.fan501SetCnt = 2;
+                }
+            }
+            else
+            {
+
+                CANA_tzMSRegs.fan501SetCnt = 0;
+
+                CANA_tzMSRegs.fan501ResetCnt++;
+
+                if (CANA_tzMSRegs.fan501ResetCnt < 2)
+                {
+                    CANA_tzAnaOPParams.CANA_tzAOI[0][0].AOI1 = 0;
+
+                    CANA_fnCmdsForAnaOPIs(CANA_tzIORegs.uiUnitID, 3, 0,
+                                          &CANA_tzAnaOPParams); // turn off of Purge fan2
+                }
+
+                else if (CANA_tzMSRegs.fan501ResetCnt >= 2)
+                {
+                    CANA_tzMSRegs.fan501ResetCnt = 2;
+                }
+            }
+
+            if (CANA_tzMSRegs.TurnONPurge401 == 1)
+            {
+                CANA_tzMSRegs.fan401ResetCnt = 0;
+                CANA_tzMSRegs.fan401SetCnt++;
+                if (CANA_tzMSRegs.fan401SetCnt < 2)
+                {
+                    CANA_tzAnaOPParams.CANA_tzAOI[0][0].AOI1 = 2000;
+
+                    CANA_fnCmdsForAnaOPIs(CANA_tzIORegs.uiUnitID, 3, 0,
+                                          &CANA_tzAnaOPParams); // Control Speed of Purge fan2
+                }
+                else if (CANA_tzMSRegs.fan401SetCnt >= 2)
+                {
+                    CANA_tzMSRegs.fan401SetCnt = 2;
+                }
+            }
+            else
+            {
+
+                CANA_tzMSRegs.fan401SetCnt = 0;
+
+                CANA_tzMSRegs.fan401ResetCnt++;
+
+                if (CANA_tzMSRegs.fan401ResetCnt < 2)
+                {
+                    CANA_tzAnaOPParams.CANA_tzAOI[0][0].AOI1 = 0;
+
+                    CANA_fnCmdsForAnaOPIs(CANA_tzIORegs.uiUnitID, 3, 0,
+                                          &CANA_tzAnaOPParams); // turn off of Purge fan2
+                }
+
+                else if (CANA_tzMSRegs.fan401ResetCnt >= 2)
+                {
+                    CANA_tzMSRegs.fan401ResetCnt = 2;
+                }
+            }
+
+            ui16Cnt = 0;
+        }
 
         break;
 
@@ -783,48 +933,78 @@ void CANA_fnTx()
         break;
     }
 
-    if (CANA_tzMSRegs.TxCntMS >= 255)
-    {
-        CANA_tzMSRegs.TxCntMS = 0;
-    }
-
 }
 
-void CANA_fnCmdsForDigOPs(uint16_t ui16unitID, uint16_t ui16cab_ID,
-                          uint16_t ui16nodeID, CANA_tzDIG_OP *ptrDigOP)
+void CANA_fnMSTxCmds(uint16_t ui16CabiD, uint16_t NodeID,
+                     CANA_tzDIG_OP *ptrDigOP)
 {
+
+    // Master Process to Master Safety
+
     CAN_setupMessageObject(
-            CANA_BASE,
-            CAN_mMAILBOX_8,
-            (ui16unitID << 8) | (ui16cab_ID << 4) | (ui16nodeID)
-                    | CANA_mTX_IOMSGID1,
-            CAN_MSG_FRAME_EXT, CAN_MSG_OBJ_TYPE_TX, 0,
-            CAN_MSG_OBJ_NO_FLAGS,
-            CAN_mLEN8);
+    CANA_BASE,
+                           CAN_mMAILBOX_11,
+                           CANA_mTX_MSMSGID1,
+                           CAN_MSG_FRAME_EXT, CAN_MSG_OBJ_TYPE_TX, 0,
+                           CAN_MSG_OBJ_NO_FLAGS,
+                           CAN_mLEN8);
 
-    if (ui16cab_ID == 3)
-    {
-        ui16CabID = 0; // filling LPC Cabinet array
-    }
-    else if (ui16cab_ID == 1)
-    {
-        ui16CabID = 1; // filling LHC Cabinet array
-    }
+    CANA_tzMSRegs.TxCntMS++;
 
-    CANA_tzIOtimers.TxCntIOCom[ui16CabID][ui16nodeID]++;
+    uiCANtxMsgDataMS[0] = CANA_tzMSRegs.TxCntMS;
 
-    ui16txMsgDataIO[0] = CANA_tzIOtimers.TxCntIOCom[ui16CabID][ui16nodeID];
-    ui16txMsgDataIO[1] = ptrDigOP->all;
-    ui16txMsgDataIO[2] = ptrDigOP->all;
+    uiCANtxMsgDataMS[1] = STAT_tzStateMac.Present_st;
 
-    if (CANA_tzIOtimers.TxCntIOCom[ui16CabID][ui16nodeID] == 255)
-    {
-        CANA_tzIOtimers.TxCntIOCom[ui16CabID][ui16nodeID] = 0;
-    }
+    uiCANtxMsgDataMS[2] = ptrDigOP->all;
 
-    CAN_sendMessage(CANA_BASE, CAN_mMAILBOX_8, CAN_mLEN8, ui16txMsgDataIO);
+    uiCANtxMsgDataMS[3] = ui16CabiD;
+    uiCANtxMsgDataMS[4] = NodeID;
+
+    uiCANtxMsgDataMS[5] = 0;
+
+    uiCANtxMsgDataMS[6] = 0;
+    uiCANtxMsgDataMS[7] = 0;
+
+    CAN_sendMessage(CANA_BASE, CAN_mMAILBOX_11, CAN_mLEN8, uiCANtxMsgDataMS);
 
 }
+
+//void CANA_fnMSTXCmds(uint16_t ui16CabiD, uint16_t NodeID,CANA_tzDOREGS  *ptrDO)
+//{
+//
+//
+//    // Master Process to Master Safety
+//
+//
+//        CAN_setupMessageObject(
+//        CANA_BASE,
+//                               CAN_mMAILBOX_11,
+//                               CANA_mTX_MSMSGID1,
+//                               CAN_MSG_FRAME_EXT, CAN_MSG_OBJ_TYPE_TX, 0,
+//                               CAN_MSG_OBJ_NO_FLAGS,
+//                               CAN_mLEN8);
+//
+//
+//        CANA_tzMSRegs.TxCntMS++;
+//
+//        uiCANtxMsgDataMS[0] = CANA_tzMSRegs.TxCntMS;
+//
+//        uiCANtxMsgDataMS[1] = STAT_tzStateMac.Present_st;
+//
+//        uiCANtxMsgDataMS[2] = ptrDO->CANA_tzDO[ui16CabiD][NodeID].all;
+//
+//        uiCANtxMsgDataMS[3] = 0;
+//        uiCANtxMsgDataMS[4] = 0;
+//
+//        uiCANtxMsgDataMS[5] = 0;
+//
+//        uiCANtxMsgDataMS[6] = 0;
+//        uiCANtxMsgDataMS[7] = 0;
+//
+//        CAN_sendMessage(CANA_BASE, CAN_mMAILBOX_11, CAN_mLEN8, uiCANtxMsgDataMS);
+//
+//
+//}
 
 void CANA_fnCmdsForAnaOPVs(uint16_t ui16unitID, uint16_t ui16cab_ID,
                            uint16_t ui16nodeID, can_tzAnaOPParams *ptrAOV)
@@ -894,67 +1074,37 @@ void CANA_fnCmdsForAnaOPIs(uint16_t ui16unitID, uint16_t ui16cab_ID,
     CAN_sendMessage(CANA_BASE, CAN_mMAILBOX_8, CAN_mLEN8, ui16txMsgDataIO);
 }
 
-static void canaTX_fnMS()
-{
-// Master Process to Master Safety
-
-    CANA_tzMSRegs.TxCntMS++;
-
-    CAN_setupMessageObject(
-    CANA_BASE,
-                           CAN_mMAILBOX_11,
-                           CANA_mTX_MSMSGID1,
-                           CAN_MSG_FRAME_EXT, CAN_MSG_OBJ_TYPE_TX, 0,
-                           CAN_MSG_OBJ_NO_FLAGS,
-                           CAN_mLEN8);
-
-    uiCANtxMsgDataMS[0] = CANA_tzMSRegs.TxCntMS;
-
-    uiCANtxMsgDataMS[1] = STAT_tzStateMac.Present_st;
-    uiCANtxMsgDataMS[2] = 0;
-
-    uiCANtxMsgDataMS[3] = 0;
-    uiCANtxMsgDataMS[4] = 0;
-
-    uiCANtxMsgDataMS[5] = 0;
-
-    uiCANtxMsgDataMS[6] = 0;
-    uiCANtxMsgDataMS[7] = 0;
-
-    CAN_sendMessage(CANA_BASE, CAN_mMAILBOX_11, CAN_mLEN8, uiCANtxMsgDataMS);
-}
-
 void CANA_fnIOHrtBt()
 {
-    CANA_tzIOtimers.HrtbtCntIOCom++;
-
-    switch (CANA_tzIOtimers.HrtbtCntIOCom)
-    {
-    case 1:
-
-        CANA_fnCmdsForDigOPs(CANA_tzIORegs.uiUnitID, 3, 0, &CANA_tzDO[0][0]); //LPCIO1
-        break;
-
-    case 2:
-
-        CANA_fnCmdsForDigOPs(CANA_tzIORegs.uiUnitID, 3, 1, &CANA_tzDO[0][1]); //LPCIO2
-        break;
-
-    case 3:
-
-        CANA_fnCmdsForDigOPs(CANA_tzIORegs.uiUnitID, 1, 0, &CANA_tzDO[1][0]); //LHCIO1
-        break;
-
-    case 4:
-
-        CANA_fnCmdsForDigOPs(CANA_tzIORegs.uiUnitID, 1, 1, &CANA_tzDO[1][1]); //LHCIO2
-        CANA_tzIOtimers.HrtbtCntIOCom = 0;
-
-        break;
-
-    default:
-        break;
-    }
+//    CANA_tzIOtimers.HrtbtCntIOCom++;
+//
+//    switch (CANA_tzIOtimers.HrtbtCntIOCom)
+//    {
+//    case 1:
+//
+//        CANA_fnCmdsForDigOPs(CANA_tzIORegs.uiUnitID, 3, 0, &CANA_tzDO[0][0]); //LPCIO1
+//        break;
+//
+//    case 2:
+//
+//        CANA_fnCmdsForDigOPs(CANA_tzIORegs.uiUnitID, 3, 1, &CANA_tzDO[0][1]); //LPCIO2
+//        break;
+//
+//    case 3:
+//
+//        CANA_fnCmdsForDigOPs(CANA_tzIORegs.uiUnitID, 1, 0, &CANA_tzDO[1][0]); //LHCIO1
+//        break;
+//
+//    case 4:
+//
+//        CANA_fnCmdsForDigOPs(CANA_tzIORegs.uiUnitID, 1, 1, &CANA_tzDO[1][1]); //LHCIO2
+//        CANA_tzIOtimers.HrtbtCntIOCom = 0;
+//
+//        break;
+//
+//    default:
+//        break;
+//    }
 }
 /*==============================================================================
  End of File

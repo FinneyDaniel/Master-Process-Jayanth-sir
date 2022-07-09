@@ -246,10 +246,35 @@ typedef union
 }CANA_tzDIG_OP;
 
 
-//union can_tzDigOPParams
-//{
-//    struct CANA_tzDIG_OP CANA_tzDO[2][2];
-//};
+struct IO_tzDO
+{
+   uint16_t DO0:1;
+   uint16_t DO1:1;
+   uint16_t DO2:1;
+   uint16_t DO3:1;
+   uint16_t DO4:1;
+   uint16_t DO5:1;
+   uint16_t DO6:1;
+   uint16_t DO7:1;
+
+} ;
+
+typedef union
+{
+   uint16_t all;
+  struct IO_tzDO bit;
+
+}CANA_tzDOs;
+
+
+typedef struct can_tzDOs
+{
+    CANA_tzDOs CANA_tzDO[2][2];
+
+} CANA_tzDOREGS;
+
+
+
 
 
 
@@ -305,11 +330,21 @@ typedef struct CANA_zMSREGS
 
     uint32_t TxCntMS;
     uint32_t RxCntMS;
+    uint16_t fan101SetCnt;
+    uint16_t fan101ResetCnt;
+    uint16_t fan501SetCnt;
+    uint16_t fan501ResetCnt;
+    uint16_t fan401SetCnt;
+    uint16_t fan401ResetCnt;
 
     uint16_t PresentStMS;
     uint16_t StartCmd;
     bool btMSComStart;
+    uint16_t AOCmd;
     uint32_t MSComFailCnt;
+    bool TurnONPurge101;
+    bool TurnONPurge501;
+    bool TurnONPurge401;
 
 } CANA_tzMSREGS;
 
@@ -670,8 +705,10 @@ extern union CANA_tzLHCAIFLT_IOREGS CANA_tzLHCAIFaultRegs[CANA_mTOTAL_LHCNODES];
 
 extern can_tzAnaOPParams CANA_tzAnaOPParams;
 
-extern void CANA_fnCmdsForDigOPs(uint16_t ui16unitID, uint16_t ui16cab_ID,
-                           uint16_t ui16nodeID, CANA_tzDIG_OP *ptrDigOP);
+//extern void CANA_fnMSTxCmds(CANA_tzDIG_OP *ptrDigOP);
+extern void CANA_fnMSTxCmds(uint16_t ui16CabiD, uint16_t NodeID, CANA_tzDIG_OP  *ptrDigOP);
+//extern void CANA_fnMSTXCmds(uint16_t ui16CabiD, uint16_t NodeID,CANA_tzDOREGS  *ptrDO);
+
 
 extern void CANA_fnCmdsForAnaOPVs(uint16_t ui16unitID, uint16_t ui16cabinetID, uint16_t ui16nodeID,
                            can_tzAnaOPParams *ptrAO_V);
@@ -681,6 +718,9 @@ extern void CANA_fnCmdsForAnaOPIs(uint16_t ui16unitID, uint16_t ui16cabinetID, u
 
 extern void CANA_fnIOHrtBt();
 extern CANA_tzDIG_OP CANA_tzDO[2][2];
+
+extern CANA_tzDOREGS CANA_tzDOParams;
+
 /*==============================================================================
  Extern/Public Constants
  ==============================================================================*/
