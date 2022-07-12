@@ -65,7 +65,6 @@
 int main(void)
 {
     INIT_fnSystem(); // System Initialization done here
-
     while (1)
     {
 

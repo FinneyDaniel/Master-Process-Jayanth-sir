@@ -69,7 +69,7 @@
 
 #define CANA_mRX_LPCMSGID1                                                 (0x11042130)
 #define CANA_mRX_LHCMSGID1                                                 (0x11042110)
-#define CANA_mRX_MSMSGID1                                                  (0x11043100)
+#define CANA_mRX_MSMSGID1                                                  (0x11043000)
 
 #define CANA_mTX_MSMSGID1                                                 (0x10043100)
 
@@ -193,7 +193,7 @@ typedef struct CAN_zRX_CIRCULAR_BUF
 
 typedef struct can_zcirc_buff
 {
-    CAN_tzRX_CIRCULAR_BUF canA_tzRxC_buffer[20];
+    CAN_tzRX_CIRCULAR_BUF canA_tzRxC_buffer[100];
     int16_t i_head;
     int16_t i_tail;
     const int16_t i_maxlen;
@@ -329,6 +329,8 @@ typedef struct CANA_zMSREGS
 {
 
     uint32_t TxCntMS;
+    uint32_t HBCntMS;
+
     uint32_t RxCntMS;
     uint16_t fan101SetCnt;
     uint16_t fan101ResetCnt;
@@ -345,6 +347,9 @@ typedef struct CANA_zMSREGS
     bool TurnONPurge101;
     bool TurnONPurge501;
     bool TurnONPurge401;
+    uint16_t AOVFan101;
+    uint16_t AOVFan501;
+    uint16_t AOVFan401;
 
 } CANA_tzMSREGS;
 

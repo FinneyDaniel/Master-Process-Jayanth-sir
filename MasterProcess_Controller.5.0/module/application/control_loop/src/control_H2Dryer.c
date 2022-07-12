@@ -98,7 +98,11 @@ void H2_fnSVcontrol(void)
             CANA_tzDO[CANA_mLHC_CABID][CANA_mLHC11_IO].bit.DO0 = 0x1;
             CANA_tzDO[CANA_mLHC_CABID][CANA_mLHC11_IO].bit.DO1 = 0x0;
 
-            CANA_fnMSTxCmds(CANA_mLHC_CABID,CANA_mLHC11_IO,&CANA_tzDO[CANA_mLHC_CABID][CANA_mLHC11_IO]); // Turn ON SV1ON
+            CANA_fnMSTxCmds(CANA_mLHC_CABID, CANA_mLHC11_IO,
+                            &CANA_tzDO[CANA_mLHC_CABID][CANA_mLHC11_IO]); // Turn ON SV1ON & TURN OFF SV2
+
+            H2_tzValves.bit.bt_Svalve1 = 1;
+            H2_tzValves.bit.bt_Svalve2 = 0;
 
         }
 
@@ -107,26 +111,36 @@ void H2_fnSVcontrol(void)
             CANA_tzDO[CANA_mLHC_CABID][CANA_mLHC11_IO].bit.DO0 = 0x0;
             CANA_tzDO[CANA_mLHC_CABID][CANA_mLHC11_IO].bit.DO1 = 0x1;
 
-            CANA_fnMSTxCmds(CANA_mLHC_CABID,CANA_mLHC11_IO,&CANA_tzDO[CANA_mLHC_CABID][CANA_mLHC11_IO]); // Turn ON SV1ON
+            CANA_fnMSTxCmds(CANA_mLHC_CABID, CANA_mLHC11_IO,
+                            &CANA_tzDO[CANA_mLHC_CABID][CANA_mLHC11_IO]); // Turn ON SV1OFF & TURN OFF SV1
+
+            H2_tzValves.bit.bt_Svalve1 = 0;
+            H2_tzValves.bit.bt_Svalve2 = 1;
         }
 
         if (ui16CycleCount == 0)
         {
-            H2_tzValves.bit.bt_Svalve5 = 0;
+            H2_tzValves.bit.bt_Svalve5 = 0;  // SV5 OFF in entire Cycle
 
             if ((ui16H2count == 2) || (ui16H2count == 4))
             {
 
                 CANA_tzDO[CANA_mLHC_CABID][CANA_mLHC11_IO].bit.DO4 = 0x1; // Turn ON SV4
 
-                CANA_fnMSTxCmds(CANA_mLHC_CABID,CANA_mLHC11_IO,&CANA_tzDO[CANA_mLHC_CABID][CANA_mLHC11_IO]); // Turn ON SV1ON
+                H2_tzValves.bit.bt_Svalve4 = 1;
+
+                CANA_fnMSTxCmds(CANA_mLHC_CABID, CANA_mLHC11_IO,
+                                &CANA_tzDO[CANA_mLHC_CABID][CANA_mLHC11_IO]);
 
             }
             else if ((ui16H2count >= 501) && (ui16H2count <= 502)) // turn ON SV6
             {
                 CANA_tzDO[CANA_mLHC_CABID][CANA_mLHC11_IO].bit.DO6 = 0x1;
 
-                CANA_fnMSTxCmds(CANA_mLHC_CABID,CANA_mLHC11_IO,&CANA_tzDO[CANA_mLHC_CABID][CANA_mLHC11_IO]); // Turn ON SV1ON
+                CANA_fnMSTxCmds(CANA_mLHC_CABID, CANA_mLHC11_IO,
+                                &CANA_tzDO[CANA_mLHC_CABID][CANA_mLHC11_IO]);
+
+                H2_tzValves.bit.bt_Svalve6 = 1;
 
             }
 
@@ -134,59 +148,73 @@ void H2_fnSVcontrol(void)
             {
                 CANA_tzDO[CANA_mLHC_CABID][CANA_mLHC11_IO].bit.DO6 = 0x0;
 
-                CANA_fnMSTxCmds(CANA_mLHC_CABID,CANA_mLHC11_IO,&CANA_tzDO[CANA_mLHC_CABID][CANA_mLHC11_IO]); // Turn ON SV1ON
+                CANA_fnMSTxCmds(CANA_mLHC_CABID, CANA_mLHC11_IO,
+                                &CANA_tzDO[CANA_mLHC_CABID][CANA_mLHC11_IO]);
+
+                H2_tzValves.bit.bt_Svalve6 = 0;
+
             }
             else if ((ui16H2count == 19502) || (ui16H2count == 19504)) // turn ON SV7
             {
 
                 CANA_tzDO[CANA_mLHC_CABID][CANA_mLHC11_IO].bit.DO7 = 0x1;
 
-                CANA_fnMSTxCmds(CANA_mLHC_CABID,CANA_mLHC11_IO,&CANA_tzDO[CANA_mLHC_CABID][CANA_mLHC11_IO]); // Turn ON SV1ON
+                CANA_fnMSTxCmds(CANA_mLHC_CABID, CANA_mLHC11_IO,
+                                &CANA_tzDO[CANA_mLHC_CABID][CANA_mLHC11_IO]);
 
+                H2_tzValves.bit.bt_Svalve7 = 1;
 
             }
 
             else if ((ui16H2count == 19999) || (ui16H2count == 20000)) // clear All GPIOs
             {
                 CANA_tzDO[CANA_mLHC_CABID][CANA_mLHC11_IO].all = 0x0;
-                CANA_fnMSTxCmds(CANA_mLHC_CABID,CANA_mLHC11_IO,&CANA_tzDO[CANA_mLHC_CABID][CANA_mLHC11_IO]); // Turn ON SV1ON
-
+                CANA_fnMSTxCmds(CANA_mLHC_CABID, CANA_mLHC11_IO,
+                                &CANA_tzDO[CANA_mLHC_CABID][CANA_mLHC11_IO]); // Turn ON SV1ON
+                H2_tzValves.all = 0;
 
             }
 
         }
         else
         {
-            H2_tzValves.bit.bt_Svalve6 = 0;
+            H2_tzValves.bit.bt_Svalve6 = 0;  // SV6 OFF in entire Cycle
 
-            if ((ui16H2count == 3) || (ui16H2count == 6))
+            if ((ui16H2count == 3) || (ui16H2count == 6))  // Turn ON SV4
             {
-                CANA_tzDO[CANA_mLHC_CABID][CANA_mLHC11_IO].bit.DO3 = 0x1; // Turn ON SV4
-                CANA_fnMSTxCmds(CANA_mLHC_CABID,CANA_mLHC11_IO,&CANA_tzDO[CANA_mLHC_CABID][CANA_mLHC11_IO]); // Turn ON SV1ON
+                CANA_tzDO[CANA_mLHC_CABID][CANA_mLHC11_IO].bit.DO3 = 0x1;
+                CANA_fnMSTxCmds(CANA_mLHC_CABID, CANA_mLHC11_IO,
+                                &CANA_tzDO[CANA_mLHC_CABID][CANA_mLHC11_IO]);
+                H2_tzValves.bit.bt_Svalve4 = 1;
 
             }
-            else if ((ui16H2count >= 501) && (ui16H2count <= 502)) // after 3 sec (to be changed to 30sec - Number 501, 502)
+            else if ((ui16H2count >= 501) && (ui16H2count <= 502)) //Turn ON SV5
             {
-                CANA_tzDO[CANA_mLHC_CABID][CANA_mLHC11_IO].bit.DO5 = 0x1; // Turn ON SV5
-                CANA_fnMSTxCmds(CANA_mLHC_CABID,CANA_mLHC11_IO,&CANA_tzDO[CANA_mLHC_CABID][CANA_mLHC11_IO]); // Turn ON SV1ON
+                CANA_tzDO[CANA_mLHC_CABID][CANA_mLHC11_IO].bit.DO5 = 0x1;
+                CANA_fnMSTxCmds(CANA_mLHC_CABID, CANA_mLHC11_IO,
+                                &CANA_tzDO[CANA_mLHC_CABID][CANA_mLHC11_IO]);
             }
 
-            else if ((ui16H2count == 14501) || (ui16H2count == 14503)) // after 87 sec (to be changed to 870sec - Number 14501, 14503)
+            else if ((ui16H2count == 14501) || (ui16H2count == 14503)) //Turn OFF SV5
             {
-                CANA_tzDO[CANA_mLHC_CABID][CANA_mLHC11_IO].bit.DO5 = 0x0; // Turn ON SV4
-                CANA_fnMSTxCmds(CANA_mLHC_CABID,CANA_mLHC11_IO,&CANA_tzDO[CANA_mLHC_CABID][CANA_mLHC11_IO]); // Turn ON SV1ON
+                CANA_tzDO[CANA_mLHC_CABID][CANA_mLHC11_IO].bit.DO5 = 0x0;
+                CANA_fnMSTxCmds(CANA_mLHC_CABID, CANA_mLHC11_IO,
+                                &CANA_tzDO[CANA_mLHC_CABID][CANA_mLHC11_IO]);
             }
-            else if ((ui16H2count == 19502) || (ui16H2count == 19504)) // after 117 sec (to be changed to 1170sec - Number 19501, 19503 -on for 30sec)
+            else if ((ui16H2count == 19502) || (ui16H2count == 19504)) //Turn ON SV7
             {
-                CANA_tzDO[CANA_mLHC_CABID][CANA_mLHC11_IO].bit.DO7 = 0x1; // Turn ON SV4
-                CANA_fnMSTxCmds(CANA_mLHC_CABID,CANA_mLHC11_IO,&CANA_tzDO[CANA_mLHC_CABID][CANA_mLHC11_IO]); // Turn ON SV1ON
+                CANA_tzDO[CANA_mLHC_CABID][CANA_mLHC11_IO].bit.DO7 = 0x1;
+                CANA_fnMSTxCmds(CANA_mLHC_CABID, CANA_mLHC11_IO,
+                                &CANA_tzDO[CANA_mLHC_CABID][CANA_mLHC11_IO]);
 
             }
 
-            else if ((ui16H2count == 19999) || (ui16H2count == 20000)) // after 120 sec (to be changed to 1200sec - Number 19999, 20000 - off all valves at end of cycle)
+            else if ((ui16H2count == 19999) || (ui16H2count == 20000)) // Clear All GPIOs
             {
                 CANA_tzDO[CANA_mLHC_CABID][CANA_mLHC11_IO].all = 0x0;
-                CANA_fnMSTxCmds(CANA_mLHC_CABID,CANA_mLHC11_IO,&CANA_tzDO[CANA_mLHC_CABID][CANA_mLHC11_IO]); // Turn ON SV1ON
+                CANA_fnMSTxCmds(CANA_mLHC_CABID, CANA_mLHC11_IO,
+                                &CANA_tzDO[CANA_mLHC_CABID][CANA_mLHC11_IO]);
+                H2_tzValves.all = 0;
 
             }
         }
@@ -211,7 +239,10 @@ void H2_fnSVcontrol(void)
         if ((ui16AllValvesOffCnt >= 1) && (ui16AllValvesOffCnt <= 2))
         {
             CANA_tzDO[CANA_mLHC_CABID][CANA_mLHC11_IO].all = 0x0;
-            CANA_fnMSTxCmds(CANA_mLHC_CABID,CANA_mLHC11_IO,&CANA_tzDO[CANA_mLHC_CABID][CANA_mLHC11_IO]); // Turn ON SV1ON
+            CANA_fnMSTxCmds(CANA_mLHC_CABID, CANA_mLHC11_IO,
+                            &CANA_tzDO[CANA_mLHC_CABID][CANA_mLHC11_IO]); // Turn ON SV1ON
+
+            H2_tzValves.all = 0;
 
         }
     }

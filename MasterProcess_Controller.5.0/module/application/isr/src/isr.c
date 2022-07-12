@@ -86,8 +86,6 @@ interrupt void cpu_timer0_isr(void)  //100usec
 
     CANA_fnRXevent();
 
-    CANA_fnTask();
-
     /******** Latch Reset Pulse Starts here    ****/
 
     uiResetTimer++;
@@ -134,6 +132,8 @@ interrupt void cpu_timer1_isr(void)  // 10msec
     }
 //     GpioDataRegs.GPCTOGGLE.bit.GPIO92 = 1;
     scheduler_task();
+
+    CANA_fnTask();
 
     CANA_fnTx();
 

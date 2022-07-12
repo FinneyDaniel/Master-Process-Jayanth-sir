@@ -320,6 +320,9 @@ void stat_IOReset(void)
     CANA_tzThermoCoupleData.KTC_801 = 0;
     CANA_tzThermoCoupleData.TTC_301 = 0;
 
+    CANA_tzMSRegs.StartCmd = 0;
+
+
     for (ui16temp = 0; ui16temp <= 3; ui16temp++)
     {
 
