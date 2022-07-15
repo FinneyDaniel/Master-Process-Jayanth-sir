@@ -28,6 +28,7 @@
 
 #include "state_machine.h"
 #include "scheduler.h"
+#include "control_defs.h"
 
 /*==============================================================================
  Defines
@@ -72,6 +73,8 @@ void stat_fnInitState(void)
     STAT_tzStateMac.Next_st = STAND_BY;
     STAT_tzStateMac.Previous_st = STAND_BY;
     STAT_tzStateMac.Present_st = STAND_BY;
+    CANA_tzMSRegs.StartCmd = 0;
+    ui16Bleedh2 = 0;
 }
 /*=============================================================================
  @brief infinite loop for the main where tasks are executed is defined here
@@ -90,54 +93,15 @@ void STAT_fnFSMCheck(void)
 
         switch (STAT_tzStateMac.Present_st)
         {
-        case ST_INIT:
-        {
-            stat_fnInitState();
-            break;
-        }
+
         case STAND_BY:
         {
-
-            if (CANB_tzSiteRxRegs.Start_cmd == 0)
-            {
-                STAT_tzStateMac.Next_st = STAND_BY;
-
-                CANB_tzSiteRxRegs.StateChngStandBy = 1;
-                stat_IOReset();
-            }
-
-            else if (CANA_tzMSRegs.StartCmd == 1)
-//                    && (CANA_tzIOflags.LPC130Comfail == 0)
-//                    && (CANA_tzIOflags.LPC131Comfail == 0)
-//                    && (CANA_tzIOflags.LHC110Comfail == 0)
-//                    && (CANA_tzIOflags.LHC111Comfail == 0))
-            {
-
-                STAT_tzStateMac.Next_st = READY;
-            }
 
             break;
         }
 
         case READY:
         {
-            if (CANB_tzSiteRxRegs.Start_cmd == 0)
-            {
-                STAT_tzStateMac.Next_st = STAND_BY;
-
-                CANB_tzSiteRxRegs.StateChngStandBy = 1;
-                stat_IOReset();
-            }
-
-            else if (CANB_tzSiteRxRegs.Start_cmd == 2)
-            {
-                STAT_tzStateMac.Next_st = STACK_CHECK;
-            }
-
-            else if (CANB_tzSiteRxRegs.Start_cmd == 5)
-            {
-                STAT_tzStateMac.Next_st = COMMISSION;
-            }
 
             break;
         }
@@ -145,62 +109,24 @@ void STAT_fnFSMCheck(void)
         case STACK_CHECK:
         {
 
-            if (CANB_tzSiteRxRegs.Start_cmd == 0)
-            {
-                STAT_tzStateMac.Next_st = STAND_BY;
-
-                CANB_tzSiteRxRegs.StateChngStandBy = 1;
-                stat_IOReset();
-            }
-
-            else if (CANB_tzSiteRxRegs.Start_cmd == 3)
-            {
-                STAT_tzStateMac.Next_st = STACK_POWER;
-            }
-
             break;
         }
 
         case STACK_POWER:
         {
-            if (CANB_tzSiteRxRegs.Start_cmd == 0)
-            {
-                STAT_tzStateMac.Next_st = STAND_BY;
-
-                CANB_tzSiteRxRegs.StateChngStandBy = 1;
-                stat_IOReset();
-            }
-
-//            else if (CANB_tzSiteRxRegs.Start_cmd == 4)
-//            {
-//                STAT_tzStateMac.Next_st = FAULT;
-//            }
 
             break;
         }
 
         case FAULT:
         {
-            if (CANB_tzSiteRxRegs.Start_cmd == 0)
-            {
-                STAT_tzStateMac.Next_st = STAND_BY;
-
-                CANB_tzSiteRxRegs.StateChngStandBy = 1;
-                stat_IOReset();
-            }
 
             break;
         }
 
         case COMMISSION:
         {
-            if (CANB_tzSiteRxRegs.Start_cmd == 0)
-            {
-                STAT_tzStateMac.Next_st = STAND_BY;
 
-                CANB_tzSiteRxRegs.StateChngStandBy = 1;
-                stat_IOReset();
-            }
             break;
         }
 
@@ -214,59 +140,157 @@ void STAT_fnFSMCheck(void)
 //#################################################################################################################
 static void stat_fnFSMNextState()
 {
-    switch (STAT_tzStateMac.Present_st)
+    switch (STAT_tzStateMac.Next_st)
     {
 
-    case ST_INIT:
-    {
-
-        if (ui32StateTimer >= 100)
-        {
-            //Switch to Forward state
-            STAT_tzStateMac.Next_st = STAND_BY;
-
-            ui32StateTimer = 100;
-        }
-        else
-        {
-            ui32StateTimer++;
-
-        }
-        break;
-    }
     case STAND_BY:
     {
 
-        stat_IOReset();
+        if (CANA_tzMSRegs.StartCmd == 0)
+        {
+            STAT_tzStateMac.Next_st = STAND_BY;
+
+            CANB_tzSiteRxRegs.StateChngStandBy = 1;
+            stat_IOReset();
+        }
+
+        else if ((CANA_tzMSRegs.StartCmd == 1)
+                && (CANA_tzIOflags.LPC30Comfail == 0)
+                && (CANA_tzIOflags.LPC31Comfail == 0)
+                && (CANA_tzIOflags.LHC10Comfail == 0)
+                && (CANA_tzIOflags.LHC11Comfail == 0)
+                && (CANB_tzSiteRxRegs.Start_cmd == 1))  // Manually change it for now
+        {
+
+            STAT_tzStateMac.Next_st = READY;
+        }
 
         break;
     }
     case READY:
     {
-        if (CANB_tzSiteRxRegs.f32CurrSet > 2.0)
+        if (CANA_tzMSRegs.StartCmd == 0)
         {
+            STAT_tzStateMac.Next_st = STAND_BY;
+
+            CANB_tzSiteRxRegs.StateChngStandBy = 1;
+            stat_IOReset();
+        }
+
+        else if ((CANA_tzMSRegs.StartCmd == 1)
+                && (CANB_tzSiteRxRegs.Start_cmd == 2))
+        {
+            STAT_tzStateMac.Next_st = STACK_CHECK;
+        }
+
+        else if (CANB_tzSiteRxRegs.Start_cmd == 5)
+        {
+            STAT_tzStateMac.Next_st = COMMISSION;
+        }
+
+        if (CANB_tzSiteRxRegs.f32CurrSet >= 10.0f)
+        {
+            CANB_tzSiteRxRegs.Start_H2Cmd = 1;
             CANB_tzSiteRxRegs.Start_cmd = 2;
         }
+        else if (CANB_tzSiteRxRegs.f32CurrSet < 1.0f)
+        {
+            CANB_tzSiteRxRegs.Start_H2Cmd = 0;
+        }
+
+
         break;
     }
     case STACK_CHECK:
     {
+
+        if (CANA_tzMSRegs.StartCmd == 0)
+        {
+            STAT_tzStateMac.Next_st = STAND_BY;
+
+            CANB_tzSiteRxRegs.StateChngStandBy = 1;
+            stat_IOReset();
+        }
+
+        else if ((CANA_tzMSRegs.StartCmd == 1)
+                && (CANB_tzSiteRxRegs.Start_cmd == 3))
+        {
+            STAT_tzStateMac.Next_st = STACK_POWER;
+        }
 
         break;
     }
     case STACK_POWER:
     {
 
+        if (CANA_tzMSRegs.StartCmd == 0)
+        {
+            STAT_tzStateMac.Next_st = STAND_BY;
+
+            CANB_tzSiteRxRegs.StateChngStandBy = 1;
+            stat_IOReset();
+        }
+
+        if(CANB_tzSiteRxRegs.Start_H2Cmd == 0)
+        {
+            ui16StateTnstCnt = 0;
+            ui16StateRstCnt = 0;
+            STAT_tzStateMac.Next_st = READY;
+            CANB_tzSiteRxRegs.Start_cmd = 1;
+
+        }
+
+        if(ui16InstShutDownFlg == 1)
+        {
+            CANB_tzSiteRxRegs.f32CurrSet = 0;
+            CANB_tzSiteRxRegs.StateChngFault = 1;
+            STAT_tzStateMac.Next_st = FAULT;
+        }
+
         break;
     }
     case FAULT:
     {
 
+        if (CANB_tzSiteRxRegs.Start_cmd == 0)
+        {
+            STAT_tzStateMac.Next_st = STAND_BY;
+
+            CANB_tzSiteRxRegs.StateChngStandBy = 1;
+            stat_IOReset();
+        }
+
+        else if(ui16InstShutDownFlg == 0)
+        {
+            ui16StateTnstCnt = 0;
+             ui16StateRstCnt = 0;
+             CANB_tzSiteRxRegs.StateChngFault = 0;
+             CANB_tzSiteRxRegs.Start_cmd = 1;
+              stat_IOReset();
+
+            STAT_tzStateMac.Next_st = READY;
+
+        }
+
+        else if (CANA_tzMSRegs.StartCmd == 0)
+        {
+            STAT_tzStateMac.Next_st = STAND_BY;
+
+            CANB_tzSiteRxRegs.StateChngStandBy = 1;
+            stat_IOReset();
+        }
         break;
     }
 
     case COMMISSION:
     {
+        if (CANB_tzSiteRxRegs.Start_cmd == 0)
+        {
+            STAT_tzStateMac.Next_st = STAND_BY;
+
+            CANB_tzSiteRxRegs.StateChngStandBy = 1;
+            stat_IOReset();
+        }
 
         break;
     }
@@ -296,38 +320,38 @@ static void stat_fnFSMNextState()
  ==============================================================================*/
 void stat_IOReset(void)
 {
-    uint16_t ui16temp;
+//    uint16_t ui16temp;
 
-    CANA_tzAISensorData.COS_101 = 0;
-    CANA_tzAISensorData.HYS_101 = 0;
-    CANA_tzAISensorData.HYS_501 = 0;
-    CANA_tzAISensorData.HYS_401 = 0;
-    CANA_tzAISensorData.HYS_102 = 0;
-    CANA_tzAISensorData.OXS_101 = 0;
-    CANA_tzAISensorData.TE_401 = 0;
-    CANA_tzAISensorData.DPT_401 = 0;
-    CANA_tzAISensorData.LVL_101 = 0;
-    CANA_tzAISensorData.PRT_101 = 0;
-    CANA_tzAISensorData.PRT_102 = 0;
-    CANA_tzAISensorData.PRT_401 = 0;
+//    CANA_tzAISensorData.COS_101 = 4.0;
+//    CANA_tzAISensorData.HYS_101 = 4.0;
+//    CANA_tzAISensorData.HYS_501 = 4.0;
+//    CANA_tzAISensorData.HYS_401 = 4.0;
+//    CANA_tzAISensorData.HYS_102 = 4.0;
+//    CANA_tzAISensorData.OXS_101 = 4.0;
+//    CANA_tzAISensorData.TE_401 = 4.0;
+//    CANA_tzAISensorData.DPT_401 = 4.0;
+//    CANA_tzAISensorData.LVL_101 = 4.0;
+//    CANA_tzAISensorData.PRT_101 = 4.0;
+//    CANA_tzAISensorData.PRT_102 = 4.0;
+//    CANA_tzAISensorData.PRT_401 = 4.0;
+//
+//    CANA_tzAISensorData.PRT_402 = 4.0;
+//
+//    CANA_tzThermoCoupleData.KTC_401 = 4.0;
+//    CANA_tzThermoCoupleData.KTC_402 = 4.0;
+//    CANA_tzThermoCoupleData.TTC_102 = 4.0;
+//    CANA_tzThermoCoupleData.TTC_101 = 4.0;
+//    CANA_tzThermoCoupleData.KTC_801 = 4.0;
+//    CANA_tzThermoCoupleData.TTC_301 = 4.0;
+//
+//    //CANA_tzMSRegs.StartCmd = 0;
+//
+//    for (ui16temp = 0; ui16temp <= 3; ui16temp++)
+//    {
+//
+//        // CANA_tzDI_IORegs[ui16temp].all = 0;
+//
+//    }
 
-    CANA_tzAISensorData.PRT_402 = 0;
-
-    CANA_tzThermoCoupleData.KTC_401 = 0;
-    CANA_tzThermoCoupleData.KTC_402 = 0;
-    CANA_tzThermoCoupleData.TTC_102 = 0;
-    CANA_tzThermoCoupleData.TTC_101 = 0;
-    CANA_tzThermoCoupleData.KTC_801 = 0;
-    CANA_tzThermoCoupleData.TTC_301 = 0;
-
-    CANA_tzMSRegs.StartCmd = 0;
-
-
-    for (ui16temp = 0; ui16temp <= 3; ui16temp++)
-    {
-
-        // CANA_tzDI_IORegs[ui16temp].all = 0;
-
-    }
 
 }

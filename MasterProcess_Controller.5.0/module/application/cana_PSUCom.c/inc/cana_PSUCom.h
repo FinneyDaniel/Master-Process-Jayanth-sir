@@ -275,6 +275,8 @@ typedef struct CANA_zPSUTIMER
 {
     uint16_t secondCnt;
     uint16_t TxCount;
+    uint16_t TxManCount;
+
     uint16_t TxCntPSUCmds;
     uint16_t RxCntPSUCmds;
     uint16_t CANfailCnt[CANA_mTOTAL_PSUNODE + 1];
@@ -282,6 +284,8 @@ typedef struct CANA_zPSUTIMER
     uint16_t CurRampDowncnt;
     uint16_t InstShutDowncnt;
     uint16_t SiteCommandRUT_ACK;
+    uint16_t ComsnCnt;
+
 
 } CANA_tzPSUTIMER;
 
@@ -311,6 +315,9 @@ extern void cana_fnSendImpCmds(int32 i32nodeID);
 
 extern void cana_fnSetVoltage_PSU(int32 i32nodeID, float32 f32voltageValue,
                                   Uint16 ui16global);
+
+extern void cana_fnSetCurrent_PSU(int32 i32nodeID, float32 f32CurrentValue,
+                           Uint16 ui16global);
 extern void cana_fnReadMBox_PSU(void);
 extern void cana_fnNodeCheckLogic_PSU(void);
 extern void cana_fnTimeoutFaultsLogic_PSU(void);
@@ -339,6 +346,7 @@ extern uint16_t ui16Rx2MsgDataPSU[8];
 extern uint16_t ui16Rx3MsgDataPSU[8];
 extern uint16_t ui16CANAPSUFailTrig1;
 extern uint32_t ui32CANAPSUFailCnt1;
+extern uint16_t PSUCommand,ui16manualTesting;
 
 /*==============================================================================
  Extern/Public Constants

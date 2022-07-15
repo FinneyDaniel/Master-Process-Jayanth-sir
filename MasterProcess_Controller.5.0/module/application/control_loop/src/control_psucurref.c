@@ -71,6 +71,7 @@ int16_t n2 = 12;
 int16_t n3 = 25; //Array Size Declaration
 float32_t c[26]; //Array Declaration
 float32_t f32maxCellVolt;
+
 /*==============================================================================
  Local Constants
  ==============================================================================*/
@@ -120,8 +121,6 @@ void CONTROL_fnPSU_IRef(void)
 //        }
 //    }
 
-
-
     if (MATHConvtzRegs.AISensorPRT101 < 0.0f)
     {
         MATHConvtzRegs.AISensorPRT101 = 0;
@@ -136,7 +135,6 @@ void CONTROL_fnPSU_IRef(void)
     {
         MATHConvtzRegs.AISensorPRT402 = 0;
     }
-
 
 //    if (CANA_tzIOFlags.WaterLevelOk == 0)
 //    {
@@ -194,12 +192,14 @@ void CONTROL_fnPSU_IRef(void)
     }
     else
     {
-        if ((STAT_tzStateMac.Present_st == STAND_BY) || (STAT_tzStateMac.Present_st == READY) || (STAT_tzStateMac.Present_st == STACK_CHECK))
+        if (((STAT_tzStateMac.Present_st == STAND_BY)
+                || (STAT_tzStateMac.Present_st == READY)
+                || (STAT_tzStateMac.Present_st == STACK_CHECK)) && (ui16manualTesting == 0))
         {
             CANA_tzTxdRegs.tzPSUData.TotalCurrentSet = 0;
         }
 
-        else if (STAT_tzStateMac.Present_st == STACK_POWER)
+        else if ((STAT_tzStateMac.Present_st == STACK_POWER) || (ui16manualTesting == 1))
         {
 
             if ((CANB_tzSiteRxRegs.Start_H2Cmd == 1)
@@ -221,7 +221,7 @@ void CONTROL_fnPSU_IRef(void)
 //                    && (CANA_tzThermalFaultRegs.bit.TTC_301 == 0)
 //                    && (CANA_tzLPCAIFaultRegs.bit.OXS_101_ShtDwn == 0)
 //                    && (CANA_tzLPCAIFaultRegs.bit.OXS_101_RmpDwn == 0)
-                    )
+            )
 
             {
                 CANA_tzTimerRegs.tzPSU.CurRampDowncnt = 0;
@@ -307,6 +307,7 @@ void CONTROL_fnPSU_IRef(void)
                         CANA_tzTxdRegs.tzPSUData.CurrentSet = 0.0;
                         CANA_tzTxdRegs.tzPSUData.TotalISetTemp = 0;
                         ui16SafeShutDownFlg = 1;
+                        ui16Bleedh2 = 1;
                     }
 
                 }
@@ -322,6 +323,8 @@ void CONTROL_fnPSU_IRef(void)
 //                    {
 //                        CANA_tzTimerRegs.tzPSU.InstShutDowncnt = 20;
 //                        ui16InstShutDownFlg = 1;
+//                        ui16Bleedh2 = 1;
+
 //                    }
 //                }
 

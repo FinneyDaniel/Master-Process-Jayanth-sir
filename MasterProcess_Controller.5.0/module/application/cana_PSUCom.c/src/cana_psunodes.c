@@ -99,6 +99,7 @@ uint16_t ui16CANAIOFailTrig1 = 0;
 uint32_t ui32CANAIOFailCnt1 = 0;
 uint32_t ui32tempImp[3] = { 0 };
 uint16_t ui16ModeChange = 0;
+uint16_t ui16manualTesting = 0, PSUCommand = 0;
 /*==============================================================================
  Local Constants
  ==============================================================================*/
@@ -116,43 +117,47 @@ void CANA_fnPSUTX_Event(void)
     {
     case STAND_BY:
 
-        if ((CANA_tzQueryType.PSU == SET_VOLT)
-                || (CANA_tzQueryType.PSU == SET_CURR)
-                || (CANA_tzQueryType.PSU == QUERY_PROGPARAM)
-                || (CANA_tzQueryType.PSU == QUERY_OP_PARAM)
-                || (CANA_tzQueryType.PSU == TURN_ONFEC)
-                || (CANA_tzQueryType.PSU == TURN_ON)
-                || (CANA_tzQueryType.PSU == QUERY_FLTS)
-                || ((CANA_tzQueryType.PSU == QUERY_ACPARAMS))
-                        && (CANB_tzSiteRxRegs.StateChngStandBy == 1))
-
+        if (ui16manualTesting == 0)
         {
 
-            CANA_tzQueryType.PSU = TURN_OFF;
+            if ((CANA_tzQueryType.PSU == SET_VOLT)
+                    || (CANA_tzQueryType.PSU == SET_CURR)
+                    || (CANA_tzQueryType.PSU == QUERY_PROGPARAM)
+                    || (CANA_tzQueryType.PSU == QUERY_OP_PARAM)
+                    || (CANA_tzQueryType.PSU == TURN_ONFEC)
+                    || (CANA_tzQueryType.PSU == TURN_ON)
+                    || (CANA_tzQueryType.PSU == QUERY_FLTS)
+                    || ((CANA_tzQueryType.PSU == QUERY_ACPARAMS))
+                            && (CANB_tzSiteRxRegs.StateChngStandBy == 1))
 
-            CANB_tzSiteRxRegs.StateChngStandBy = 0;
-
-            CANA_tzTimerRegs.tzPSU.TxCount = 0;
-        }
-
-        else if (CANA_tzQueryType.PSU == TURN_OFF)
-        {
-            CANA_tzTimerRegs.tzPSU.TxCount++;
-
-            cana_fnTurnON_PSU(0, CANA_mTURNOFF_DCDC, 1);
-
-            if (CANA_tzTimerRegs.tzPSU.TxCount > 10)
             {
-                CANA_tzTimerRegs.tzPSU.TxCount = 0;
 
-                CANA_tzQueryType.PSU = IDLE_PSU;
+                CANA_tzQueryType.PSU = TURN_OFF;
+
+                CANB_tzSiteRxRegs.StateChngStandBy = 0;
+
+                CANA_tzTimerRegs.tzPSU.TxCount = 0;
             }
 
-        }
+            else if (CANA_tzQueryType.PSU == TURN_OFF)
+            {
+                CANA_tzTimerRegs.tzPSU.TxCount++;
 
-        else if (CANA_tzQueryType.PSU == IDLE_PSU)
-        {
-            CANA_tzQueryType.PSU = SET_VOLT;
+                cana_fnTurnON_PSU(0, CANA_mTURNOFF_DCDC, 1);
+
+                if (CANA_tzTimerRegs.tzPSU.TxCount > 10)
+                {
+                    CANA_tzTimerRegs.tzPSU.TxCount = 0;
+
+                    CANA_tzQueryType.PSU = IDLE_PSU;
+                }
+
+            }
+
+            else if (CANA_tzQueryType.PSU == IDLE_PSU)
+            {
+                CANA_tzQueryType.PSU = SET_VOLT;
+            }
         }
 
         break;
@@ -268,8 +273,7 @@ void CANA_fnPSUTX_Event(void)
 
             CANA_tzTxdRegs.tzPSUData.VoltageSet = 400.0;
 
-            cana_fnSetVoltage_PSU(0, CANA_tzTxdRegs.tzPSUData.VoltageSet,
-                                  1);
+            cana_fnSetVoltage_PSU(0, CANA_tzTxdRegs.tzPSUData.VoltageSet, 1);
 
             if (CANA_tzTimerRegs.tzPSU.TxCount > 4)
             {
@@ -321,7 +325,6 @@ void CANA_fnPSUTX_Event(void)
                 CANA_tzQueryType.PSU = QUERY_ACPARAMS;
             }
         }
-
 
         break;
 
@@ -443,6 +446,49 @@ void CANA_fnPSUTX_Event(void)
                 ui16ModeChange = 0;
                 CANA_tzQueryType.PSU = QUERY_OP_PARAM;
             }
+        }
+
+        break;
+
+    case FAULT:
+
+        if ((CANA_tzQueryType.PSU == SET_VOLT)
+                || (CANA_tzQueryType.PSU == SET_CURR)
+                || (CANA_tzQueryType.PSU == QUERY_PROGPARAM)
+                || (CANA_tzQueryType.PSU == QUERY_OP_PARAM)
+                || (CANA_tzQueryType.PSU == TURN_ONFEC)
+                || (CANA_tzQueryType.PSU == TURN_ON)
+                || (CANA_tzQueryType.PSU == QUERY_FLTS)
+                || (CANA_tzQueryType.PSU == QUERY_ACPARAMS)
+                        && (CANB_tzSiteRxRegs.StateChngFault == 1))
+
+        {
+
+            CANA_tzQueryType.PSU = TURN_OFF;
+
+            CANB_tzSiteRxRegs.StateChngFault = 0;
+
+            CANA_tzTimerRegs.tzPSU.TxCount = 0;
+        }
+
+        else if (CANA_tzQueryType.PSU == TURN_OFF)
+        {
+            CANA_tzTimerRegs.tzPSU.TxCount++;
+
+            cana_fnTurnON_PSU(0, CANA_mTURNOFF_DCDC, 1);
+
+            if (CANA_tzTimerRegs.tzPSU.TxCount > 10)
+            {
+                CANA_tzTimerRegs.tzPSU.TxCount = 0;
+
+                CANA_tzQueryType.PSU = IDLE_PSU;
+            }
+
+        }
+
+        else if (CANA_tzQueryType.PSU == IDLE_PSU)
+        {
+            CANA_tzQueryType.PSU = SET_VOLT;
         }
 
         break;
