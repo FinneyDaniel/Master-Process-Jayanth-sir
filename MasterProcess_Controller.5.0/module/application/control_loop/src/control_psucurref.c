@@ -85,6 +85,16 @@ float32_t f32maxCellVolt;
 void CONTROL_fnPSU_IRef(void)
 {
 
+    if (CANB_tzSiteRxRegs.f32CurrSet >= 10.0f)
+    {
+        CANB_tzSiteRxRegs.Start_H2Cmd = 1;
+        CANB_tzSiteRxRegs.Start_cmd = 2;
+    }
+    else if (CANB_tzSiteRxRegs.f32CurrSet < 1.0f)
+    {
+        CANB_tzSiteRxRegs.Start_H2Cmd = 0;
+    }
+
 //    control_fncellmaxval();
 //
 //    if (f32maxCellVolt > CANB_tzSiteRxRegs.CellMaxLimit)
@@ -229,6 +239,7 @@ void CONTROL_fnPSU_IRef(void)
 
                 ui16SafeShutDownFlg = 0;
                 ui16InstShutDownFlg = 0;
+                ui16Bleedh2 = 0;
 
                 CANA_tzTimerRegs.tzPSU.CurRampUpcnt++;
 

@@ -67,15 +67,15 @@
 #define CAN_mPOLYNOMIAL                                                 (0x04C11DB7L)
 #define APPROX_1_SECOND_DELAY                                           (5000000UL)
 
-#define CANA_mRX_LPCMSGID1                                                 (0x11042030)
-#define CANA_mRX_LHCMSGID1                                                 (0x11042010)
+#define CANA_mRX_LPCMSGID1                                                 (0x10042130)
+#define CANA_mRX_LHCMSGID1                                                 (0x10042110)
 #define CANA_mRX_MSMSGID1                                                  (0x11043000)
 
 #define CANA_mTX_MSMSGID1                                                 (0x10043000)
 
-#define CANA_mTX_IOMSGID1                                                 (0x10142000)  // Digital Output
-#define CANA_mTX_IOMSGID2                                                 (0x10242000)  // Analog Output Voltage
-#define CANA_mTX_IOMSGID3                                                 (0x10342000)  // Analog Output Current
+#define CANA_mTX_IOMSGID1                                                 (0x11142000)  // Digital Output
+#define CANA_mTX_IOMSGID2                                                 (0x11242000)  // Analog Output Voltage
+#define CANA_mTX_IOMSGID3                                                 (0x11342000)  // Analog Output Current
 
 
 #define CAN_mMAILBOX_1                                                  (1U)

@@ -730,7 +730,7 @@ static void cana_fnmsgPrcsMS(uint16_t *msgDataMS)
     if (CANA_tzMSRegs.RxCntMS != msgDataMS[0])
     {
         CANA_tzMSRegs.RxCntMS = msgDataMS[0];
-        CANA_tzMSRegs.StartCmd = msgDataMS[1];
+        CANA_tzMSRegs.StartCmd = 1;//msgDataMS[1];
         CANA_tzMSRegs.PresentStMS = msgDataMS[2];
         CANA_tzMSRegs.AOCmd = msgDataMS[3];
         CANA_tzMSRegs.AOVFan101 = msgDataMS[5];
@@ -783,23 +783,19 @@ static void cana_fnmsgPrcsMS(uint16_t *msgDataMS)
         break;
 
     case 1:
-        STAT_tzStateMacMS.Present_st = MS_READY;
-        break;
-
-    case 2:
         STAT_tzStateMacMS.Present_st = MS_PURGE;
 
         break;
-    case 3:
+    case 2:
         STAT_tzStateMacMS.Present_st = MS_IOPOWER;
         break;
-    case 4:
+    case 3:
         STAT_tzStateMacMS.Present_st = MS_ARMED_POWER;
         break;
-    case 5:
+    case 4:
         STAT_tzStateMacMS.Present_st = MS_FAULT;
         break;
-    case 6:
+    case 5:
         STAT_tzStateMacMS.Present_st = MS_SHUTDOWN;
         break;
     default:
@@ -975,9 +971,9 @@ void CANA_fnTx()
         {
             ui16StateRstCnt = 0;
             ui16StateTnstCnt++;
-            if (ui16StateTnstCnt > 12000)
+            if (ui16StateTnstCnt > 10000)
             {
-                ui16StateTnstCnt = 12000;
+                ui16StateTnstCnt = 10000;
 
                 CANB_tzSiteRxRegs.Start_cmd = 3;
                 CANA_tzIOflags.faultAtStChkSt = 0;
@@ -1249,106 +1245,106 @@ void cana_CommisionMode()
 
         }
 
-        if (CANA_tzQueryType.PSU == SET_VOLT)
-        {
-            CANA_tzTimerRegs.tzPSU.TxManCount++;
-
-            cana_fnSetVoltage_PSU(0, CANB_tzSiteRxRegs.f32VoltSet, 1);
-
-            if (CANA_tzTimerRegs.tzPSU.TxManCount > 2)
-            {
-                CANA_tzQueryType.PSU = QUERY_FLTS;
-
-                CANA_tzTimerRegs.tzPSU.TxManCount = 0;
-            }
-        }
-
-        else if (CANA_tzQueryType.PSU == QUERY_FLTS)
-        {
-            CANA_tzTimerRegs.tzPSU.TxManCount++;
-
-            cana_fnQryFaultsParam_PSU(CANA_tzTimerRegs.tzPSU.TxManCount);
-
-            if (CANA_tzTimerRegs.tzPSU.TxManCount > CANA_mTOTAL_PSUNODE)
-            {
-                CANA_tzTimerRegs.tzPSU.TxManCount = 0;
-
-                CANA_tzQueryType.PSU = SET_CURR;
-
-            }
-
-        }
-
-        else if (CANA_tzQueryType.PSU == SET_CURR)
-        {
-            CANA_tzTimerRegs.tzPSU.TxManCount++;
-
-            cana_fnSetCurrent_PSU(0, CANA_tzTxdRegs.tzPSUData.CurrentSet, 1);
-
-            if (CANA_tzTimerRegs.tzPSU.TxManCount > 2)
-            {
-                CANA_tzQueryType.PSU = QUERY_ACPARAMS;
-
-                CANA_tzTimerRegs.tzPSU.TxManCount = 0;
-            }
-        }
-
-        else if (CANA_tzQueryType.PSU == QUERY_ACPARAMS)
-        {
-            CANA_tzTimerRegs.tzPSU.TxManCount++;
-
-            cana_fnQryACParam_PSU(CANA_tzTimerRegs.tzPSU.TxManCount);
-
-            if (CANA_tzTimerRegs.tzPSU.TxManCount > 10)
-            {
-                CANA_tzTimerRegs.tzPSU.TxManCount = 0;
-
-                CANA_tzQueryType.PSU = QUERY_OP_PARAM;
-            }
-        }
-
-        else if (CANA_tzQueryType.PSU == QUERY_OP_PARAM)
-        {
-            CANA_tzTimerRegs.tzPSU.TxManCount++;
-
-            cana_fnQryOutputParam_PSU(CANA_tzTimerRegs.tzPSU.TxManCount);
-
-            if (CANA_tzTimerRegs.tzPSU.TxManCount > CANA_mTOTAL_PSUNODE)
-            {
-                CANA_tzTimerRegs.tzPSU.TxManCount = 0;
-                CANA_tzQueryType.PSU = TURN_ON;
-
-            }
-
-        }
-
-        else if (CANA_tzQueryType.PSU == TURN_ON)
-        {
-            cana_fnTurnON_PSU(0, PSUCommand, 1);
-
-            CANA_tzTimerRegs.tzPSU.TxManCount++;
-
-            if (CANA_tzTimerRegs.tzPSU.TxManCount > 2)
-            {
-                CANA_tzTimerRegs.tzPSU.TxManCount = 0;
-                CANA_tzQueryType.PSU = QUERY_FLTS;
-
-            }
-        }
-        else if (CANA_tzQueryType.PSU == QUERY_FLTS)
-        {
-            CANA_tzTimerRegs.tzPSU.TxManCount++;
-
-            cana_fnQryFaultsParam_PSU(CANA_tzTimerRegs.tzPSU.TxCount);
-
-            if (CANA_tzTimerRegs.tzPSU.TxManCount > CANA_mTOTAL_PSUNODE)
-            {
-                CANA_tzTimerRegs.tzPSU.TxManCount = 0;
-                CANA_tzQueryType.PSU = SET_VOLT;
-
-            }
-
-        }
+//        if (CANA_tzQueryType.PSU == SET_VOLT)
+//        {
+//            CANA_tzTimerRegs.tzPSU.TxManCount++;
+//
+//            cana_fnSetVoltage_PSU(0, CANB_tzSiteRxRegs.f32VoltSet, 1);
+//
+//            if (CANA_tzTimerRegs.tzPSU.TxManCount > 2)
+//            {
+//                CANA_tzQueryType.PSU = QUERY_FLTS;
+//
+//                CANA_tzTimerRegs.tzPSU.TxManCount = 0;
+//            }
+//        }
+//
+//        else if (CANA_tzQueryType.PSU == QUERY_FLTS)
+//        {
+//            CANA_tzTimerRegs.tzPSU.TxManCount++;
+//
+//            cana_fnQryFaultsParam_PSU(CANA_tzTimerRegs.tzPSU.TxManCount);
+//
+//            if (CANA_tzTimerRegs.tzPSU.TxManCount > CANA_mTOTAL_PSUNODE)
+//            {
+//                CANA_tzTimerRegs.tzPSU.TxManCount = 0;
+//
+//                CANA_tzQueryType.PSU = SET_CURR;
+//
+//            }
+//
+//        }
+//
+//        else if (CANA_tzQueryType.PSU == SET_CURR)
+//        {
+//            CANA_tzTimerRegs.tzPSU.TxManCount++;
+//
+//            cana_fnSetCurrent_PSU(0, CANA_tzTxdRegs.tzPSUData.CurrentSet, 1);
+//
+//            if (CANA_tzTimerRegs.tzPSU.TxManCount > 2)
+//            {
+//                CANA_tzQueryType.PSU = QUERY_ACPARAMS;
+//
+//                CANA_tzTimerRegs.tzPSU.TxManCount = 0;
+//            }
+//        }
+//
+//        else if (CANA_tzQueryType.PSU == QUERY_ACPARAMS)
+//        {
+//            CANA_tzTimerRegs.tzPSU.TxManCount++;
+//
+//            cana_fnQryACParam_PSU(CANA_tzTimerRegs.tzPSU.TxManCount);
+//
+//            if (CANA_tzTimerRegs.tzPSU.TxManCount > 10)
+//            {
+//                CANA_tzTimerRegs.tzPSU.TxManCount = 0;
+//
+//                CANA_tzQueryType.PSU = QUERY_OP_PARAM;
+//            }
+//        }
+//
+//        else if (CANA_tzQueryType.PSU == QUERY_OP_PARAM)
+//        {
+//            CANA_tzTimerRegs.tzPSU.TxManCount++;
+//
+//            cana_fnQryOutputParam_PSU(CANA_tzTimerRegs.tzPSU.TxManCount);
+//
+//            if (CANA_tzTimerRegs.tzPSU.TxManCount > CANA_mTOTAL_PSUNODE)
+//            {
+//                CANA_tzTimerRegs.tzPSU.TxManCount = 0;
+//                CANA_tzQueryType.PSU = TURN_ON;
+//
+//            }
+//
+//        }
+//
+//        else if (CANA_tzQueryType.PSU == TURN_ON)
+//        {
+//            cana_fnTurnON_PSU(0, PSUCommand, 1);
+//
+//            CANA_tzTimerRegs.tzPSU.TxManCount++;
+//
+//            if (CANA_tzTimerRegs.tzPSU.TxManCount > 2)
+//            {
+//                CANA_tzTimerRegs.tzPSU.TxManCount = 0;
+//                CANA_tzQueryType.PSU = QUERY_FLTS;
+//
+//            }
+//        }
+//        else if (CANA_tzQueryType.PSU == QUERY_FLTS)
+//        {
+//            CANA_tzTimerRegs.tzPSU.TxManCount++;
+//
+//            cana_fnQryFaultsParam_PSU(CANA_tzTimerRegs.tzPSU.TxCount);
+//
+//            if (CANA_tzTimerRegs.tzPSU.TxManCount > CANA_mTOTAL_PSUNODE)
+//            {
+//                CANA_tzTimerRegs.tzPSU.TxManCount = 0;
+//                CANA_tzQueryType.PSU = SET_VOLT;
+//
+//            }
+//
+//        }
 
     }
 }

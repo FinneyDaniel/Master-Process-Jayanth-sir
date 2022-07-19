@@ -25,7 +25,7 @@
 #include "hal/driverlib/can.h"
 #include "cana_defs.h"
 #include "canb_defs.h"
-
+#include "cana_PSUCom.h"
 #include "state_machine.h"
 #include "scheduler.h"
 #include "control_defs.h"
@@ -190,13 +190,9 @@ static void stat_fnFSMNextState()
 
         if (CANB_tzSiteRxRegs.f32CurrSet >= 10.0f)
         {
-            CANB_tzSiteRxRegs.Start_H2Cmd = 1;
             CANB_tzSiteRxRegs.Start_cmd = 2;
         }
-        else if (CANB_tzSiteRxRegs.f32CurrSet < 1.0f)
-        {
-            CANB_tzSiteRxRegs.Start_H2Cmd = 0;
-        }
+
 
 
         break;
@@ -231,18 +227,20 @@ static void stat_fnFSMNextState()
             stat_IOReset();
         }
 
-        if(CANB_tzSiteRxRegs.Start_H2Cmd == 0)
-        {
-            ui16StateTnstCnt = 0;
-            ui16StateRstCnt = 0;
-            STAT_tzStateMac.Next_st = READY;
-            CANB_tzSiteRxRegs.Start_cmd = 1;
-
-        }
+//        if(CANB_tzSiteRxRegs.Start_H2Cmd == 0)
+//        {
+//            ui16StateTnstCnt = 0;
+//            ui16StateRstCnt = 0;
+//            STAT_tzStateMac.Next_st = READY;
+//            CANB_tzSiteRxRegs.Start_cmd = 1;
+//
+//        }
 
         if(ui16InstShutDownFlg == 1)
         {
             CANB_tzSiteRxRegs.f32CurrSet = 0;
+            CANA_tzTxdRegs.tzPSUData.CurrentSet = 0;
+
             CANB_tzSiteRxRegs.StateChngFault = 1;
             STAT_tzStateMac.Next_st = FAULT;
         }

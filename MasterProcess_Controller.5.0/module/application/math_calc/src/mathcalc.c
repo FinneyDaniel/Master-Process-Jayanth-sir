@@ -55,7 +55,7 @@ MATHCONV_tzREGS MATHConvtzRegs;
 //==============================================================================*/
 
 void MATH_fnCalc(void);
-static limitAnalogSensorData(float32 SensorType);
+static float32_t limitAnalogSensorData(float32 SensorType);
 
 ///*==============================================================================
 // Local Variables
@@ -249,17 +249,17 @@ void MATH_fnCalc(void)
 
 }
 
-static limitAnalogSensorData(float32 SensorType)
+static float32_t limitAnalogSensorData(float32_t SensorType)
 {
     if (SensorType > 20.0)
     {
         SensorType = 20.0;
     }
-    else if (SensorType < 4.0)
+    if (SensorType < 4.0)
     {
         SensorType = 4.0;
     }
-    return SensorType;
+    return (float32_t)(SensorType);
 }
 //
 ///*==============================================================================

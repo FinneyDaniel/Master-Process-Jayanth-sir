@@ -39,7 +39,6 @@ All trademarks are owned by Enarka India Private Limited
 typedef enum
 {
     MS_STANDBY,
-    MS_READY,
     MS_PURGE,
     MS_IOPOWER,
     MS_ARMED_POWER,

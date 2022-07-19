@@ -134,9 +134,9 @@ void SCH_fnslot_0(void)
     xx++;
     H2_fnSVcontrol();
 
-    CONTROL_DryerOutletValveLogic();
+   // CONTROL_DryerOutletValveLogic();
 
-    CONTROL_DryerValveBleedLogic();
+  //  CONTROL_DryerValveBleedLogic();
 
     safety_fnlog_monitoring_chk();
 
@@ -188,7 +188,7 @@ void SCH_fnslot_4(void)
 {
 
 
-     CANA_fnPSUTX_Event();
+    // CANA_fnPSUTX_Event();
 
     //safety_fnLog_monitoring_slot_exe(4);
 }
