@@ -269,81 +269,81 @@ void H2_fnSVcontrol(void)
 
 // Dryer Outlet SV401 and SV402 Logic
 
-void CONTROL_DryerOutletValveLogic()
-{
-
-//    if ((ui16SafeShutDownFlg == 1) || (ui16InstShutDownFlg == 1)
-//            || (STAT_tzStateMac.Present_st != STACK_POWER))
-//    {
-//        ui16valSetCnt_SV401402 = 0;
-//        ui16valResetCnt_SV401402++;
-//        if (ui16valResetCnt_SV401402 < 2)
-//        {
-//            CANA_tzDO[1][0].bit.DO1 = 0x0;
-//            CANA_tzDO[1][0].bit.DO2 = 0x0;
+//void CONTROL_DryerOutletValveLogic()
+//{
 //
-//            CANA_fnMSTxCmds(1, 0, &CANA_tzDO[1][0]); //Turn OFF SV401 & SV402 when H2 stops
-//        }
-//        else if (ui16valResetCnt_SV401402 >= 2)
+////    if ((ui16SafeShutDownFlg == 1) || (ui16InstShutDownFlg == 1)
+////            || (STAT_tzStateMac.Present_st != STACK_POWER))
+////    {
+////        ui16valSetCnt_SV401402 = 0;
+////        ui16valResetCnt_SV401402++;
+////        if (ui16valResetCnt_SV401402 < 2)
+////        {
+////            CANA_tzDO[1][0].bit.DO1 = 0x0;
+////            CANA_tzDO[1][0].bit.DO2 = 0x0;
+////
+////            CANA_fnMSTxCmds(1, 0, &CANA_tzDO[1][0]); //Turn OFF SV401 & SV402 when H2 stops
+////        }
+////        else if (ui16valResetCnt_SV401402 >= 2)
+////        {
+////            ui16valResetCnt_SV401402 = 2;
+////        }
+////
+////    }
+////    else if ((ui16SafeShutDownFlg == 0) && (ui16InstShutDownFlg == 0)
+////            && (STAT_tzStateMac.Present_st == STACK_POWER))
+////    {
+////        ui16valResetCnt_SV401402 = 0;
+////        ui16valSetCnt_SV401402++;
+////        if (ui16valSetCnt_SV401402 < 2)
+////        {
+////            CANA_tzDO[1][0].bit.DO1 = 0x1;
+////            CANA_tzDO[1][0].bit.DO2 = 0x1;
+////
+////            CANA_fnMSTxCmds(1, 0, &CANA_tzDO[1][0]); //Turn ON SV401 & SV402 when H2 Production Starts
+////        }
+////        else if (ui16valSetCnt_SV401402 >= 2)
+////        {
+////            ui16valSetCnt_SV401402 = 2;
+////        }
+////
+////    }
+//}
+//
+//void CONTROL_DryerValveBleedLogic()
+//{
+//    if ((ui16Bleedh2 == 1) && (STAT_tzStateMac.Present_st == STAND_BY))
+//    {
+//        ui16BleedCnt++;
+//        if ((ui16BleedCnt == 1) || (ui16BleedCnt == 2))
 //        {
-//            ui16valResetCnt_SV401402 = 2;
+//            CANA_tzDO[CANA_mLHC_CABID][CANA_mLHC11_IO].bit.DO6 = 0x1;
+//            CANA_fnMSTxCmds(1, 1, &CANA_tzDO[1][1]); //Turn ON SV401 & SV402 when H2 Production Starts
+//
+//        }
+//        else if ((ui16BleedCnt == 100) || (ui16BleedCnt == 101))
+//        {
+//            CANA_tzDO[CANA_mLHC_CABID][CANA_mLHC11_IO].bit.DO2 = 0x1; // SV3 to SV6 on after 5 sec
+//            CANA_tzDO[CANA_mLHC_CABID][CANA_mLHC11_IO].bit.DO3 = 0x1;
+//            CANA_tzDO[CANA_mLHC_CABID][CANA_mLHC11_IO].bit.DO4 = 0x1;
+//            CANA_tzDO[CANA_mLHC_CABID][CANA_mLHC11_IO].bit.DO5 = 0x1;
+//            CANA_fnMSTxCmds(1, 1, &CANA_tzDO[1][1]);
+//        }
+//        else if (ui16BleedCnt > 101)
+//        {
+//            ui16BleedCnt = 0;
 //        }
 //
 //    }
-//    else if ((ui16SafeShutDownFlg == 0) && (ui16InstShutDownFlg == 0)
-//            && (STAT_tzStateMac.Present_st == STACK_POWER))
+//    else if (((STAT_tzStateMac.Present_st == READY) && (ui16Bleedh2 == 0))
+//            || (STAT_tzStateMac.Present_st == STACK_CHECK)
+//            || (STAT_tzStateMac.Present_st == STACK_POWER) && (ui16Bleedh2 == 0)
+//            || ((ui16Bleedh2 == 0) && (STAT_tzStateMac.Present_st == STAND_BY)))
 //    {
-//        ui16valResetCnt_SV401402 = 0;
-//        ui16valSetCnt_SV401402++;
-//        if (ui16valSetCnt_SV401402 < 2)
-//        {
-//            CANA_tzDO[1][0].bit.DO1 = 0x1;
-//            CANA_tzDO[1][0].bit.DO2 = 0x1;
-//
-//            CANA_fnMSTxCmds(1, 0, &CANA_tzDO[1][0]); //Turn ON SV401 & SV402 when H2 Production Starts
-//        }
-//        else if (ui16valSetCnt_SV401402 >= 2)
-//        {
-//            ui16valSetCnt_SV401402 = 2;
-//        }
-//
+//        // ui16Bleedh2 = 0;
+//        ui16BleedCnt = 0;
 //    }
-}
-
-void CONTROL_DryerValveBleedLogic()
-{
-    if ((ui16Bleedh2 == 1) && (STAT_tzStateMac.Present_st == STAND_BY))
-    {
-        ui16BleedCnt++;
-        if ((ui16BleedCnt == 1) || (ui16BleedCnt == 2))
-        {
-            CANA_tzDO[CANA_mLHC_CABID][CANA_mLHC11_IO].bit.DO6 = 0x1;
-            CANA_fnMSTxCmds(1, 1, &CANA_tzDO[1][1]); //Turn ON SV401 & SV402 when H2 Production Starts
-
-        }
-        else if ((ui16BleedCnt == 100) || (ui16BleedCnt == 101))
-        {
-            CANA_tzDO[CANA_mLHC_CABID][CANA_mLHC11_IO].bit.DO2 = 0x1; // SV3 to SV6 on after 5 sec
-            CANA_tzDO[CANA_mLHC_CABID][CANA_mLHC11_IO].bit.DO3 = 0x1;
-            CANA_tzDO[CANA_mLHC_CABID][CANA_mLHC11_IO].bit.DO4 = 0x1;
-            CANA_tzDO[CANA_mLHC_CABID][CANA_mLHC11_IO].bit.DO5 = 0x1;
-            CANA_fnMSTxCmds(1, 1, &CANA_tzDO[1][1]);
-        }
-        else if (ui16BleedCnt > 101)
-        {
-            ui16BleedCnt = 0;
-        }
-
-    }
-    else if (((STAT_tzStateMac.Present_st == READY) && (ui16Bleedh2 == 0))
-            || (STAT_tzStateMac.Present_st == STACK_CHECK)
-            || (STAT_tzStateMac.Present_st == STACK_POWER) && (ui16Bleedh2 == 0)
-            || ((ui16Bleedh2 == 0) && (STAT_tzStateMac.Present_st == STAND_BY)))
-    {
-        // ui16Bleedh2 = 0;
-        ui16BleedCnt = 0;
-    }
-}
+//}
 
 /*==============================================================================
  End of File
