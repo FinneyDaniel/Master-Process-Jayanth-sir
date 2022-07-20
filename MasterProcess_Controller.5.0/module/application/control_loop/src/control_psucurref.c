@@ -26,7 +26,9 @@
 #include "hal/driverlib/can.h"
 #include "cana_PSUCom.h"
 #include "scheduler.h"
+#include "cana_defs.h"
 #include "canb_defs.h"
+
 #include "mathcalc.h"
 #include "control_defs.h"
 /*==============================================================================
@@ -59,7 +61,8 @@ void control_fncellmaxval(void);
  ==============================================================================*/
 
 uint32_t ui32NodePresent = 0;
-uint16_t ui16SafeShutDownFlg = 0;
+uint16_t ui16SafeShutDownFlg = 0, ui16RampdownAtstackPwr = 0,
+        ui16StH2CmdFrmMSFlg= 0;
 uint16_t ui16InstShutDownFlg = 0;
 uint16_t testflag = 1;
 uint32_t ui32WaterOkCnt = 0, ui32WaterNotOkCnt = 0;
@@ -146,28 +149,6 @@ void CONTROL_fnPSU_IRef(void)
         MATHConvtzRegs.AISensorPRT402 = 0;
     }
 
-//    if (CANA_tzIOFlags.WaterLevelOk == 0)
-//    {
-//        ui32WaterOkCnt = 0;
-//        ui32WaterNotOkCnt++;
-//        if (ui32WaterNotOkCnt > 100)
-//        {
-//            ui32WaterNotOkCnt = 100;
-//            CONTROLtzFaultRegs.bit.WaterlvlsFail = 1;
-//        }
-//
-//    }
-//    else
-//    {
-//        ui32WaterNotOkCnt = 0;
-//        ui32WaterOkCnt++;
-//        if (ui32WaterOkCnt > 100)
-//        {
-//            ui32WaterOkCnt = 100;
-//            CONTROLtzFaultRegs.bit.WaterlvlsFail = 0;
-//        }
-//    }
-
     ui32NodePresent = CANA_tzActNodeRegs_PSU.bit.bt_node1
             + CANA_tzActNodeRegs_PSU.bit.bt_node2
             + CANA_tzActNodeRegs_PSU.bit.bt_node3
@@ -204,15 +185,18 @@ void CONTROL_fnPSU_IRef(void)
     {
         if (((STAT_tzStateMac.Present_st == STAND_BY)
                 || (STAT_tzStateMac.Present_st == READY)
-                || (STAT_tzStateMac.Present_st == STACK_CHECK)) && (ui16manualTesting == 0))
+                || (STAT_tzStateMac.Present_st == STACK_CHECK))
+                && (ui16manualTesting == 0))
         {
             CANA_tzTxdRegs.tzPSUData.TotalCurrentSet = 0;
         }
 
-        else if ((STAT_tzStateMac.Present_st == STACK_POWER) || (ui16manualTesting == 1))
+        else if ((STAT_tzStateMac.Present_st == STACK_POWER)
+                || (ui16manualTesting == 1))
         {
 
             if ((CANB_tzSiteRxRegs.Start_H2Cmd == 1)
+                    && (CANA_tzMSRegs.StartCmd == 1))
 //                    && (CANA_tzLHC2AIFaultRegs.bit.COS_101 == 0)
 //                    && (CONTROLtzFaultRegs.bit.WaterlvlsFail == 0)
 //                    && (CANA_tzLHC1AIFaultRegs.bit.PRT_101 == 0)
@@ -231,15 +215,16 @@ void CONTROL_fnPSU_IRef(void)
 //                    && (CANA_tzThermalFaultRegs.bit.TTC_301 == 0)
 //                    && (CANA_tzLPCAIFaultRegs.bit.OXS_101_ShtDwn == 0)
 //                    && (CANA_tzLPCAIFaultRegs.bit.OXS_101_RmpDwn == 0)
-            )
 
             {
                 CANA_tzTimerRegs.tzPSU.CurRampDowncnt = 0;
                 CANA_tzTimerRegs.tzPSU.InstShutDowncnt = 0;
 
                 ui16SafeShutDownFlg = 0;
+                ui16RampdownAtstackPwr = 0;
                 ui16InstShutDownFlg = 0;
                 ui16Bleedh2 = 0;
+                ui16StH2CmdFrmMSFlg = 0;
 
                 CANA_tzTimerRegs.tzPSU.CurRampUpcnt++;
 
@@ -271,7 +256,8 @@ void CONTROL_fnPSU_IRef(void)
             else
             {
                 if ((CANB_tzSiteRxRegs.Start_cmd == 0)
-                        || (CANB_tzSiteRxRegs.Start_H2Cmd == 0))
+                        || (CANB_tzSiteRxRegs.Start_H2Cmd == 0)
+                        || (CANA_tzMSRegs.StartCmd == 0))
 //                        || (CANA_tzActNodeRegs_IO.bit.bt_node1 == 0)
 //                        || (CANA_tzActNodeRegs_IO.bit.bt_node2 == 0)
 //                        || (CANA_tzActNodeRegs_IO.bit.bt_node3 == 0)
@@ -294,6 +280,7 @@ void CONTROL_fnPSU_IRef(void)
                 {
 
                     CANA_tzTimerRegs.tzPSU.CurRampUpcnt = 0;
+                    ui16InstShutDownFlg = 0;
 
                     CANA_tzTxdRegs.tzPSUData.TotalCurrentSet =
                             CANB_tzSiteRxRegs.f32CurrSet;
@@ -317,8 +304,37 @@ void CONTROL_fnPSU_IRef(void)
                     {
                         CANA_tzTxdRegs.tzPSUData.CurrentSet = 0.0;
                         CANA_tzTxdRegs.tzPSUData.TotalISetTemp = 0;
-                        ui16SafeShutDownFlg = 1;
-                        ui16Bleedh2 = 1;
+
+                        // In any of the above Conditions bleed H2 should happen - Dryer Valves
+
+                        //ui16Bleedh2 = 1;
+
+                        // Stop Command from Master Safety - Goto SafeShutdown --> StandBy State
+                        if (CANA_tzMSRegs.StartCmd == 0)
+                        {
+                            ui16SafeShutDownFlg = 1;
+                            ui16RampdownAtstackPwr = 0;
+                        }
+
+                        // H2 Percent < 10% from System Process - Goto Ready State --> Restart the process
+
+                        else if (CANB_tzSiteRxRegs.Start_H2Cmd == 0)
+                        {
+                            ui16StH2CmdFrmMSFlg = 1;
+                            ui16SafeShutDownFlg = 0;
+                            ui16RampdownAtstackPwr = 0;
+
+                        }
+
+                        //Any Ramp down Faults occur --> Ramp down and stay in Stack Power
+
+                        else
+                        {
+                            ui16StH2CmdFrmMSFlg = 0;
+                            ui16SafeShutDownFlg = 0;
+                            ui16RampdownAtstackPwr = 1;
+                        }
+
                     }
 
                 }
@@ -329,6 +345,7 @@ void CONTROL_fnPSU_IRef(void)
 //                    CANA_tzTimerRegs.tzPSU.CurRampUpcnt = 0;
 //                    CONTROLtzFaultRegs.bit.LPCCurHealthy = 1;
 //                    ui16SafeShutDownFlg = 0;
+//                    ui16RampdownAtstackPwr = 0;
 //                    CANA_tzTimerRegs.tzPSU.InstShutDowncnt++;
 //                    if (CANA_tzTimerRegs.tzPSU.InstShutDowncnt >= 20)   // delay of 1.2s( 60m * 20) for Instantaneous trip
 //                    {

@@ -241,7 +241,7 @@ void H2_fnSVcontrol(void)
 
         // Keeping all the valves OFF in Other states Except Stack Power
 
-        else //if ((ui16Bleedh2 == 0))
+        else if ((ui16Bleedh2 == 0) && (STAT_tzStateMac.Present_st!= STACK_POWER))
         {
             ui16H2count = 0;
             ui16CycleCount = 0;
@@ -340,7 +340,7 @@ void CONTROL_DryerValveBleedLogic()
             || (STAT_tzStateMac.Present_st == STACK_POWER) && (ui16Bleedh2 == 0)
             || ((ui16Bleedh2 == 0) && (STAT_tzStateMac.Present_st == STAND_BY)))
     {
-       // ui16Bleedh2 = 0;
+        // ui16Bleedh2 = 0;
         ui16BleedCnt = 0;
     }
 }

@@ -151,7 +151,7 @@ uint16_t ui16Cnt = 0;
 uint16_t ui16StateTnstCnt = 0, ui16StateRstCnt = 0;
 uint16_t testCabID = 0, testNodeID = 0, testCntVFD = 0, ui16ComsnCnt = 0;
 float32 testEBV = 0;
-
+uint16_t var = 0;
 /*==============================================================================
  Local Constants
  ==============================================================================*/
@@ -730,7 +730,7 @@ static void cana_fnmsgPrcsMS(uint16_t *msgDataMS)
     if (CANA_tzMSRegs.RxCntMS != msgDataMS[0])
     {
         CANA_tzMSRegs.RxCntMS = msgDataMS[0];
-        CANA_tzMSRegs.StartCmd = 1;//msgDataMS[1];
+        CANA_tzMSRegs.StartCmd = var;//msgDataMS[1];
         CANA_tzMSRegs.PresentStMS = msgDataMS[2];
         CANA_tzMSRegs.AOCmd = msgDataMS[3];
         CANA_tzMSRegs.AOVFan101 = msgDataMS[5];
