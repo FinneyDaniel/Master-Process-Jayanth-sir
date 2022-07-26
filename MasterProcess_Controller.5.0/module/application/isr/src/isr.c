@@ -24,6 +24,8 @@
 #include "isr.h"
 #include "scheduler.h"
 #include "cana_defs.h"
+#include "canb_defs.h"
+
 #include "state_machine.h"
 /*==============================================================================
  Defines
@@ -103,6 +105,8 @@ interrupt void cpu_timer0_isr(void)  //100usec
 
     CANA_fnRXevent();
 
+    CANB_fnRXevent();
+
     /******** Latch Reset Pulse Starts here    ****/
 
     uiResetTimer++;
@@ -151,8 +155,12 @@ interrupt void cpu_timer1_isr(void)  // 10msec
     scheduler_task();
 
     CANA_fnTask();
+    CANB_fnTask();
+
 
     CANA_fnTx();
+
+    CANB_fnTX_SiteEvent();
 
     LEDCount++;
 

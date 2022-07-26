@@ -25,7 +25,7 @@
 #include "cana_defs.h"
 #include "canb_defs.h"
 #include "cana_PSUCom.h"
-
+#include "cana_vsc.h"
 #include "hal/driverlib/can.h"
 #include "state_machine.h"
 #include "control_defs.h"
@@ -54,6 +54,10 @@ CANA_tzAISENSOR_DATA CANA_tzAISensorData;
 CANA_tzDISENSOR_DATA CANA_tzDISensorData;
 
 CANA_tzTHERMOCOUPLE_DATA CANA_tzThermoCoupleData;
+CANA_tzDO_IOREGS CANA_tzSetDO_IORegs;
+can_tzAnaOPParams CANA_tzAnaOPParams;
+CANA_tzDIG_OP CANA_tzDO[2][2];
+CANA_tzDOREGS CANA_tzDOParams;
 
 union CANA_tzDI_IOREGS CANA_tzLPCDI_IORegs[CANA_mTOTAL_LPCNODES],
         CANA_tzLHCDI_IORegs[CANA_mTOTAL_LHCNODES];
@@ -74,15 +78,10 @@ union CANA_tzLHCIO2_AIFLT_IOREGS CANA_tzLHCIO2_AIFaultRegs;
 
 union CANA_tzTHERMALFLT_IOREGS CANA_tzThermalFaultRegs;
 
-CANA_tzDO_IOREGS CANA_tzSetDO_IORegs;
+union CANA_tzACTIVE_IONODE_REGS CANA_tzActNodeRegs_IO;
+union CANA_tzDOMS_STATUS_REGS CANA_tzActMS_DOStRegs;
 
-can_tzAnaOPParams CANA_tzAnaOPParams;
-
-//can_tzDigOPParams CANA_tzDigOPParams;
-
-CANA_tzDIG_OP CANA_tzDO[2][2];
-
-CANA_tzDOREGS CANA_tzDOParams;
+union CANA_tzMP_FAULTS_REGS CANA_tzActMS_FaultRegs;
 
 /*==============================================================================
  Macros
@@ -91,6 +90,8 @@ CANA_tzDOREGS CANA_tzDOParams;
 CIRC_BUF_DEF(uiRxbufferLPCIO, 100);
 CIRC_BUF_DEF(uiRxbufferLHCIO, 100);
 CIRC_BUF_DEF(uiRxbufferMS, 50);
+CIRC_BUF_DEF(uiRxbufferVSC, 100);
+
 
 /*==============================================================================
  Local Function Prototypes
@@ -107,7 +108,7 @@ static void cana_fnmsgPrcsLPCIO(uint16_t uimsgID, uint16_t *msgData,
 static void cana_fnmsgPrcsLHCIO(uint16_t uimsgID, uint16_t *msgData,
                                 uint16_t uiNodeType);
 
-static void cana_fnmsgPrcsMS(uint16_t *msgDataMS);
+static void cana_fnmsgPrcsMS(uint16_t uiMsgtype, uint16_t *msgDataMS);
 
 void CANA_fnIOHrtBt();
 void safeshutDown();
@@ -140,9 +141,12 @@ uint16_t ui16txMsgDataIO[8] = { 0 };
 uint16_t uirxPrcsMsgLPCIO[8] = { 0 };
 uint16_t uirxPrcsMsgLHCIO[8] = { 0 };
 uint16_t uirxPrcsMsgMS[8] = { 0 };
+uint16_t uirxMsgVSC[8] = { 0 };
+uint16_t uirxPrcsMsgVSC[8] = { 0 };
 
-uint32_t u32msgID1 = 0, u32msgID2 = 0, u32msgID3 = 0;
-uint16_t uiDataLength1 = 0, uiDataLength2 = 0, uiDataLength3 = 0;
+uint32_t u32msgID1 = 0, u32msgID2 = 0, u32msgID3 = 0, u32msgID4 = 0;
+uint16_t uiDataLength1 = 0, uiDataLength2 = 0, uiDataLength3 = 0,
+        uiDataLength4 = 0;
 uint16_t uiMsgtype = 0, uiNodeType = 0;
 uint16_t uiCANtxMsgDataMS[8] = { 0 };
 uint16_t ui16CabID = 0, ui16prev_value = 0;
@@ -252,12 +256,22 @@ void CANA_fnRXevent(void)
 
     }
 
-
     if (CAN_IsMessageReceived(CANA_BASE, CAN_mMAILBOX_11))
     {
         CAN_readMessage(CANA_BASE, CAN_mMAILBOX_11, uirxMsgMS);
 
         can_fnEnquedata(&uiRxbufferMS, uirxMsgMS, CanaRegs.CAN_IF2ARB.bit.ID,
+                        CanaRegs.CAN_IF2MCTL.bit.DLC);
+
+    }
+
+    //VSC receive event
+
+    if (CAN_IsMessageReceived(CANA_BASE, CAN_mMAILBOX_12))
+    {
+        CAN_readMessage(CANA_BASE, CAN_mMAILBOX_12, uirxMsgVSC);
+
+        can_fnEnquedata(&uiRxbufferVSC, uirxMsgVSC, CanaRegs.CAN_IF2ARB.bit.ID,
                         CanaRegs.CAN_IF2MCTL.bit.DLC);
 
     }
@@ -308,7 +322,21 @@ void CANA_fnTask(void)
 
     can_fndequedata(&uiRxbufferMS, uirxPrcsMsgMS, &u32msgID3, &uiDataLength3);
 
-    cana_fnmsgPrcsMS(uirxPrcsMsgMS);
+    ui32temp = (u32msgID3 & 0x00F00000);
+    CANA_tzMSRegs.uiMsgtype = (uint16_t) (ui32temp >> 20);
+
+    cana_fnmsgPrcsMS(CANA_tzMSRegs.uiMsgtype, uirxPrcsMsgMS);
+
+    // VSC Processing
+
+    can_fndequedata(&uiRxbufferVSC, uirxPrcsMsgVSC, &u32msgID4, &uiDataLength4);
+
+    canA_VSCbuff.uiNodeID = u32msgID4 & 0xF;
+    ui32temp = u32msgID4 & 0x00F00000;
+    canA_VSCbuff.uiMsgType = (uint16_t) (ui32temp >> 20);
+
+    cana_fnmsgPrcsVSC(canA_VSCbuff.uiNodeID, canA_VSCbuff.uiMsgType,
+                      uirxPrcsMsgVSC);
 }
 
 /*=============================================================================
@@ -342,7 +370,7 @@ static void cana_fnmsgPrcsLPCIO(uint16_t uiMsgtype, uint16_t *msgDataIO,
 
                     CANA_tzIOflags.btLPC30CommnStart = true;
                     CANA_tzIOtimers.LPC30ComFailCnt = 0;
-
+                    CANA_tzActNodeRegs_IO.bit.bt_LPC30 = 1;
                 }
             }
             break;
@@ -360,6 +388,8 @@ static void cana_fnmsgPrcsLPCIO(uint16_t uiMsgtype, uint16_t *msgDataIO,
 
                     CANA_tzIOflags.btLPC31CommnStart = true;
                     CANA_tzIOtimers.LPC31ComFailCnt = 0;
+                    CANA_tzActNodeRegs_IO.bit.bt_LPC31 = 1;
+
                 }
             }
             break;
@@ -512,14 +542,15 @@ static void cana_fnmsgPrcsLPCIO(uint16_t uiMsgtype, uint16_t *msgDataIO,
     if (CANA_tzIOtimers.LPC30ComFailCnt >= 90000)
     {
         CANA_tzIOtimers.LPC30ComFailCnt = 90001;
-        CANA_tzIOflags.LPC30Comfail = 0;
+        CANA_tzActNodeRegs_IO.bit.bt_LPC30 = 0;
     }
 
     CANA_tzIOtimers.LPC31ComFailCnt++;
     if (CANA_tzIOtimers.LPC31ComFailCnt >= 90000)
     {
         CANA_tzIOtimers.LPC31ComFailCnt = 90001;
-        CANA_tzIOflags.LPC31Comfail = 0;
+        CANA_tzActNodeRegs_IO.bit.bt_LPC31 = 0;
+
     }
 }
 
@@ -707,14 +738,12 @@ static void cana_fnmsgPrcsLHCIO(uint16_t uiMsgtype, uint16_t *msgDataIO,
     if (CANA_tzIOtimers.LHC10ComFailCnt >= 90000)
     {
         CANA_tzIOtimers.LHC10ComFailCnt = 90001;
-        CANA_tzIOflags.LHC10Comfail = 0;
     }
 
     CANA_tzIOtimers.LHC11ComFailCnt++;
     if (CANA_tzIOtimers.LHC11ComFailCnt >= 90000)
     {
         CANA_tzIOtimers.LHC11ComFailCnt = 90001;
-        CANA_tzIOflags.LHC11Comfail = 0;
     }
 }
 
@@ -725,14 +754,21 @@ static void cana_fnmsgPrcsLHCIO(uint16_t uiMsgtype, uint16_t *msgDataIO,
  @param void
  @return void
  ============================================================================ */
-static void cana_fnmsgPrcsMS(uint16_t *msgDataMS)
+static void cana_fnmsgPrcsMS(uint16_t uiMsgtype, uint16_t *msgDataMS)
 {
+
+    switch (uiMsgtype)
+    {
+
+    case 0:
+
     if (CANA_tzMSRegs.RxCntMS != msgDataMS[0])
     {
         CANA_tzMSRegs.RxCntMS = msgDataMS[0];
-        CANA_tzMSRegs.StartCmd = var;//msgDataMS[1];
+        CANA_tzMSRegs.StartCmd = var; //msgDataMS[1];
         CANA_tzMSRegs.PresentStMS = msgDataMS[2];
         CANA_tzMSRegs.AOCmd = msgDataMS[3];
+        CANA_tzActMS_FaultRegs.all =  msgDataMS[4];
         CANA_tzMSRegs.AOVFan101 = msgDataMS[5];
         CANA_tzMSRegs.AOVFan501 = msgDataMS[6];
         CANA_tzMSRegs.AOVFan401 = msgDataMS[7];
@@ -773,6 +809,18 @@ static void cana_fnmsgPrcsMS(uint16_t *msgDataMS)
     else
     {
         CANA_tzMSRegs.TurnONPurge401 = 0;
+    }
+    break;
+
+case 1:
+
+    CANA_tzActMS_DOStRegs.all =  msgDataMS[0];
+
+    break;
+
+default:
+    break;
+
     }
 
     switch (CANA_tzMSRegs.PresentStMS)
@@ -1208,7 +1256,7 @@ void safeshutDown()
 void cana_CommisionMode()
 {
 
-    if(CANA_tzQueryType.PSU == QUERY_PROGPARAM)
+    if (CANA_tzQueryType.PSU == QUERY_PROGPARAM)
     {
         CANA_tzQueryType.PSU = SET_VOLT;
     }

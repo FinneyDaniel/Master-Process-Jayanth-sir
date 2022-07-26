@@ -70,12 +70,15 @@
 #define CANA_mRX_LPCMSGID1                                                 (0x10042130)
 #define CANA_mRX_LHCMSGID1                                                 (0x10042110)
 #define CANA_mRX_MSMSGID1                                                  (0x11043000)
+#define CANA_mRX_VSCMSGID1                                                 (0x10041110)
 
 #define CANA_mTX_MSMSGID1                                                 (0x10043000)
 
 #define CANA_mTX_IOMSGID1                                                 (0x11142000)  // Digital Output
 #define CANA_mTX_IOMSGID2                                                 (0x11242000)  // Analog Output Voltage
 #define CANA_mTX_IOMSGID3                                                 (0x11342000)  // Analog Output Current
+
+#define CANA_mTX_VSC_CELL_CNT                                             (0x11141110)
 
 
 #define CAN_mMAILBOX_1                                                  (1U)
@@ -334,6 +337,8 @@ typedef struct CANA_zMSREGS
 
 
     uint32_t RxCntMS;
+    uint16_t uiMsgtype;
+
     uint16_t fan101SetCnt;
     uint16_t fan101ResetCnt;
     uint16_t fan501SetCnt;
@@ -364,15 +369,10 @@ typedef struct CANA_zIOFLAGS
 {
 
     bool btLPC30CommnStart;
-    bool LPC30Comfail;
     bool btLPC31CommnStart;
-    bool LPC31Comfail;
     bool btLHC10CommnStart;
-    bool LHC10Comfail;
     bool btLHC11CommnStart;
-    bool LHC11Comfail;
-    bool   faultAtStChkSt;
-
+    bool faultAtStChkSt;
 
 } CANA_tzIOFLAGS;
 
@@ -648,7 +648,54 @@ union CANA_tzTHERMALFLT_IOREGS
     struct CANA_tzTHERMALFLT_BITS bit;
 };
 
+struct CANA_tzACTIVE_IONODE_BITS
+{
+    uint16_t bt_LPC30 :1;
+    uint16_t bt_LPC31 :1;
+    uint16_t bt_LHC10 :1;
+    uint16_t bt_LHC11 :1;
+    uint16_t bt_MS :1;
 
+};
+
+union CANA_tzACTIVE_IONODE_REGS
+{
+    Uint16 all;
+    struct CANA_tzACTIVE_IONODE_BITS bit;
+};
+
+struct CANA_tzMSDO_STATUS_BITS
+{
+    uint16_t fan101_102 :1;
+    uint16_t purg501_502 :1;
+    uint16_t purg401_402 :1;
+    uint16_t LHC_dc :1;
+    uint16_t LHC_ac :1;
+    uint16_t PSU_CONT :1;
+ };
+
+union CANA_tzDOMS_STATUS_REGS
+{
+    uint16_t all;
+    struct CANA_tzMSDO_STATUS_BITS bit;
+};
+
+
+struct CANA_tzMPFLT_BITS
+{
+    uint16_t fan101_102 :1;
+    uint16_t fan501_502 :1;
+    uint16_t fan401_402 :1;
+    uint16_t DOS101_103 :1;
+    uint16_t DOS301 :1;
+    uint16_t D0S303 :1;
+ };
+
+union CANA_tzMP_FAULTS_REGS
+{
+    uint16_t all;
+    struct CANA_tzMPFLT_BITS bit;
+};
 
 /*============================================================================
  Macros
@@ -660,6 +707,8 @@ union CANA_tzTHERMALFLT_IOREGS
         .i_tail = 0,                      \
         .i_maxlen = y                     \
     }
+
+
 
 /*==============================================================================
  Extern/Public Function Prototypes
@@ -696,6 +745,12 @@ extern CANA_tzDISENSOR_DATA CANA_tzDISensorData;
 
 extern CANA_tzTHERMOCOUPLE_DATA CANA_tzThermoCoupleData;
 extern CANA_tzDIFREQ_IOREGS CANA_tzAIDataFreq_IORegs[CANA_mTOTAL_IONODE];
+extern can_tzAnaOPParams CANA_tzAnaOPParams;
+extern CANA_tzDO_IOREGS CANA_tzSetDO_IORegs;
+extern CANA_tzDIG_OP CANA_tzDO[2][2];
+
+extern CANA_tzDOREGS CANA_tzDOParams;
+
 extern union CANA_tzDI_IOREGS CANA_tzLPCDI_IORegs[CANA_mTOTAL_LPCNODES],
         CANA_tzLHCDI_IORegs[CANA_mTOTAL_LHCNODES];
 extern union CANA_tzAIFLT_IOREGS CANA_tzLPCAIFlt_IORegs[CANA_mTOTAL_IONODE],
@@ -712,19 +767,19 @@ extern union CANA_tzLPCIO2_AIFLT_IOREGS CANA_tzLPCIO2_AIFaultRegs;
 extern union CANA_tzLHCIO1_AIFLT_IOREGS CANA_tzLHCIO1_AIFaultRegs;
 extern union CANA_tzLHCIO2_AIFLT_IOREGS CANA_tzLHCIO2_AIFaultRegs;
 extern union CANA_tzTHERMALFLT_IOREGS CANA_tzThermalFaultRegs;
+extern union CANA_tzACTIVE_IONODE_REGS CANA_tzActNodeRegs_IO;
 
+extern union CANA_tzDOMS_STATUS_REGS CANA_tzActMS_DOStRegs;
 
- //union CANA_tzDO_IOREGS CANA_tzSetDO_IORegs[2][2];
- extern CANA_tzDO_IOREGS CANA_tzSetDO_IORegs;
+extern union CANA_tzMP_FAULTS_REGS CANA_tzActMS_FaultRegs;
 
 extern union CANA_tzLPCAIFLT_IOREGS CANA_tzLPCAIFaultRegs[CANA_mTOTAL_LPCNODES];
 extern union CANA_tzLHCAIFLT_IOREGS CANA_tzLHCAIFaultRegs[CANA_mTOTAL_LHCNODES];
 
-extern can_tzAnaOPParams CANA_tzAnaOPParams;
 
-//extern void CANA_fnMSTxCmds(CANA_tzDIG_OP *ptrDigOP);
+
+
 extern void CANA_fnMSTxCmds(uint16_t ui16CabiD, uint16_t NodeID, CANA_tzDIG_OP  *ptrDigOP);
-//extern void CANA_fnMSTXCmds(uint16_t ui16CabiD, uint16_t NodeID,CANA_tzDOREGS  *ptrDO);
 
 
 extern void CANA_fnCmdsForAnaOPVs(uint16_t ui16unitID, uint16_t ui16cabinetID, uint16_t ui16nodeID,
@@ -734,9 +789,8 @@ extern void CANA_fnCmdsForAnaOPIs(uint16_t ui16unitID, uint16_t ui16cabinetID, u
                            can_tzAnaOPParams *ptrAO_I);
 
 extern void CANA_fnIOHrtBt();
-extern CANA_tzDIG_OP CANA_tzDO[2][2];
 
-extern CANA_tzDOREGS CANA_tzDOParams;
+
 
 /*==============================================================================
  Extern/Public Constants

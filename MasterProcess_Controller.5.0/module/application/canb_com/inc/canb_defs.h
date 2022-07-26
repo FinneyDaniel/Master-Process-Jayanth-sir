@@ -32,6 +32,7 @@ All trademarks are owned by Enarka India Private Limited
 ==============================================================================*/
 
 
+
 /*==============================================================================
  Defines
  ==============================================================================*/
@@ -45,6 +46,21 @@ All trademarks are owned by Enarka India Private Limited
  Structures
 ==============================================================================*/
 
+typedef struct CANB_zRX_CIRCULAR_BUF
+{
+    uint16_t uiDataBuffer[CANA_mRX_BUFFER_SIZE];
+    uint32_t u32_msgID;
+    int16_t i_DataLength;
+
+} CANB_tzRX_CIRCULAR_BUF;
+
+typedef struct canb_zcirc_buff
+{
+    CANB_tzRX_CIRCULAR_BUF canB_tzRxC_buffer[100];
+    int16_t i_head;
+    int16_t i_tail;
+    const int16_t i_maxlen;
+} canb_tzcirc_buff;
 
 
 typedef struct CANB_zSITERXREGS
@@ -58,18 +74,7 @@ typedef struct CANB_zSITERXREGS
     uint16_t StateChngStandBy;
     uint16_t StateChngFault;
 
-    uint16_t uiVoltInt;
-    uint16_t uiVoltFrac;
-    float32_t f32VoltSet;
-    float32_t H2Percent;
 
-    uint16_t uiCurrInt;
-    uint16_t uiCurrFrac;
-    float32_t f32CurrSet;
-
-
-
-    uint16_t queryfaults;
 
 
 } CANB_tzSITERXREGS;
@@ -83,19 +88,60 @@ typedef struct CANB_zSITEREGS
    uint16_t MBox8;
    uint16_t MsgID8;
 
+   uint16_t uiVoltInt;
+   uint16_t uiVoltFrac;
+   float32_t f32VoltSet;
+   float32_t H2Percent;
 
+   uint16_t uiCurrInt;
+   uint16_t uiCurrFrac;
+   float32_t f32CurrSet;
+
+   uint16_t StartCmd;
+
+
+   uint16_t queryfaults;
+   uint16_t ui16MeasVolt[29];
+   uint16_t ui16MeasCurr[29];
+   uint16_t ui16PFCLFlts[29];
+   uint16_t ui16PFCHFlts[29];
+   uint16_t ui16DCDCFlts[29];
+   uint16_t ui16ACFreq[27];
+   uint16_t ui16ACVolt[27];
+   uint16_t ui16ACCurr[27];
+   uint16_t VFDFreqSet;
+   uint16_t uiNumCells;
+
+   uint16_t txHBCnt;
+   uint16_t WaterDemand;
+   uint16_t TurnONLCC;
+   uint16_t uiMsgtype;
+   uint32_t SPComFailCnt;
+  bool btMSComStart;
 } CANB_tzSITEREGS;
 
 /*==============================================================================
  Macros
 ==============================================================================*/
 
+
+#define CIRC1_BUF_DEF(x,y)                \
+    canb_tzcirc_buff x = {                 \
+        .i_head = 0,                      \
+        .i_tail = 0,                      \
+        .i_maxlen = y                     \
+    }
+
 /*==============================================================================
  Extern/Public Function Prototypes
 ==============================================================================*/
 
-extern void CANB_fnSite_Event(void);
+extern void CANB_fnTX_SiteEvent(void);
+extern void CANB_fnRX_SiteEvent(void);
 extern void canb_fnReadMBox_Site(void);
+extern void canb_fnParamsUpdate(void);
+extern void CANB_fnRXevent(void);
+extern void CANB_fnTask(void);
 
 /*==============================================================================
  Extern/Public Variables
