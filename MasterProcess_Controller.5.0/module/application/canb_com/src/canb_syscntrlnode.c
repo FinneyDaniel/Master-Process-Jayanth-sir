@@ -724,7 +724,7 @@ case 1:
     ui16nodeIDVS++;
     if (ui16nodeIDVS > 16)
     {
-        ui16nodeIDVS = 0;
+        ui16nodeIDVS = 1;
     }
 
     CAN_setupMessageObject(CANB_BASE, CAN_mMAILBOX_4,
@@ -1021,10 +1021,13 @@ void CANB_fnRXevent(void)
     //any commands for AO/DO control
     if (CAN_IsMessageReceived(CANB_BASE, CAN_mMAILBOX_11))
     {
-        CAN_readMessage(CANA_BASE, CAN_mMAILBOX_11, ui16rxMsgSP);
+        CAN_readMessage(CANB_BASE, CAN_mMAILBOX_11, ui16rxMsgSP);
 
         canb_fnEnquedata(&uiRxbufferSP, ui16rxMsgSP, CanbRegs.CAN_IF2ARB.bit.ID,
                          CanbRegs.CAN_IF2MCTL.bit.DLC);
+
+        CANB_tzSiteRegs.btMSComStart = 1;
+        CANB_tzSiteRegs.SPComFailCnt = 0;
 
     }
 
@@ -1097,6 +1100,8 @@ static void canb_fnmsgPrcsSP(uint16_t uiMsgtype, uint16_t *msgDataSP)
          CANB_tzSiteRegs.f32CurrSet = (CANB_tzSiteRegs.H2Percent * 0.01
                  * 1000.0);
 
+         CANB_tzSiteRegs.numofCells = ((msgDataSP[6] << 8)
+                  | (msgDataSP[7])) * 0.01;
 
          CANB_tzSiteRegs.SPComFailCnt++;
         if (CANB_tzSiteRegs.SPComFailCnt >= 90000)

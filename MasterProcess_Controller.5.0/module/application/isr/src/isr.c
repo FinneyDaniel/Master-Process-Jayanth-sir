@@ -162,6 +162,8 @@ interrupt void cpu_timer1_isr(void)  // 10msec
 
     CANB_fnTX_SiteEvent();
 
+    cana_fnVSCTx();
+
     LEDCount++;
 
     if (LEDCount > 200)
