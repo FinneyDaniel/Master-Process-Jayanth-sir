@@ -48,6 +48,8 @@ All trademarks are owned by Enarka India Private Limited
 #define EEP_mCAN_ERROR_ADDR                                   (0x122U)
 #define EEP_mCAN_LENGTH_ADDR                                  (0x124U)
 #define EEP_mCAN_CRC32_ADDR                                   (0x128U)
+#define EEP_mCAN_DRYER_ADDR                                   (0x0U)//(0x12AU)
+
 
 #define EEP_mCHANNEL_ID1                            (0x01)
 #define EEP_mCHANNEL_ID2                            (0x02)
@@ -74,22 +76,21 @@ typedef struct EEP_zMSG_BUFF
                                          // with message (high byte).
     uint16_t memoryLowAddr;              // EEPROM address of data associated
                                          // with message (low byte).
-    uint16_t msgBuffer[MAX_BUFFER_SIZE]; // Array holding message data.
+    uint16_t *msgBuffer; // Array holding message data.
 }EEP_tzMSG_BUFF;
 
-typedef struct EEP_zBOOTBUFF
+typedef struct EEP_zFLAGS
 {
-    int32 Calibrated_gain;
-    int32 Calibrated_offset;
-    int32 Calibrated_sign;
-    int32 update_Calibrated_gain;
-    int32 update_Calibrated_sign;
-    int32 update_Calibrated_offset;
+    bool bt_busyflag;
+    bool bt_eepsuccess_flag;
+    bool bt_eepfail_flag;
+    bool bt_loaddata;
+    bool bt_ResetAll;
+    bool bt_eepReset;
+    bool bt_eepWrite;
+}EEP_tzFLAGS;
 
-} EEP_tzBOOTBUFF;
 
-
-extern EEP_tzMSG_BUFF transaction_I2CMsg;
 /*==============================================================================
  Macros
 ==============================================================================*/
@@ -97,22 +98,23 @@ extern EEP_tzMSG_BUFF transaction_I2CMsg;
 /*==============================================================================
  Extern/Public Function Prototypes
 ==============================================================================*/
-extern bool EEP_fnWrite(EEP_tzMSG_BUFF  *pTx_msg, uint16_t ui_addr, uint16_t *pdata, uint16_t uilen);
-extern bool EEP_fnRead(EEP_tzMSG_BUFF  *pRx_msg, uint16_t ui_addr, uint16_t *pdata, uint16_t uilen);
-extern void idle(void);
-extern void EEP_fnResetAll(uint16_t uiInputType);
-extern void eep_fnResetVal(uint16_t uiChannelnum, uint16_t adc_Sel, uint16_t uiaddress);
-extern void eep_fnCalibWrite_TI(uint16_t *msgData, uint16_t uiadrs);
-extern void eep_fnCalibWrite_AI(uint16_t *msgData, uint16_t uiadrs);
-extern void eep_fnBootvalues(void);
-extern void eep_fnCaliboffset_CJC(uint16_t *msgData);
+
 
 /*==============================================================================
  Extern/Public Variables
 ==============================================================================*/
 
 extern uint16_t uieepData[8];
-extern uint16_t uiRxMsgBuffer[7];
+extern uint16_t uiRxMsgBuffer[10];
+extern uint16_t uiRxMsgBuffer1[5];
+extern uint16_t uiTxMsgBuffer[5];
+extern uint16_t uiTxMsgBuffer1[5];
+extern EEP_tzMSG_BUFF transaction_I2CMsg;
+extern void eep_fnTask(void);
+extern bool EEP_fnWrite(EEP_tzMSG_BUFF  *pTx_msg, uint16_t ui_addr, uint16_t *pdata, uint16_t uilen);
+extern bool EEP_fnRead(EEP_tzMSG_BUFF  *pRx_msg, uint16_t ui_addr, uint16_t *pdata, uint16_t uilen);
+
+
 /*==============================================================================
  Extern/Public Constants
 ==============================================================================*/
@@ -121,6 +123,12 @@ extern uint16_t uiRxMsgBuffer[7];
 /*==============================================================================
  Extern/Public Function Prototypes
 ==============================================================================*/
+
+extern bool eep_fnPollwrite(uint16_t address, uint16_t *data, uint16_t bytes);
+extern bool eep_fnPollRead(uint16_t address, uint16_t *data, uint16_t bytes);
+extern void eep_fnInit(void);
+extern void eep_fnidle(void);
+extern EEP_tzFLAGS eep_tzflag;
 
 /*==============================================================================
  Extern/Public Variables

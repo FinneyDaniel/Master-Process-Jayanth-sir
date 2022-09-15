@@ -664,6 +664,42 @@ union CANA_tzACTIVE_IONODE_REGS
     struct CANA_tzACTIVE_IONODE_BITS bit;
 };
 
+struct CANA_tzACTIVE_VSNODE_BITS
+{
+    uint16_t bt_VS1 :1;
+    uint16_t bt_VS2 :1;
+    uint16_t bt_VS3 :1;
+    uint16_t bt_VS4 :1;
+    uint16_t bt_VS5 :1;
+    uint16_t bt_VS6 :1;
+    uint16_t bt_VS7 :1;
+    uint16_t bt_VS8 :1;
+};
+
+union CANA_tzACTIVE_VSNODE_REGS
+{
+    Uint16 all;
+    struct CANA_tzACTIVE_VSNODE_BITS bit;
+};
+
+struct CANA_tzACTIVE_VS1NODE_BITS
+{
+    uint16_t bt_VS9 :1;
+    uint16_t bt_VS10 :1;
+    uint16_t bt_VS11 :1;
+    uint16_t bt_VS12 :1;
+    uint16_t bt_VS13 :1;
+    uint16_t bt_VS14 :1;
+    uint16_t bt_VS15 :1;
+    uint16_t bt_VS16 :1;
+};
+
+union CANA_tzACTIVE_VS1NODE_REGS
+{
+    Uint16 all;
+    struct CANA_tzACTIVE_VS1NODE_BITS bit;
+};
+
 struct CANA_tzMSDO_STATUS_BITS
 {
     uint16_t fan101_102 :1;
@@ -769,6 +805,10 @@ extern union CANA_tzLHCIO2_AIFLT_IOREGS CANA_tzLHCIO2_AIFaultRegs;
 extern union CANA_tzTHERMALFLT_IOREGS CANA_tzThermalFaultRegs;
 extern union CANA_tzACTIVE_IONODE_REGS CANA_tzActNodeRegs_IO;
 
+extern union CANA_tzACTIVE_VSNODE_REGS CANA_tzActNodeRegs_VS;
+extern union CANA_tzACTIVE_VS1NODE_REGS CANA_tzActNodeRegs_VS1;
+
+
 extern union CANA_tzDOMS_STATUS_REGS CANA_tzActMS_DOStRegs;
 
 extern union CANA_tzMP_FAULTS_REGS CANA_tzActMS_FaultRegs;
@@ -791,6 +831,7 @@ extern void CANA_fnCmdsForAnaOPIs(uint16_t ui16unitID, uint16_t ui16cabinetID, u
 extern void CANA_fnIOHrtBt();
 
 extern void cana_fnVSCTx(void);
+extern void CANA_fnComFailChk(void);
 
 
 /*==============================================================================

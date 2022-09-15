@@ -64,6 +64,8 @@ void canb_fnParamsUpdate(void);
 void CANB_fnRXevent(void);
 
 void CANB_fnTask(void);
+void CAN_fnComFailChk(void);
+
 static void canb_fnmsgPrcsSP(uint16_t uiMsgtype, uint16_t *msgDataSP);
 
 bool canb_fnEnquedata(canb_tzcirc_buff *ptr, uint16_t *data, uint32_t msgID,
@@ -1044,13 +1046,15 @@ void CANB_fnTask(void)
 {
     uint32_t ui32temp;
 
-    canb_fndequedata(&uiRxbufferSP, uirxPrcsMsgSP, &u32CANBmsgID1,
-                     &uiCANBDataLength1);
+    while (canb_fndequedata(&uiRxbufferSP, uirxPrcsMsgSP, &u32CANBmsgID1,
+                            &uiCANBDataLength1))
+    {
 
-    ui32temp = (u32CANBmsgID1 & 0x00F00000);
-    CANA_tzMSRegs.uiMsgtype = (uint16_t) (ui32temp >> 20);
+        ui32temp = (u32CANBmsgID1 & 0x00F00000);
+        CANA_tzMSRegs.uiMsgtype = (uint16_t) (ui32temp >> 20);
 
-    canb_fnmsgPrcsSP(CANB_tzSiteRegs.uiMsgtype, uirxPrcsMsgSP);
+        canb_fnmsgPrcsSP(CANB_tzSiteRegs.uiMsgtype, uirxPrcsMsgSP);
+    }
 
 }
 
@@ -1069,8 +1073,8 @@ static void canb_fnmsgPrcsSP(uint16_t uiMsgtype, uint16_t *msgDataSP)
 
     case 0:
 
-       // if (CANB_tzSiteRegs.RxCntMS != msgDataSP[0])
-        {
+        // if (CANB_tzSiteRegs.RxCntMS != msgDataSP[0])
+    {
 //            CANB_tzSiteRegs.RxCntMS = msgDataSP[0];
 //            CANB_tzSiteRegs.StartCmd = msgDataSP[1];
 //            CANB_tzSiteRegs.PresentStMS = msgDataSP[2];
@@ -1082,65 +1086,65 @@ static void canb_fnmsgPrcsSP(uint16_t uiMsgtype, uint16_t *msgDataSP)
 //            CANB_tzSiteRegs.btMSComStart = true;
 //            CANB_tzSiteRegs.SPComFailCnt = 0;
 
-        }
+    }
 
-        if((msgDataSP[4] == 0xAA) && (msgDataSP[5] == 0xAA))
+        if ((msgDataSP[4] == 0xAA) && (msgDataSP[5] == 0xAA))
         {
             CANB_tzSiteRegs.StartCmd = 0x01;
         }
-        else if((msgDataSP[4] == 0x0) && (msgDataSP[5] == 0x0))
+        else if ((msgDataSP[4] == 0x0) && (msgDataSP[5] == 0x0))
         {
             CANB_tzSiteRegs.StartCmd = 0x0;
         }
 
-        CANB_tzSiteRegs.H2Percent = ((msgDataSP[4] << 8)
-                 | (msgDataSP[5])) * 0.01;
+        CANB_tzSiteRegs.H2Percent = ((msgDataSP[4] << 8) | (msgDataSP[5]))
+                * 0.01;
 
         // CANB_tzSiteRegs.f32VoltSet = 400.0; //CV limit changed after connecting 15 power Supplies 15 cell voltages
-         CANB_tzSiteRegs.f32CurrSet = (CANB_tzSiteRegs.H2Percent * 0.01
-                 * 1000.0);
+        CANB_tzSiteRegs.f32CurrSet =
+                (CANB_tzSiteRegs.H2Percent * 0.01 * 1000.0);
 
-         CANB_tzSiteRegs.numofCells = ((msgDataSP[6] << 8)
-                  | (msgDataSP[7])) * 0.01;
+        CANB_tzSiteRegs.numofCells = ((msgDataSP[6] << 8) | (msgDataSP[7]))
+                * 0.01;
 
-         CANB_tzSiteRegs.SPComFailCnt++;
-        if (CANB_tzSiteRegs.SPComFailCnt >= 90000)
+        CANB_tzSiteRegs.SPComFailCnt++;
+        if (CANB_tzSiteRegs.SPComFailCnt >= 3000)
         {
             CANB_tzSiteRegs.btMSComStart = false;
-            CANB_tzSiteRegs.SPComFailCnt = 90000;
+            CANB_tzSiteRegs.SPComFailCnt = 3001;
         }
 
         break;
     }
 }
 
-    void canb_fnParamsUpdate()
-    {
-        CANB_tzSiteRegs.ui16MeasVolt[CANA_PSURegs.Node] =
-                CANA_tzRxdRegs.tzPSUData.f32OutVolt[CANA_PSURegs.Node] * 100;
-        CANB_tzSiteRegs.ui16MeasCurr[CANA_PSURegs.Node] =
-                CANA_tzRxdRegs.tzPSUData.f32OutCurr[CANA_PSURegs.Node] * 100;
-        CANB_tzSiteRegs.ui16DCDCFlts[CANA_PSURegs.Node] =
-                CANA_tzDCDCFaultRegs[CANA_PSURegs.Node].all;
-        CANB_tzSiteRegs.ui16PFCHFlts[CANA_PSURegs.Node] =
-                CANA_tzFECHFaultRegs[CANA_PSURegs.Node].all;
-        CANB_tzSiteRegs.ui16PFCLFlts[CANA_PSURegs.Node] =
-                CANA_tzFECLFaultRegs[CANA_PSURegs.Node].all;
+void canb_fnParamsUpdate()
+{
+    CANB_tzSiteRegs.ui16MeasVolt[CANA_PSURegs.Node] =
+            CANA_tzRxdRegs.tzPSUData.f32OutVolt[CANA_PSURegs.Node] * 100;
+    CANB_tzSiteRegs.ui16MeasCurr[CANA_PSURegs.Node] =
+            CANA_tzRxdRegs.tzPSUData.f32OutCurr[CANA_PSURegs.Node] * 100;
+    CANB_tzSiteRegs.ui16DCDCFlts[CANA_PSURegs.Node] =
+            CANA_tzDCDCFaultRegs[CANA_PSURegs.Node].all;
+    CANB_tzSiteRegs.ui16PFCHFlts[CANA_PSURegs.Node] =
+            CANA_tzFECHFaultRegs[CANA_PSURegs.Node].all;
+    CANB_tzSiteRegs.ui16PFCLFlts[CANA_PSURegs.Node] =
+            CANA_tzFECLFaultRegs[CANA_PSURegs.Node].all;
 
-        CANB_tzSiteRegs.ui16ACFreq[CANA_PSURegs.Node] =
-                (CANA_tzRxdRegs.tzPSUData.ACparamFreq[CANA_PSURegs.Node] * 10);
-        CANB_tzSiteRegs.ui16ACVolt[CANA_PSURegs.Node] =
-                (CANA_tzRxdRegs.tzPSUData.AClineVolt[CANA_PSURegs.Node]);
+    CANB_tzSiteRegs.ui16ACFreq[CANA_PSURegs.Node] =
+            (CANA_tzRxdRegs.tzPSUData.ACparamFreq[CANA_PSURegs.Node] * 10);
+    CANB_tzSiteRegs.ui16ACVolt[CANA_PSURegs.Node] =
+            (CANA_tzRxdRegs.tzPSUData.AClineVolt[CANA_PSURegs.Node]);
 
-        CANB_tzSiteRegs.ui16ACCurr[CANA_PSURegs.Node] =
-                (CANA_tzRxdRegs.tzPSUData.AClineCurr[CANA_PSURegs.Node] * 10);
-    }
+    CANB_tzSiteRegs.ui16ACCurr[CANA_PSURegs.Node] =
+            (CANA_tzRxdRegs.tzPSUData.AClineCurr[CANA_PSURegs.Node] * 10);
+}
 
-    /*==============================================================================
-     Local Constants
-     ==============================================================================*/
+/*==============================================================================
+ Local Constants
+ ==============================================================================*/
 
-    /*==============================================================================
-     End of File
-     ==============================================================================*/
+/*==============================================================================
+ End of File
+ ==============================================================================*/
 

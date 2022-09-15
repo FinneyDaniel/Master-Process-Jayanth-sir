@@ -52,6 +52,8 @@ extern interrupt void cpu_timer1_isr(void);
  Extern/Public Variables
 ==============================================================================*/
 extern uint16_t uiResetTimer;
+extern uint16_t ui16CANAVSFailTrig1;
+extern uint32_t ui32CANAVSFailCnt1;
 /*==============================================================================
  Extern/Public Constants
 ==============================================================================*/

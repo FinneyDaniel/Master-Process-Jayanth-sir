@@ -157,9 +157,13 @@ extern union CONTROL_FLTS_REG CONTROLtzFaultRegs;
 
 extern uint16_t ui16SafeShutDownFlg;
 extern uint16_t ui16InstShutDownFlg;
-extern uint16_t ui16Bleedh2,ui16StH2CmdFrmMSFlg,val1_2Cnt,ui16CycleCount;
+extern uint16_t ui16Bleedh2,ui16StH2CmdFrmMSFlg,ui16CycleCount;
 extern uint32_t ui32NodePresent;
 extern float32_t f32EBVOutvalue;
+extern uint32_t ui16H2count,val1_2Cnt;
+extern uint16_t eepwritecount;
+extern uint16_t epromStAdd;
+extern uint16_t uiepromAdd;
 
 /*==============================================================================
  Extern/Public Constants

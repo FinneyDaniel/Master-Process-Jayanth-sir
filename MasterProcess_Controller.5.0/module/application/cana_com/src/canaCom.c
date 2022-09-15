@@ -28,6 +28,7 @@
 #include "cana_vsc.h"
 #include "hal/driverlib/can.h"
 #include "state_machine.h"
+#include "isr.h"
 #include "control_defs.h"
 /*==============================================================================
  Defines
@@ -79,6 +80,9 @@ union CANA_tzLHCIO2_AIFLT_IOREGS CANA_tzLHCIO2_AIFaultRegs;
 union CANA_tzTHERMALFLT_IOREGS CANA_tzThermalFaultRegs;
 
 union CANA_tzACTIVE_IONODE_REGS CANA_tzActNodeRegs_IO;
+union CANA_tzACTIVE_VSNODE_REGS CANA_tzActNodeRegs_VS;
+union CANA_tzACTIVE_VS1NODE_REGS CANA_tzActNodeRegs_VS1;
+
 union CANA_tzDOMS_STATUS_REGS CANA_tzActMS_DOStRegs;
 
 union CANA_tzMP_FAULTS_REGS CANA_tzActMS_FaultRegs;
@@ -92,7 +96,6 @@ CIRC_BUF_DEF(uiRxbufferLHCIO, 100);
 CIRC_BUF_DEF(uiRxbufferMS, 50);
 CIRC_BUF_DEF(uiRxbufferVSC, 100);
 
-
 /*==============================================================================
  Local Function Prototypes
  ==============================================================================*/
@@ -101,6 +104,7 @@ void CANA_fnInitMBox(void);
 void CANA_fnRXevent(void);
 void CANA_fnTask(void);
 void CANA_fnTx(void);
+void CAN_fnComFailChk(void);
 
 static void cana_fnmsgPrcsLPCIO(uint16_t uimsgID, uint16_t *msgData,
                                 uint16_t uiNodeType);
@@ -155,7 +159,7 @@ uint16_t ui16Cnt = 0;
 uint16_t ui16StateTnstCnt = 0, ui16StateRstCnt = 0;
 uint16_t testCabID = 0, testNodeID = 0, testCntVFD = 0, ui16ComsnCnt = 0;
 float32 testEBV = 0;
-uint16_t var = 0;
+uint16_t var = 0, ui16IOcnt = 0;
 /*==============================================================================
  Local Constants
  ==============================================================================*/
@@ -273,6 +277,7 @@ void CANA_fnRXevent(void)
 
         can_fnEnquedata(&uiRxbufferVSC, uirxMsgVSC, CanaRegs.CAN_IF2ARB.bit.ID,
                         CanaRegs.CAN_IF2MCTL.bit.DLC);
+        ui32CANAVSFailCnt1 = 0;
 
     }
 
@@ -292,51 +297,62 @@ void CANA_fnTask(void)
 
     uint32_t ui32temp;
 
-    can_fndequedata(&uiRxbufferLPCIO, uirxPrcsMsgLPCIO, &u32msgID1,
-                    &uiDataLength1);
+    while (can_fndequedata(&uiRxbufferLPCIO, uirxPrcsMsgLPCIO, &u32msgID1,
+                           &uiDataLength1))
+    {
 
-    //extracting msgID for individual messages of LPC
+        //extracting msgID for individual messages of LPC
 
-    ui32temp = (u32msgID1 & 0x00F00F0F);
-    CANA_tzIORegs.uiMsgtypeLPCIO = (uint16_t) ((ui32temp & 0x00F00000) >> 20);
-    CANA_tzIORegs.uiUnitID = (uint16_t) ((ui32temp & 0x00000F00) >> 8);
+        ui32temp = (u32msgID1 & 0x00F00F0F);
+        CANA_tzIORegs.uiMsgtypeLPCIO =
+                (uint16_t) ((ui32temp & 0x00F00000) >> 20);
+        CANA_tzIORegs.uiUnitID = (uint16_t) ((ui32temp & 0x00000F00) >> 8);
 
-    CANA_tzIORegs.uiNodeLPCIO = (uint16_t) (ui32temp & 0x0F);
+        CANA_tzIORegs.uiNodeLPCIO = (uint16_t) (ui32temp & 0x0F);
 
-    //processing received messages of LPC
+        //processing received messages of LPC
 
-    cana_fnmsgPrcsLPCIO(CANA_tzIORegs.uiMsgtypeLPCIO, uirxPrcsMsgLPCIO,
-                        CANA_tzIORegs.uiNodeLPCIO);
+        cana_fnmsgPrcsLPCIO(CANA_tzIORegs.uiMsgtypeLPCIO, uirxPrcsMsgLPCIO,
+                            CANA_tzIORegs.uiNodeLPCIO);
+    }
 
-    can_fndequedata(&uiRxbufferLHCIO, uirxPrcsMsgLHCIO, &u32msgID2,
-                    &uiDataLength2);
+    while (can_fndequedata(&uiRxbufferLHCIO, uirxPrcsMsgLHCIO, &u32msgID2,
+                           &uiDataLength2))
 
     //extracting msgID for individual messages of LHC
 
-    ui32temp = (u32msgID2 & 0x00F0000F);
-    CANA_tzIORegs.uiMsgtypeLHCIO = (uint16_t) (ui32temp >> 20);
-    CANA_tzIORegs.uiNodeLHCIO = (uint16_t) (ui32temp & 0x0F);
+    {
+        ui32temp = (u32msgID2 & 0x00F0000F);
+        CANA_tzIORegs.uiMsgtypeLHCIO = (uint16_t) (ui32temp >> 20);
+        CANA_tzIORegs.uiNodeLHCIO = (uint16_t) (ui32temp & 0x0F);
 
-    cana_fnmsgPrcsLHCIO(CANA_tzIORegs.uiMsgtypeLHCIO, uirxPrcsMsgLHCIO,
-                        CANA_tzIORegs.uiNodeLHCIO);
+        cana_fnmsgPrcsLHCIO(CANA_tzIORegs.uiMsgtypeLHCIO, uirxPrcsMsgLHCIO,
+                            CANA_tzIORegs.uiNodeLHCIO);
+    }
 
-    can_fndequedata(&uiRxbufferMS, uirxPrcsMsgMS, &u32msgID3, &uiDataLength3);
+    while (can_fndequedata(&uiRxbufferMS, uirxPrcsMsgMS, &u32msgID3,
+                           &uiDataLength3))
+    {
 
-    ui32temp = (u32msgID3 & 0x00F00000);
-    CANA_tzMSRegs.uiMsgtype = (uint16_t) (ui32temp >> 20);
+        ui32temp = (u32msgID3 & 0x00F00000);
+        CANA_tzMSRegs.uiMsgtype = (uint16_t) (ui32temp >> 20);
 
-    cana_fnmsgPrcsMS(CANA_tzMSRegs.uiMsgtype, uirxPrcsMsgMS);
+        cana_fnmsgPrcsMS(CANA_tzMSRegs.uiMsgtype, uirxPrcsMsgMS);
+    }
 
     // VSC Processing
 
-    can_fndequedata(&uiRxbufferVSC, uirxPrcsMsgVSC, &u32msgID4, &uiDataLength4);
+    while (can_fndequedata(&uiRxbufferVSC, uirxPrcsMsgVSC, &u32msgID4,
+                           &uiDataLength4))
+    {
 
-    canA_VSCbuff.uiNodeID = u32msgID4 & 0xF;
-    ui32temp = u32msgID4 & 0x00F00000;
-    canA_VSCbuff.uiMsgType = (uint16_t) (ui32temp >> 20);
+        canA_VSCbuff.uiNodeID = u32msgID4 & 0xF;
+        ui32temp = u32msgID4 & 0x00F00000;
+        canA_VSCbuff.uiMsgType = (uint16_t) (ui32temp >> 20);
 
-    cana_fnmsgPrcsVSC(canA_VSCbuff.uiNodeID, canA_VSCbuff.uiMsgType,
-                      uirxPrcsMsgVSC);
+        cana_fnmsgPrcsVSC(canA_VSCbuff.uiNodeID, canA_VSCbuff.uiMsgType,
+                          uirxPrcsMsgVSC);
+    }
 }
 
 /*=============================================================================
@@ -359,39 +375,39 @@ static void cana_fnmsgPrcsLPCIO(uint16_t uiMsgtype, uint16_t *msgDataIO,
 
         case LPC_30:
 
-            if (CANA_tzIOtimers.RxCntLPC30 != msgDataIO[0])
+            //if (CANA_tzIOtimers.RxCntLPC30 != msgDataIO[0])
+        {
+            CANA_tzIOtimers.RxCntLPC30 = msgDataIO[0];
+
+            if (msgDataIO[1] == msgDataIO[2])
             {
-                CANA_tzIOtimers.RxCntLPC30 = msgDataIO[0];
+                CANA_tzLPCDI_IORegs[CANA_mLPC30_IO].all = msgDataIO[1];
+                CANA_tzLPCAIFlt_IORegs[CANA_mLPC30_IO].all = msgDataIO[5];
 
-                if (msgDataIO[1] == msgDataIO[2])
-                {
-                    CANA_tzLPCDI_IORegs[CANA_mLPC30_IO].all = msgDataIO[1];
-                    CANA_tzLPCAIFlt_IORegs[CANA_mLPC30_IO].all = msgDataIO[5];
-
-                    CANA_tzIOflags.btLPC30CommnStart = true;
-                    CANA_tzIOtimers.LPC30ComFailCnt = 0;
-                    CANA_tzActNodeRegs_IO.bit.bt_LPC30 = 1;
-                }
+                CANA_tzIOflags.btLPC30CommnStart = true;
+                CANA_tzIOtimers.LPC30ComFailCnt = 0;
+                CANA_tzActNodeRegs_IO.bit.bt_LPC30 = 1;
             }
+        }
             break;
 
         case LPC_31:
 
-            if (CANA_tzIOtimers.RxCntLPC31 != msgDataIO[0])
+            //if (CANA_tzIOtimers.RxCntLPC31 != msgDataIO[0])
+        {
+            CANA_tzIOtimers.RxCntLPC31 = msgDataIO[0];
+
+            if (msgDataIO[1] == msgDataIO[2])
             {
-                CANA_tzIOtimers.RxCntLPC31 = msgDataIO[0];
+                CANA_tzLPCDI_IORegs[CANA_mLPC31_IO].all = msgDataIO[1];
+                CANA_tzLPCAIFlt_IORegs[CANA_mLPC31_IO].all = msgDataIO[5];
 
-                if (msgDataIO[1] == msgDataIO[2])
-                {
-                    CANA_tzLPCDI_IORegs[CANA_mLPC31_IO].all = msgDataIO[1];
-                    CANA_tzLPCAIFlt_IORegs[CANA_mLPC31_IO].all = msgDataIO[5];
+                CANA_tzIOflags.btLPC31CommnStart = true;
+                CANA_tzIOtimers.LPC31ComFailCnt = 0;
+                CANA_tzActNodeRegs_IO.bit.bt_LPC31 = 1;
 
-                    CANA_tzIOflags.btLPC31CommnStart = true;
-                    CANA_tzIOtimers.LPC31ComFailCnt = 0;
-                    CANA_tzActNodeRegs_IO.bit.bt_LPC31 = 1;
-
-                }
             }
+        }
             break;
         }
         break;
@@ -424,7 +440,7 @@ static void cana_fnmsgPrcsLPCIO(uint16_t uiMsgtype, uint16_t *msgDataIO,
             CANA_tzAIData_IORegs[CANA_mLPC31_IO].AI3_Data = ((msgDataIO[6] << 8)
                     | (msgDataIO[7])) * 0.001;
 
-            CANA_tzAISensorData.OXS_101 =
+            CANA_tzAISensorData.HYS_401 =
                     CANA_tzAIData_IORegs[CANA_mLPC31_IO].AI3_Data;
 
             break;
@@ -463,11 +479,11 @@ static void cana_fnmsgPrcsLPCIO(uint16_t uiMsgtype, uint16_t *msgDataIO,
 
             CANA_tzAISensorData.HYS_101 =
                     CANA_tzAIData_IORegs[CANA_mLPC31_IO].AI4_Data;
-            CANA_tzAISensorData.HYS_501 =
-                    CANA_tzAIData_IORegs[CANA_mLPC31_IO].AI5_Data;
-            CANA_tzAISensorData.HYS_401 =
-                    CANA_tzAIData_IORegs[CANA_mLPC31_IO].AI6_Data;
             CANA_tzAISensorData.HYS_102 =
+                    CANA_tzAIData_IORegs[CANA_mLPC31_IO].AI5_Data;
+            CANA_tzAISensorData.OXS_101 =
+                    CANA_tzAIData_IORegs[CANA_mLPC31_IO].AI6_Data;
+            CANA_tzAISensorData.HYS_501 =
                     CANA_tzAIData_IORegs[CANA_mLPC31_IO].AI7_Data;
 
             break;
@@ -538,20 +554,6 @@ static void cana_fnmsgPrcsLPCIO(uint16_t uiMsgtype, uint16_t *msgDataIO,
 
     }
 
-    CANA_tzIOtimers.LPC30ComFailCnt++;
-    if (CANA_tzIOtimers.LPC30ComFailCnt >= 90000)
-    {
-        CANA_tzIOtimers.LPC30ComFailCnt = 90001;
-        CANA_tzActNodeRegs_IO.bit.bt_LPC30 = 0;
-    }
-
-    CANA_tzIOtimers.LPC31ComFailCnt++;
-    if (CANA_tzIOtimers.LPC31ComFailCnt >= 90000)
-    {
-        CANA_tzIOtimers.LPC31ComFailCnt = 90001;
-        CANA_tzActNodeRegs_IO.bit.bt_LPC31 = 0;
-
-    }
 }
 
 /*=============================================================================
@@ -574,33 +576,40 @@ static void cana_fnmsgPrcsLHCIO(uint16_t uiMsgtype, uint16_t *msgDataIO,
 
         case LHC_10:
 
-            if (CANA_tzIOtimers.RxCntLHC10 != msgDataIO[0])
+            //if (CANA_tzIOtimers.RxCntLHC10 != msgDataIO[0])
+        {
+            CANA_tzIOtimers.RxCntLHC10 = msgDataIO[0];
+
+            if (msgDataIO[1] == msgDataIO[2])
             {
-                CANA_tzIOtimers.RxCntLHC10 = msgDataIO[0];
+                CANA_tzLHCDI_IORegs[CANA_mLHC10_IO].all = msgDataIO[1];
+                CANA_tzIORegs.CJC[CANA_mLHC10_IO] = ((msgDataIO[3] << 8)
+                        | (msgDataIO[4])) * 0.01;
+                CANA_tzLHCAIFlt_IORegs[CANA_mLHC10_IO].all = msgDataIO[5];
 
-                if (msgDataIO[1] == msgDataIO[2])
-                {
-                    CANA_tzLHCDI_IORegs[CANA_mLHC10_IO].all = msgDataIO[1];
-                    CANA_tzIORegs.CJC[CANA_mLHC10_IO] = ((msgDataIO[3] << 8)
-                            | (msgDataIO[4])) * 0.001;
-                    CANA_tzLHCAIFlt_IORegs[CANA_mLHC10_IO].all = msgDataIO[5];
+                CANA_tzIOflags.btLHC10CommnStart = true;
+                CANA_tzIOtimers.LHC10ComFailCnt = 0;
+                CANA_tzActNodeRegs_IO.bit.bt_LHC10 = 1;
 
-                }
             }
+        }
             break;
 
         case LHC_11:
 
-            if (CANA_tzIOtimers.RxCntLHC11 != msgDataIO[0])
-            {
-                CANA_tzIOtimers.RxCntLHC11 = msgDataIO[0];
+            //if (CANA_tzIOtimers.RxCntLHC11 != msgDataIO[0])
+        {
+            CANA_tzIOtimers.RxCntLHC11 = msgDataIO[0];
 
-                if (msgDataIO[1] == msgDataIO[2])
-                {
-                    CANA_tzLHCDI_IORegs[CANA_mLHC11_IO].all = msgDataIO[1];
-                    CANA_tzLHCAIFlt_IORegs[CANA_mLHC11_IO].all = msgDataIO[5];
-                }
+            if (msgDataIO[1] == msgDataIO[2])
+            {
+                CANA_tzLHCDI_IORegs[CANA_mLHC11_IO].all = msgDataIO[1];
+                CANA_tzLHCAIFlt_IORegs[CANA_mLHC11_IO].all = msgDataIO[5];
+                CANA_tzIOflags.btLHC11CommnStart = true;
+                CANA_tzIOtimers.LHC11ComFailCnt = 0;
+                CANA_tzActNodeRegs_IO.bit.bt_LHC11 = 1;
             }
+        }
             break;
         }
         break;
@@ -708,13 +717,13 @@ static void cana_fnmsgPrcsLHCIO(uint16_t uiMsgtype, uint16_t *msgDataIO,
             CANA_tzThermal_IORegs[CANA_mLHC10_IO].T3_Data = ((msgDataIO[6] << 8)
                     | (msgDataIO[7])) * 0.001;
 
-            CANA_tzThermoCoupleData.KTC_401 =
-                    CANA_tzThermal_IORegs[CANA_mLHC10_IO].T0_Data;
             CANA_tzThermoCoupleData.TTC_101 =
+                    CANA_tzThermal_IORegs[CANA_mLHC10_IO].T0_Data;
+            CANA_tzThermoCoupleData.TTC_102 =
                     CANA_tzThermal_IORegs[CANA_mLHC10_IO].T1_Data;
             CANA_tzThermoCoupleData.TTC_301 =
                     CANA_tzThermal_IORegs[CANA_mLHC10_IO].T2_Data;
-            CANA_tzThermoCoupleData.TTC_102 =
+            CANA_tzThermoCoupleData.KTC_401 =
                     CANA_tzThermal_IORegs[CANA_mLHC10_IO].T3_Data;
 
             break;
@@ -734,17 +743,6 @@ static void cana_fnmsgPrcsLHCIO(uint16_t uiMsgtype, uint16_t *msgDataIO,
 
     }
 
-    CANA_tzIOtimers.LHC10ComFailCnt++;
-    if (CANA_tzIOtimers.LHC10ComFailCnt >= 90000)
-    {
-        CANA_tzIOtimers.LHC10ComFailCnt = 90001;
-    }
-
-    CANA_tzIOtimers.LHC11ComFailCnt++;
-    if (CANA_tzIOtimers.LHC11ComFailCnt >= 90000)
-    {
-        CANA_tzIOtimers.LHC11ComFailCnt = 90001;
-    }
 }
 
 /*=============================================================================
@@ -762,64 +760,57 @@ static void cana_fnmsgPrcsMS(uint16_t uiMsgtype, uint16_t *msgDataMS)
 
     case 0:
 
-    if (CANA_tzMSRegs.RxCntMS != msgDataMS[0])
-    {
-        CANA_tzMSRegs.RxCntMS = msgDataMS[0];
-        CANA_tzMSRegs.StartCmd = var; //msgDataMS[1];
-        CANA_tzMSRegs.PresentStMS = msgDataMS[2];
-        CANA_tzMSRegs.AOCmd = msgDataMS[3];
-        CANA_tzActMS_FaultRegs.all =  msgDataMS[4];
-        CANA_tzMSRegs.AOVFan101 = msgDataMS[5];
-        CANA_tzMSRegs.AOVFan501 = msgDataMS[6];
-        CANA_tzMSRegs.AOVFan401 = msgDataMS[7];
-        CANA_tzMSRegs.btMSComStart = true;
-        CANA_tzMSRegs.MSComFailCnt = 0;
+        if (CANA_tzMSRegs.RxCntMS != msgDataMS[0])
+        {
+            CANA_tzMSRegs.RxCntMS = msgDataMS[0];
+            CANA_tzMSRegs.StartCmd = msgDataMS[1];
+            CANA_tzMSRegs.PresentStMS = msgDataMS[2];
+            CANA_tzMSRegs.AOCmd = msgDataMS[3];
+            CANA_tzActMS_FaultRegs.all = msgDataMS[4];
+            CANA_tzMSRegs.AOVFan101 = msgDataMS[5];
+            CANA_tzMSRegs.AOVFan501 = msgDataMS[6];
+            CANA_tzMSRegs.AOVFan401 = msgDataMS[7];
+            CANA_tzMSRegs.btMSComStart = true;
+            CANA_tzMSRegs.MSComFailCnt = 0;
 
-    }
+        }
 
-    CANA_tzMSRegs.MSComFailCnt++;
-    if (CANA_tzMSRegs.MSComFailCnt >= 90000)
-    {
-        CANA_tzMSRegs.btMSComStart = false;
-        CANA_tzMSRegs.MSComFailCnt = 90000;
-    }
+        if ((CANA_tzMSRegs.AOCmd & 0x01) == 0x01)
+        {
+            CANA_tzMSRegs.TurnONPurge101 = 1;
+        }
+        else
+        {
+            CANA_tzMSRegs.TurnONPurge101 = 0;
+        }
 
-    if ((CANA_tzMSRegs.AOCmd & 0x01) == 0x01)
-    {
-        CANA_tzMSRegs.TurnONPurge101 = 1;
-    }
-    else
-    {
-        CANA_tzMSRegs.TurnONPurge101 = 0;
-    }
+        if ((CANA_tzMSRegs.AOCmd & 0x02) == 0x02)
+        {
+            CANA_tzMSRegs.TurnONPurge501 = 1;
+        }
+        else
+        {
+            CANA_tzMSRegs.TurnONPurge501 = 0;
+        }
 
-    if ((CANA_tzMSRegs.AOCmd & 0x02) == 0x02)
-    {
-        CANA_tzMSRegs.TurnONPurge501 = 1;
-    }
-    else
-    {
-        CANA_tzMSRegs.TurnONPurge501 = 0;
-    }
+        if ((CANA_tzMSRegs.AOCmd & 0x0004) == 0x0004)
+        {
+            CANA_tzMSRegs.TurnONPurge401 = 1;
+        }
+        else
+        {
+            CANA_tzMSRegs.TurnONPurge401 = 0;
+        }
+        break;
 
-    if ((CANA_tzMSRegs.AOCmd & 0x0004) == 0x0004)
-    {
-        CANA_tzMSRegs.TurnONPurge401 = 1;
-    }
-    else
-    {
-        CANA_tzMSRegs.TurnONPurge401 = 0;
-    }
-    break;
+    case 1:
 
-case 1:
+        CANA_tzActMS_DOStRegs.all = msgDataMS[0];
 
-    CANA_tzActMS_DOStRegs.all =  msgDataMS[0];
+        break;
 
-    break;
-
-default:
-    break;
+    default:
+        break;
 
     }
 
@@ -848,6 +839,377 @@ default:
         break;
     default:
         break;
+    }
+
+}
+
+void CANA_fnComFailChk()
+{
+
+    uint16_t ui16temp;
+
+    CANA_tzMSRegs.MSComFailCnt++;
+    if (CANA_tzMSRegs.MSComFailCnt >= 3000)
+    {
+        CANA_tzMSRegs.btMSComStart = false;
+        CANA_tzMSRegs.MSComFailCnt = 3001;
+    }
+
+    CANA_tzIOtimers.LHC10ComFailCnt++;
+    if (CANA_tzIOtimers.LHC10ComFailCnt >= 3000)
+    {
+        CANA_tzIOtimers.LHC10ComFailCnt = 3001;
+        CANA_tzIOflags.btLHC10CommnStart = false;
+        CANA_tzActNodeRegs_IO.bit.bt_LHC10 = 0;
+
+    }
+
+    CANA_tzIOtimers.LHC11ComFailCnt++;
+    if (CANA_tzIOtimers.LHC11ComFailCnt >= 3000)
+    {
+        CANA_tzIOtimers.LHC11ComFailCnt = 3001;
+        CANA_tzIOflags.btLHC11CommnStart = false;
+        CANA_tzActNodeRegs_IO.bit.bt_LHC11 = 0;
+
+    }
+
+    CANA_tzIOtimers.LPC30ComFailCnt++;
+    if (CANA_tzIOtimers.LPC30ComFailCnt >= 3000)
+    {
+        CANA_tzIOtimers.LPC30ComFailCnt = 3001;
+        CANA_tzActNodeRegs_IO.bit.bt_LPC30 = 0;
+    }
+
+    CANA_tzIOtimers.LPC31ComFailCnt++;
+    if (CANA_tzIOtimers.LPC31ComFailCnt >= 3000)
+    {
+        CANA_tzIOtimers.LPC31ComFailCnt = 3001;
+        CANA_tzActNodeRegs_IO.bit.bt_LPC31 = 0;
+    }
+
+    if (ui16CANAVSFailTrig1 == 1)
+    {
+        canA_VSCbuff.uiNodeID = 0;
+    }
+
+    if (canA_VSCbuff.uiNodeID != 1)
+    {
+        if (canA_tzVSC_info[1].CANfailCnt++ >= 2000)
+        {
+            canA_tzVSC_info[1].CANfailCnt = 2000;
+            CANA_tzActNodeRegs_VS.bit.bt_VS1 = 0;
+
+            for (ui16temp = 1; ui16temp <= 16; ui16temp++)
+            {
+                canA_tzVSC_info[1].f32Cellvolt[ui16temp] = 0;
+            }
+        }
+    }
+    else
+    {
+        canA_tzVSC_info[1].CANfailCnt = 0;
+        CANA_tzActNodeRegs_VS.bit.bt_VS1 = 1;
+
+    }
+
+    if (canA_VSCbuff.uiNodeID != 2)
+    {
+        if (canA_tzVSC_info[2].CANfailCnt++ >= 2000)
+        {
+            canA_tzVSC_info[2].CANfailCnt = 2000;
+            CANA_tzActNodeRegs_VS.bit.bt_VS2 = 0;
+            for (ui16temp = 1; ui16temp <= 16; ui16temp++)
+            {
+                canA_tzVSC_info[2].f32Cellvolt[ui16temp] = 0;
+
+            }
+        }
+    }
+    else
+    {
+        canA_tzVSC_info[2].CANfailCnt = 0;
+        CANA_tzActNodeRegs_VS.bit.bt_VS2 = 1;
+
+    }
+
+    if (canA_VSCbuff.uiNodeID != 3)
+    {
+        if (canA_tzVSC_info[3].CANfailCnt++ >= 2000)
+        {
+            canA_tzVSC_info[3].CANfailCnt = 2000;
+            CANA_tzActNodeRegs_VS.bit.bt_VS3 = 0;
+            for (ui16temp = 1; ui16temp <= 16; ui16temp++)
+            {
+                canA_tzVSC_info[3].f32Cellvolt[ui16temp] = 0;
+
+            }
+        }
+    }
+    else
+    {
+        canA_tzVSC_info[3].CANfailCnt = 0;
+        CANA_tzActNodeRegs_VS.bit.bt_VS3 = 1;
+
+    }
+
+    if (canA_VSCbuff.uiNodeID != 4)
+    {
+        if (canA_tzVSC_info[4].CANfailCnt++ >= 2000)
+        {
+            canA_tzVSC_info[4].CANfailCnt = 2000;
+            CANA_tzActNodeRegs_VS.bit.bt_VS4 = 0;
+            for (ui16temp = 1; ui16temp <= 16; ui16temp++)
+            {
+                canA_tzVSC_info[4].f32Cellvolt[ui16temp] = 0;
+
+            }
+        }
+    }
+    else
+    {
+        canA_tzVSC_info[4].CANfailCnt = 0;
+        CANA_tzActNodeRegs_VS.bit.bt_VS1 = 1;
+
+    }
+
+    if (canA_VSCbuff.uiNodeID != 5)
+    {
+        if (canA_tzVSC_info[5].CANfailCnt++ >= 2000)
+        {
+            canA_tzVSC_info[5].CANfailCnt = 2000;
+            CANA_tzActNodeRegs_VS.bit.bt_VS5 = 0;
+            for (ui16temp = 1; ui16temp <= 16; ui16temp++)
+            {
+                canA_tzVSC_info[5].f32Cellvolt[ui16temp] = 0;
+
+            }
+        }
+    }
+    else
+    {
+        canA_tzVSC_info[5].CANfailCnt = 0;
+        CANA_tzActNodeRegs_VS.bit.bt_VS5 = 1;
+
+    }
+
+    if (canA_VSCbuff.uiNodeID != 6)
+    {
+        if (canA_tzVSC_info[6].CANfailCnt++ >= 2000)
+        {
+            canA_tzVSC_info[6].CANfailCnt = 2000;
+            CANA_tzActNodeRegs_VS.bit.bt_VS6 = 0;
+            for (ui16temp = 1; ui16temp <= 16; ui16temp++)
+            {
+                canA_tzVSC_info[6].f32Cellvolt[ui16temp] = 0;
+
+            }
+        }
+    }
+    else
+    {
+        canA_tzVSC_info[6].CANfailCnt = 0;
+        CANA_tzActNodeRegs_VS.bit.bt_VS6 = 1;
+
+    }
+
+    if (canA_VSCbuff.uiNodeID != 7)
+    {
+        if (canA_tzVSC_info[7].CANfailCnt++ >= 2000)
+        {
+            canA_tzVSC_info[7].CANfailCnt = 2000;
+            CANA_tzActNodeRegs_VS.bit.bt_VS7 = 0;
+            for (ui16temp = 1; ui16temp <= 16; ui16temp++)
+            {
+                canA_tzVSC_info[7].f32Cellvolt[ui16temp] = 0;
+
+            }
+        }
+    }
+    else
+    {
+        canA_tzVSC_info[7].CANfailCnt = 0;
+        CANA_tzActNodeRegs_VS.bit.bt_VS7 = 1;
+
+    }
+
+    if (canA_VSCbuff.uiNodeID != 8)
+    {
+        if (canA_tzVSC_info[8].CANfailCnt++ >= 2000)
+        {
+            canA_tzVSC_info[8].CANfailCnt = 2000;
+            CANA_tzActNodeRegs_VS.bit.bt_VS8 = 0;
+            for (ui16temp = 1; ui16temp <= 16; ui16temp++)
+            {
+                canA_tzVSC_info[8].f32Cellvolt[ui16temp] = 0;
+
+            }
+        }
+    }
+    else
+    {
+        canA_tzVSC_info[8].CANfailCnt = 0;
+        CANA_tzActNodeRegs_VS.bit.bt_VS8 = 1;
+
+    }
+
+    if (canA_VSCbuff.uiNodeID != 9)
+    {
+        if (canA_tzVSC_info[9].CANfailCnt++ >= 2000)
+        {
+            canA_tzVSC_info[9].CANfailCnt = 2000;
+            CANA_tzActNodeRegs_VS1.bit.bt_VS9 = 0;
+            for (ui16temp = 1; ui16temp <= 16; ui16temp++)
+            {
+                canA_tzVSC_info[9].f32Cellvolt[ui16temp] = 0;
+
+            }
+        }
+    }
+    else
+    {
+        canA_tzVSC_info[9].CANfailCnt = 0;
+        CANA_tzActNodeRegs_VS1.bit.bt_VS9 = 1;
+
+    }
+
+    if (canA_VSCbuff.uiNodeID != 10)
+    {
+        if (canA_tzVSC_info[10].CANfailCnt++ >= 2000)
+        {
+            canA_tzVSC_info[10].CANfailCnt = 2000;
+            CANA_tzActNodeRegs_VS1.bit.bt_VS10 = 0;
+            for (ui16temp = 1; ui16temp <= 16; ui16temp++)
+            {
+                canA_tzVSC_info[10].f32Cellvolt[ui16temp] = 0;
+
+            }
+        }
+    }
+    else
+    {
+        canA_tzVSC_info[10].CANfailCnt = 0;
+        CANA_tzActNodeRegs_VS1.bit.bt_VS10 = 1;
+
+    }
+
+    if (canA_VSCbuff.uiNodeID != 11)
+    {
+        if (canA_tzVSC_info[11].CANfailCnt++ >= 2000)
+        {
+            canA_tzVSC_info[11].CANfailCnt = 2000;
+            for (ui16temp = 1; ui16temp <= 16; ui16temp++)
+            {
+                canA_tzVSC_info[11].f32Cellvolt[ui16temp] = 0;
+                CANA_tzActNodeRegs_VS1.bit.bt_VS11 = 0;
+
+            }
+        }
+    }
+    else
+    {
+        canA_tzVSC_info[11].CANfailCnt = 0;
+        CANA_tzActNodeRegs_VS1.bit.bt_VS11 = 1;
+
+    }
+
+    if (canA_VSCbuff.uiNodeID != 12)
+    {
+        if (canA_tzVSC_info[12].CANfailCnt++ >= 2000)
+        {
+            canA_tzVSC_info[12].CANfailCnt = 2000;
+            CANA_tzActNodeRegs_VS1.bit.bt_VS12 = 0;
+
+            for (ui16temp = 1; ui16temp <= 16; ui16temp++)
+            {
+                canA_tzVSC_info[12].f32Cellvolt[ui16temp] = 0;
+            }
+        }
+    }
+    else
+    {
+        canA_tzVSC_info[12].CANfailCnt = 0;
+        CANA_tzActNodeRegs_VS1.bit.bt_VS12 = 1;
+
+    }
+
+    if (canA_VSCbuff.uiNodeID != 13)
+    {
+        if (canA_tzVSC_info[13].CANfailCnt++ >= 2000)
+        {
+            canA_tzVSC_info[13].CANfailCnt = 2000;
+            CANA_tzActNodeRegs_VS1.bit.bt_VS13 = 0;
+
+            for (ui16temp = 1; ui16temp <= 16; ui16temp++)
+            {
+                canA_tzVSC_info[13].f32Cellvolt[ui16temp] = 0;
+            }
+        }
+    }
+    else
+    {
+        canA_tzVSC_info[13].CANfailCnt = 0;
+        CANA_tzActNodeRegs_VS1.bit.bt_VS13 = 1;
+
+    }
+
+    if (canA_VSCbuff.uiNodeID != 14)
+    {
+        if (canA_tzVSC_info[14].CANfailCnt++ >= 2000)
+        {
+            canA_tzVSC_info[14].CANfailCnt = 2000;
+            CANA_tzActNodeRegs_VS1.bit.bt_VS14 = 0;
+
+            for (ui16temp = 1; ui16temp <= 16; ui16temp++)
+            {
+                canA_tzVSC_info[14].f32Cellvolt[ui16temp] = 0;
+            }
+        }
+    }
+    else
+    {
+        canA_tzVSC_info[14].CANfailCnt = 0;
+        CANA_tzActNodeRegs_VS1.bit.bt_VS14 = 1;
+
+    }
+
+    if (canA_VSCbuff.uiNodeID != 15)
+    {
+        if (canA_tzVSC_info[15].CANfailCnt++ >= 2000)
+        {
+            canA_tzVSC_info[15].CANfailCnt = 2000;
+            CANA_tzActNodeRegs_VS1.bit.bt_VS15 = 0;
+
+            for (ui16temp = 1; ui16temp <= 16; ui16temp++)
+            {
+                canA_tzVSC_info[15].f32Cellvolt[ui16temp] = 0;
+            }
+        }
+    }
+    else
+    {
+        canA_tzVSC_info[15].CANfailCnt = 0;
+        CANA_tzActNodeRegs_VS1.bit.bt_VS15 = 1;
+
+    }
+
+    if (canA_VSCbuff.uiNodeID != 16)
+    {
+        if (canA_tzVSC_info[16].CANfailCnt++ >= 2000)
+        {
+            canA_tzVSC_info[16].CANfailCnt = 2000;
+            CANA_tzActNodeRegs_VS1.bit.bt_VS16 = 0;
+
+            for (ui16temp = 1; ui16temp <= 16; ui16temp++)
+            {
+                canA_tzVSC_info[16].f32Cellvolt[ui16temp] = 0;
+            }
+        }
+    }
+    else
+    {
+        canA_tzVSC_info[16].CANfailCnt = 0;
+        CANA_tzActNodeRegs_VS1.bit.bt_VS16 = 1;
+
     }
 
 }
@@ -904,6 +1266,48 @@ void CANA_fnTx()
     {
 
     case STAND_BY:
+
+        ui16IOcnt++;
+
+        switch (ui16IOcnt)
+        {
+        case 0:
+            CANA_tzDO[0][0].all = 0x0;
+            CANA_fnMSTxCmds(3, 1, &CANA_tzDO[0][1]);
+
+            CANA_tzAnaOPParams.CANA_tzAOV[0][0].AOV4 = 0;
+
+            CANA_fnCmdsForAnaOPVs(CANA_tzIORegs.uiUnitID, 3, 0,
+                                  &CANA_tzAnaOPParams); // Turn OFF PMP101 VFD
+
+            break;
+
+        case 10:
+            CANA_tzDO[0][1].all = 0x0;
+            CANA_fnMSTxCmds(3, 1, &CANA_tzDO[0][1]);
+            break;
+
+        case 20:
+            CANA_tzDO[1][0].all = 0x0;
+            CANA_fnMSTxCmds(1, 0, &CANA_tzDO[1][0]);
+            break;
+
+        case 30:
+            CANA_tzDO[1][1].all = 0x0;
+            CANA_fnMSTxCmds(1, 1, &CANA_tzDO[1][1]);
+
+
+            break;
+
+        default:
+            break;
+
+        }
+
+        if (ui16IOcnt >= 40)
+        {
+            ui16IOcnt = 40;
+        }
 
         ui16Cnt++;
 
@@ -1007,11 +1411,15 @@ void CANA_fnTx()
 
     case READY:
 
+        ui16IOcnt = 0;
+
         control_waterloop();
 
         break;
 
     case STACK_CHECK:
+
+        ui16IOcnt = 0;
 
         control_waterloop();
 
@@ -1046,17 +1454,20 @@ void CANA_fnTx()
 
     case STACK_POWER:
 
+        ui16IOcnt = 0;
         control_waterloop();
 
         break;
 
     case FAULT:
+        ui16IOcnt = 0;
 
         safeshutDown();
 
         break;
 
     case COMMISSION:
+        ui16IOcnt = 0;
 
         ui16ComsnCnt++;
         if (ui16ComsnCnt >= 10)
@@ -1103,10 +1514,10 @@ void CANA_fnMSTxCmds(uint16_t ui16CabiD, uint16_t NodeID,
     uiCANtxMsgDataMS[3] = ui16CabiD;
     uiCANtxMsgDataMS[4] = NodeID;
 
-    uiCANtxMsgDataMS[5] = 0;
+    uiCANtxMsgDataMS[5] = CONTROLtzFaultRegs.bit.LPCCurHealthy;
 
-    uiCANtxMsgDataMS[6] = 0;
-    uiCANtxMsgDataMS[7] = 0;
+    uiCANtxMsgDataMS[6] = CANA_tzLHCIO1_AIFaultRegs.all;
+    uiCANtxMsgDataMS[7] = CANA_tzLHCIO2_AIFaultRegs.all;
 
     CAN_sendMessage(CANA_BASE, CAN_mMAILBOX_20, CAN_mLEN8, uiCANtxMsgDataMS);
 
@@ -1152,7 +1563,7 @@ void CANA_fnCmdsForAnaOPIs(uint16_t ui16unitID, uint16_t ui16cab_ID,
 
     CAN_setupMessageObject(
             CANA_BASE,
-            CAN_mMAILBOX_8,
+            CAN_mMAILBOX_9,
             (ui16unitID << 8) | (ui16cab_ID << 4) | (ui16nodeID)
                     | CANA_mTX_IOMSGID2,
             CAN_MSG_FRAME_EXT, CAN_MSG_OBJ_TYPE_TX, 0,
@@ -1177,7 +1588,7 @@ void CANA_fnCmdsForAnaOPIs(uint16_t ui16unitID, uint16_t ui16cab_ID,
     ui16txMsgDataIO[6] = (ptrAOI->CANA_tzAOI[ui16CabID][ui16nodeID].AOI4) >> 8;
     ui16txMsgDataIO[7] = (ptrAOI->CANA_tzAOI[ui16CabID][ui16nodeID].AOI4);
 
-    CAN_sendMessage(CANA_BASE, CAN_mMAILBOX_8, CAN_mLEN8, ui16txMsgDataIO);
+    CAN_sendMessage(CANA_BASE, CAN_mMAILBOX_9, CAN_mLEN8, ui16txMsgDataIO);
 }
 
 void CANA_fnIOHrtBt()

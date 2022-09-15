@@ -60,7 +60,7 @@ uint16_t ui16VoltMotorSpeedCntrl = 0;
 uint16_t ui16VoltMotorSpeedCntrl1 = 0;
 
 float32_t f32VFDVoltageCAN = 0;
-float32_t f32MotorSpeed = 0;
+float32_t f32MotorSpeed = 0,vfdset = 0;
 
 /*==============================================================================
  Local Constants
@@ -107,35 +107,38 @@ void control_waterloop(void)
     else if ((CANA_tzIOtimers.TxCntWaterloop == 60)
             || (CANA_tzIOtimers.TxCntWaterloop == 120))
     {
-        if (MATHConvtzRegs.AISensorLVL101 >= 60.0) // greater than 85 % turn OFF
+        if (MATHConvtzRegs.AISensorLVL101 >= 40.0) // greater than 85 % turn OFF
         {
             if (CANA_tzIOtimers.TxCntWaterloop == 60)
             {
-                CANA_tzDO[0][1].bit.DO1 = 0x1;
+                CANA_tzDO[0][1].bit.DO2 = 0x1;
+                CANA_tzDO[0][1].bit.DO3 = 0x1;
 
-                CANA_fnMSTxCmds(0, 1, &CANA_tzDO[0][1]); //Turn OFF WSV101
+
+                CANA_fnMSTxCmds(3, 1, &CANA_tzDO[0][1]); //Turn ON CTR302
 
             }
             else if (CANA_tzIOtimers.TxCntWaterloop == 120)
             {
-                CANA_tzAnaOPParams.CANA_tzAOV[0][0].AOV4 = 7000;
+                CANA_tzAnaOPParams.CANA_tzAOV[0][0].AOV4 = 3700;
 
                 CANA_fnCmdsForAnaOPVs(CANA_tzIORegs.uiUnitID, 3, 0,
                                       &CANA_tzAnaOPParams); // Turn ON PMP101 VFD
             }
 
         }
-        else if (MATHConvtzRegs.AISensorLVL101 <= 58.0)
+        else if (MATHConvtzRegs.AISensorLVL101 <= 38.0)
         {
             if (CANA_tzIOtimers.TxCntWaterloop == 60)
             {
-                CANA_tzDO[0][1].bit.DO1 = 0;
-                CANA_fnMSTxCmds(0, 1, &CANA_tzDO[0][1]); //Turn OFF CTR302
+                CANA_tzDO[0][1].bit.DO2 = 0x0;
+                CANA_tzDO[0][1].bit.DO3 = 0x0;
+                CANA_fnMSTxCmds(3, 1, &CANA_tzDO[0][1]); //Turn OFF CTR302
 
             }
             else if (CANA_tzIOtimers.TxCntWaterloop == 120)
             {
-                CANA_tzAnaOPParams.CANA_tzAOV[0][0].AOV4 = 0;
+                CANA_tzAnaOPParams.CANA_tzAOV[0][0].AOV4 = vfdset;
 
                 CANA_fnCmdsForAnaOPVs(CANA_tzIORegs.uiUnitID, 3, 0,
                                       &CANA_tzAnaOPParams); // Turn OFF PMP101 VFD

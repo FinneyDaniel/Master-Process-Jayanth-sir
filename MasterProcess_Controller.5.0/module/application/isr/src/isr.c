@@ -56,7 +56,8 @@ bool bl_clock_OKflg = 0;
 uint16_t uiResetTimer = 0;
 uint16_t LEDCount = 0;
 uint16_t ui16fsmCounter = 0;
-
+uint16_t ui16CANAVSFailTrig1 = 0;
+uint32_t ui32CANAVSFailCnt1 = 0;
 /*==============================================================================
  Local Constants
  ==============================================================================*/
@@ -137,6 +138,11 @@ interrupt void cpu_timer0_isr(void)  //100usec
  ============================================================================ */
 interrupt void cpu_timer1_isr(void)  // 10msec
 {
+
+     GpioDataRegs.GPCSET.bit.GPIO85 = 1;
+     GpioDataRegs.GPCSET.bit.GPIO86 = 1;
+
+
     CpuTimer1.InterruptCount++;
     if (CpuTimer1.InterruptCount == 1)
     {
@@ -157,6 +163,20 @@ interrupt void cpu_timer1_isr(void)  // 10msec
     CANA_fnTask();
     CANB_fnTask();
 
+    ui32CANAVSFailCnt1++;
+
+    if (ui32CANAVSFailCnt1 > 3000)
+    {
+        ui16CANAVSFailTrig1 = 1;
+        ui32CANAVSFailCnt1 = 3000;
+    }
+    else
+    {
+        ui16CANAVSFailTrig1 = 0;
+    }
+
+    CANA_fnComFailChk();
+
 
     CANA_fnTx();
 
@@ -166,21 +186,24 @@ interrupt void cpu_timer1_isr(void)  // 10msec
 
     LEDCount++;
 
-    if (LEDCount > 200)
+    if (LEDCount > 50)
     {
         LEDCount = 0;
     }
 
-    if (LEDCount <= 100)
+    if (LEDCount <= 25)
     {
         GpioDataRegs.GPCSET.bit.GPIO92 = 1;
     }
-    if ((LEDCount >= 101) && (LEDCount <= 200))
+    if ((LEDCount >= 26) && (LEDCount <= 50))
     {
         GpioDataRegs.GPCCLEAR.bit.GPIO92 = 1;
     }
     CpuTimer1Regs.TCR.bit.TIF = 1;
     EINT;
+
+    GpioDataRegs.GPCCLEAR.bit.GPIO85 = 1;
+    GpioDataRegs.GPCCLEAR.bit.GPIO86 = 1;
 
 }
 

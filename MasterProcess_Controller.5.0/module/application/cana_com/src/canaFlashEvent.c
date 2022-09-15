@@ -212,9 +212,11 @@ void CANA_FlashEvent()
             //indicat   e eeprom flash process started
             uieepData[0] = 0x11;
 
-            EEP_fnWrite(&transaction_I2CMsg, EEP_mCAN_ERROR_ADDR, &uieepData[0],
-                        1);
+//            EEP_fnWrite(&transaction_I2CMsg, EEP_mCAN_ERROR_ADDR, &uieepData[0],
+//                        1);
 
+            eep_fnPollwrite(EEP_mCAN_ERROR_ADDR, &uieepData[0],
+                        1);
 
             ui32DataLength = (((uint32_t) (ui16Rx1MsgDataFlash[3])) << 16)
                     | (ui16Rx1MsgDataFlash[2] << 8)
@@ -224,7 +226,10 @@ void CANA_FlashEvent()
             uieepData[1] = (uint16_t) ((ui32DataLength >> 8) & 0xFF);
             uieepData[2] = (uint16_t) ((ui32DataLength >> 16) & 0xFF);
 
-            EEP_fnWrite(&transaction_I2CMsg, EEP_mCAN_LENGTH_ADDR,
+//            EEP_fnWrite(&transaction_I2CMsg, EEP_mCAN_LENGTH_ADDR,
+//                        &uieepData[0], 3);
+
+            eep_fnPollwrite(EEP_mCAN_LENGTH_ADDR,
                         &uieepData[0], 3);
 
             ui16btStatus = can_fnEraseFlash();
@@ -238,15 +243,19 @@ void CANA_FlashEvent()
 
                 //clear the command
                 uieepData[0] = 0xFF;
-                EEP_fnWrite(&transaction_I2CMsg, EEP_mCAN_ERROR_ADDR, &uieepData[0],
+
+                eep_fnPollwrite(EEP_mCAN_ERROR_ADDR, &uieepData[0],
                             1);
+
 
             }
             else
             {
                 ui16ErrorCode = CANA_mFLASH_WRITE_FAIL;
                 uieepData[0] = ui16ErrorCode;
-                EEP_fnWrite(&transaction_I2CMsg, EEP_mCAN_ERROR_ADDR, &uieepData[0],
+
+
+                eep_fnPollwrite(EEP_mCAN_ERROR_ADDR, &uieepData[0],
                             1);
             }
 
@@ -361,7 +370,8 @@ void CANA_FlashEvent()
                               0x20);
                 //copy to I2C
                 uieepData[0] = ui16ErrorCode;
-                EEP_fnWrite(&transaction_I2CMsg, EEP_mCAN_ERROR_ADDR, &uieepData[0],
+
+                eep_fnPollwrite(EEP_mCAN_ERROR_ADDR, &uieepData[0],
                             1);
             }
             else
@@ -388,8 +398,10 @@ void CANA_FlashEvent()
                         uiErrorCode = CAN_mFLASH_CHKSUM_MISMATCH;
                         //COPY TO I2C
                         uieepData[0] = uiErrorCode;
-                        EEP_fnWrite(&transaction_I2CMsg, EEP_mCAN_ERROR_ADDR,
-                                    &uieepData[0], 1);
+                        eep_fnPollwrite( EEP_mCAN_ERROR_ADDR,
+                                                        &uieepData[0], 1);
+
+
                         uiI2Ccodeflag = 0x00;
                     }
                     else
@@ -401,8 +413,8 @@ void CANA_FlashEvent()
                         uieepData[2] = ((uint32_t) ui32Checksum >> 8) & 0xFF;
                         uieepData[3] = ((uint32_t) ui32Checksum >> 0) & 0xFF;
 
-                        EEP_fnWrite(&transaction_I2CMsg, EEP_mCAN_CRC32_ADDR,
-                                      &uieepData[0], 4);
+                        eep_fnPollwrite(EEP_mCAN_CRC32_ADDR,
+                                                        &uieepData[0], 4);
 
 
 
@@ -426,8 +438,8 @@ void CANA_FlashEvent()
         if (uiI2Ccodeflag == 0xAA)
         {
             uieepData[0] = uiI2Ccodeflag;
-            EEP_fnWrite(&transaction_I2CMsg, EEP_mCAN_FLASH_ADDR, &uieepData[0],
-                        1);
+            eep_fnPollwrite(EEP_mCAN_FLASH_ADDR, &uieepData[0],
+                                    1);
 
             DELAY_US(10);
 

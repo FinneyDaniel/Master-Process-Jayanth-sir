@@ -106,7 +106,16 @@ void stat_fnInitState(void)
     CANA_tzIOflags.btLPC31CommnStart = 0;
     CANA_tzIOflags.faultAtStChkSt = 0;
     CANA_tzIORegs.Node = 0;
+    CANA_tzIORegs.CJC[0] = 0;
+    CANA_tzIORegs.CJC[1] = 0;
+    CANA_tzIORegs.uiMsgtypeLHCIO = 0;
+    CANA_tzIORegs.uiNodeLHCIO = 0;
+    CANA_tzIORegs.uiMsgtypeLPCIO = 0;
+    CANA_tzIORegs.uiNodeLPCIO = 0;
+    CANA_tzIORegs.uiUnitID = 0;
     CANA_tzActMS_FaultRegs.all = 0;
+    CANA_tzActNodeRegs_VS1.all = 0;
+    CANA_tzActNodeRegs_VS.all = 0;
 
     ui16Bleedh2 = 0;
 }
@@ -189,10 +198,10 @@ static void stat_fnFSMNextState()
         }
 
         else if ((CANA_tzMSRegs.StartCmd == 1)
-                && (CANA_tzActNodeRegs_IO.bit.bt_LPC30 == 1)
-                && (CANA_tzActNodeRegs_IO.bit.bt_LPC31 == 1)
-                && (CANA_tzActNodeRegs_IO.bit.bt_LHC10 == 1)
-                && (CANA_tzActNodeRegs_IO.bit.bt_LHC11 == 1)
+//                && (CANA_tzActNodeRegs_IO.bit.bt_LPC30 == 1)
+//                && (CANA_tzActNodeRegs_IO.bit.bt_LPC31 == 1)
+//                && (CANA_tzActNodeRegs_IO.bit.bt_LHC10 == 1)
+//                && (CANA_tzActNodeRegs_IO.bit.bt_LHC11 == 1)
                 && (CANB_tzSiteRxRegs.Start_cmd == 1)) // Manually change it for now
         {
 
@@ -361,7 +370,7 @@ void stat_IOReset(void)
     ui16InstShutDownFlg = 0;
     ui16CycleCount = 0;
     CANA_tzTxdRegs.tzPSUData.CurrentSet = 0;
-    val1_2Cnt = 0;
+    //val1_2Cnt = 0;
     CANB_tzSiteRxRegs.Start_cmd = 0;
 
 //    uint16_t ui16temp;

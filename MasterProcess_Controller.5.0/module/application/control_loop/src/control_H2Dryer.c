@@ -22,6 +22,8 @@
 #include "control_defs.h"
 #include "cana_defs.h"
 #include "state_machine.h"
+#include "eep.h"
+
 /*==============================================================================
  Defines
  ==============================================================================*/
@@ -52,16 +54,21 @@ void CONTROL_DryerValveBleedLogic();
  Local Variables
  ==============================================================================*/
 
-uint16_t ui16H2count = 0, val1_2Cnt = 0, ui16valSetCnt_SV401402,
-        ui16valResetCnt_SV401402;
+uint32_t val1_2Cnt, ui16H2count, ui16H2count_eprom, ui16eepcount = 0;
+uint16_t ui16valSetCnt_SV401402, ui16valResetCnt_SV401402;
 uint16_t ui16CycleCount = 0;
 uint16_t ui16GPIOStatus = 0;
 
 uint16_t ui16AllValvesOffCnt = 0;
 
 uint16_t valvestatus = 0;
-uint16_t ui16Bleedh2 = 0, ui16BleedCnt = 0;
+uint16_t ui16Bleedh2 = 0, ui16BleedCnt = 0, dryerVal = 0, dryerVal1 = 1;
+uint16_t uieepData1[8] = { 0 };
+uint16_t uireadData1[8] = { 0 };
 
+uint16_t eepwritecount = 0, epromStAdd = 0, uiepromAdd = 0;
+uint16_t eepPagecnt = 0, eepPagecnt_rd = 0, readCnt = 0, writedone = 0;
+uint16_t epromStAdd_wt = 0, epromStAdd_rd = 0;
 /*==============================================================================
  Local Constants
  ==============================================================================*/
@@ -74,11 +81,125 @@ uint16_t ui16Bleedh2 = 0, ui16BleedCnt = 0;
  ============================================================================ */
 void H2_fnSVcontrol(void)
 {
+    // if (dryerVal == 1)
+
+//    eepwritecount++;
+//    if (eepwritecount >= 1251)
+//    {
+//        eepwritecount = 0;
+//    }
+//
+//    if (eepwritecount == 1200)
+//    {
+//
+//        if (eepPagecnt <= 100)
+//        {
+//
+//            epromStAdd_wt = epromStAdd_rd + 64;
+//            eepPagecnt = eepPagecnt_rd + 1;
+//
+//            uiTxMsgBuffer1[0] = (uint16_t) (epromStAdd_wt & 0xFF);
+//            uiTxMsgBuffer1[1] = (uint16_t) ((epromStAdd_wt >> 8) & 0xFF);
+//            uiTxMsgBuffer1[2] = (uint16_t) (eepPagecnt & 0xFF);
+//            uiTxMsgBuffer1[3] = (uint16_t) ((eepPagecnt >> 8) & 0xFF);
+//
+////            uiTxMsgBuffer1[0] = (uint16_t) (0 & 0xFF);
+////            uiTxMsgBuffer1[1] = (uint16_t) ((0 >> 8) & 0xFF);
+////            uiTxMsgBuffer1[2] = (uint16_t) (0 & 0xFF);
+////            uiTxMsgBuffer1[3] = (uint16_t) ((0 >> 8) & 0xFF);
+//
+//            EEP_fnWrite(&transaction_I2CMsg, 0x0, &uiTxMsgBuffer1[0], 4);
+//
+//        }
+//
+//    }
+//
+//    if (eepwritecount == 1250)
+//    {
+//        if (eepPagecnt < 100)
+//        {
+//            uiTxMsgBuffer[0] = (uint16_t) (ui16H2count & 0xFF);
+//            uiTxMsgBuffer[1] = (uint16_t) ((ui16H2count >> 8) & 0xFF);
+//            uiTxMsgBuffer[2] = (uint16_t) ((ui16H2count >> 16) & 0xFF);
+//
+//            uiTxMsgBuffer[3] = (uint16_t) (val1_2Cnt & 0xFF);
+//            uiTxMsgBuffer[4] = (uint16_t) ((val1_2Cnt >> 8) & 0xFF);
+//
+////            uiTxMsgBuffer[0] = (uint16_t) (0);
+////            uiTxMsgBuffer[1] = (uint16_t) (0);
+////            uiTxMsgBuffer[2] = (uint16_t) (0);
+////
+////            uiTxMsgBuffer[3] = (uint16_t) (0 & 0xFF);
+////            uiTxMsgBuffer[4] = (uint16_t) ((0 >> 8) & 0xFF);
+//
+//            EEP_fnWrite(&transaction_I2CMsg, epromStAdd_wt, &uiTxMsgBuffer[0],
+//                        5);
+//
+//            epromStAdd_rd = epromStAdd_wt;
+//            eepPagecnt_rd = eepPagecnt;
+//        }
+//
+//        if (eepPagecnt >= 101)
+//        {
+//            eepPagecnt = 0;
+//            epromStAdd = 0;
+//        }
+//
+//    }
+//    ui16eepcount++;
+//
+//    if (ui16eepcount >= 1101)
+//    {
+//        ui16eepcount = 1101;
+//    }
+//
+//    if ((dryerVal1 == 1) && (ui16eepcount > 0) && (ui16eepcount <= 150))
+//    {
+//        EEP_fnRead(&transaction_I2CMsg, 0, &uiRxMsgBuffer1[0], 5);
+//
+//    }
+//
+//    else if ((dryerVal1 == 1) && (ui16eepcount >= 151) && (ui16eepcount <= 300))
+//
+//    {
+//
+//        epromStAdd_rd = ((int32) (((uiRxMsgBuffer1[1] << 8)
+//                | ((uiRxMsgBuffer1[0]) & 0x00FF)) & 0x0000FFFF));
+//
+//        eepPagecnt_rd = ((int32) (((uiRxMsgBuffer1[3] << 8)
+//                | ((uiRxMsgBuffer1[2]) & 0x00FF)) & 0x0000FFFF));
+//
+//    }
+//
+//    else if ((dryerVal1 == 1) && (ui16eepcount >= 301) && (ui16eepcount <= 1000))
+//    {
+//
+//        EEP_fnRead(&transaction_I2CMsg, epromStAdd_rd, &uiRxMsgBuffer[0], 4);
+//
+//    }
+//
+//    else if ((dryerVal1 == 1) && (ui16eepcount >= 1001) && (ui16eepcount <= 1100))
+//    {
+//
+//        Uint32 temp = 0x0000ffff;
+//
+//        temp = (temp & (int32) uiRxMsgBuffer[2]) << 16;
+//
+//        ui16H2count = (int32) (temp
+//                | (int32) (((uiRxMsgBuffer[1] << 8)
+//                        | ((uiRxMsgBuffer[0]) & 0x00FF)) & 0x0000FFFF));
+//
+//        val1_2Cnt = ((int32) (((uiRxMsgBuffer[4] << 8)
+//                | ((uiRxMsgBuffer[3]) & 0x00FF)) & 0x0000FFFF));
+//
+//        dryerVal1 = 0;
+//
+//    }
 
     if (ui16Bleedh2 == 0)
 
     {
-        if (STAT_tzStateMac.Present_st == STACK_POWER)
+        //  if (STAT_tzStateMac.Present_st == STACK_POWER)
         {
             ui16AllValvesOffCnt = 0;
             ui16H2count++;
@@ -241,29 +362,30 @@ void H2_fnSVcontrol(void)
 
         // Keeping all the valves OFF in Other states Except Stack Power
 
-        else if ((ui16Bleedh2 == 0) && (STAT_tzStateMac.Present_st!= STACK_POWER))
-        {
-            ui16H2count = 0;
-            ui16CycleCount = 0;
-
-            val1_2Cnt = 0;
-
-            ui16AllValvesOffCnt++;
-            if (ui16AllValvesOffCnt > 3)
-            {
-                ui16AllValvesOffCnt = 3;
-            }
-
-            if ((ui16AllValvesOffCnt >= 1) && (ui16AllValvesOffCnt <= 2))
-            {
-                CANA_tzDO[CANA_mLHC_CABID][CANA_mLHC11_IO].all = 0x0;
-                CANA_fnMSTxCmds(CANA_mLHC_CABID, CANA_mLHC11_IO,
-                                &CANA_tzDO[CANA_mLHC_CABID][CANA_mLHC11_IO]); // Reset all DOs
-
-                H2_tzValves.all = 0;
-
-            }
-        }
+//        else if ((ui16Bleedh2 == 0)
+//                && (STAT_tzStateMac.Present_st != STACK_POWER))
+//        {
+//            //  ui16H2count = 0;
+//            ui16CycleCount = 0;
+//
+//            //    val1_2Cnt = 0;
+//
+//            ui16AllValvesOffCnt++;
+//            if (ui16AllValvesOffCnt > 3)
+//            {
+//                ui16AllValvesOffCnt = 3;
+//            }
+//
+//            if ((ui16AllValvesOffCnt >= 1) && (ui16AllValvesOffCnt <= 2))
+//            {
+//                CANA_tzDO[CANA_mLHC_CABID][CANA_mLHC11_IO].all = 0x0;
+//                CANA_fnMSTxCmds(CANA_mLHC_CABID, CANA_mLHC11_IO,
+//                                &CANA_tzDO[CANA_mLHC_CABID][CANA_mLHC11_IO]); // Reset all DOs
+//
+//                H2_tzValves.all = 0;
+//
+//            }
+//        }
     }
 }
 

@@ -25,6 +25,8 @@
 #include "safety_lib_prv.h"
 #include "app_constants.h"
 #include "state_machine.h"
+#include "eep.h"
+#include "control_defs.h"
 
 /*==============================================================================
  Defines
@@ -51,6 +53,9 @@ static void init_fnFlashSectors(void);
 /*==============================================================================
  Local Variables
  ==============================================================================*/
+
+uint16_t uiRxMsgBuffer[10] = {0};
+uint16_t uiRxMsgBuffer1[5] = {0};
 
 /*==============================================================================
  Local Constants
@@ -112,6 +117,12 @@ void INIT_fnSystem(void)
     INIT_fnPeripherals();
     HW_fnServiceWdog();
 
+
+    eep_fnInit(); //eeprom init
+
+   // EEP_fnRead(&transaction_I2CMsg, uiepromAdd, &uiRxMsgBuffer[0], 8);
+
+
     // Step 7: Initialize global variables
 
     //
@@ -152,6 +163,7 @@ void INIT_fnSystem(void)
 
     stat_fnInitState();
 
+
     INIT_fnStart_CPUtimers();
 
     EINT;
@@ -162,6 +174,9 @@ void INIT_fnSystem(void)
     //safety_fnLog_Monitoring_init();
     /*********************************************************************************/
     // CAN MailBox Initialization
+
+
+
 
     INIT_fnCANAMailBox();
 

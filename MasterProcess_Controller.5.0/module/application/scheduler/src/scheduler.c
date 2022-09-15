@@ -132,7 +132,9 @@ void scheduler_task(void)
 void SCH_fnslot_0(void)
 {
     xx++;
-    H2_fnSVcontrol();
+    eep_fnTask();
+
+   // H2_fnSVcontrol();
 
    // CONTROL_DryerOutletValveLogic();
 
@@ -187,7 +189,7 @@ void SCH_fnslot_4(void)
 {
 
 
-    // CANA_fnPSUTX_Event();
+     CANA_fnPSUTX_Event();
 
     //safety_fnLog_monitoring_slot_exe(4);
 }
@@ -196,6 +198,8 @@ void SCH_fnslot_4(void)
 
 void SCH_fnslot_all(void)
 {
+
+
     //  cana_fnTurnON_PSU(0, CANA_mTURNOFF_DCDC, 1);
     yy++;
 }

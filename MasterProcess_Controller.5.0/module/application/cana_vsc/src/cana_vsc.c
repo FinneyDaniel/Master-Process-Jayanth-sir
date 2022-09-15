@@ -223,6 +223,217 @@ void cana_fnmsgPrcsVSC(uint16_t nodeID, uint16_t msgtype, uint16_t *msgbuf)
         }
     }
 
+
+
+
+
+//     if(CANA_tzVSRegs.Node!= 2)
+//     {
+//         if(CANA_tzTimerRegs.tzVS.CANfailCnt[2]++ >= 200)
+//         {
+//             CANA_tzTimerRegs.tzVS.CANfailCnt[2] = 200;
+//             for(ui16temp = 1;ui16temp<=16;ui16temp++)
+//             {
+//                 CANA_tzRxdRegs.tzVSData.CellVolt[2][ui16temp] = 0;
+//             }
+//         }
+//     }
+//     else
+//     {
+//         CANA_tzTimerRegs.tzVS.CANfailCnt[2] = 0;
+//     }
+//
+//
+//     if(CANA_tzVSRegs.Node!= 3)
+//     {
+//         if(CANA_tzTimerRegs.tzVS.CANfailCnt[3]++ >= 200)
+//         {
+//             CANA_tzTimerRegs.tzVS.CANfailCnt[3] = 200;
+//             for(ui16temp = 1;ui16temp<=16;ui16temp++)
+//             {
+//                 CANA_tzRxdRegs.tzVSData.CellVolt[3][ui16temp] = 0;
+//             }
+//         }
+//     }
+//     else
+//     {
+//         CANA_tzTimerRegs.tzVS.CANfailCnt[3] = 0;
+//     }
+//
+//
+//
+//
+//     if(CANA_tzVSRegs.Node!= 4)
+//     {
+//         if(CANA_tzTimerRegs.tzVS.CANfailCnt[4]++ >= 200)
+//         {
+//             CANA_tzTimerRegs.tzVS.CANfailCnt[4] = 200;
+//             for(ui16temp = 1;ui16temp<=16;ui16temp++)
+//             {
+//                 CANA_tzRxdRegs.tzVSData.CellVolt[4][ui16temp] = 0;
+//             }
+//         }
+//     }
+//     else
+//     {
+//         CANA_tzTimerRegs.tzVS.CANfailCnt[4] = 0;
+//     }
+//
+//
+//     if(CANA_tzVSRegs.Node!= 5)
+//     {
+//         if(CANA_tzTimerRegs.tzVS.CANfailCnt[5]++ >= 200)
+//         {
+//             CANA_tzTimerRegs.tzVS.CANfailCnt[5] = 200;
+//             for(ui16temp = 1;ui16temp<=16;ui16temp++)
+//             {
+//                 CANA_tzRxdRegs.tzVSData.CellVolt[5][ui16temp] = 0;
+//             }
+//         }
+//     }
+//     else
+//     {
+//         CANA_tzTimerRegs.tzVS.CANfailCnt[5] = 0;
+//     }
+//
+//
+//     if(CANA_tzVSRegs.Node!= 6)
+//     {
+//         if(CANA_tzTimerRegs.tzVS.CANfailCnt[6]++ >= 200)
+//         {
+//             CANA_tzTimerRegs.tzVS.CANfailCnt[6] = 200;
+//             for(ui16temp = 1;ui16temp<=16;ui16temp++)
+//             {
+//                 CANA_tzRxdRegs.tzVSData.CellVolt[6][ui16temp] = 0;
+//             }
+//         }
+//     }
+//     else
+//     {
+//         CANA_tzTimerRegs.tzVS.CANfailCnt[6] = 0;
+//     }
+//
+//
+//
+//     if(CANA_tzVSRegs.Node!= 7)
+//     {
+//         if(CANA_tzTimerRegs.tzVS.CANfailCnt[7]++ >= 200)
+//         {
+//             CANA_tzTimerRegs.tzVS.CANfailCnt[7] = 200;
+//             for(ui16temp = 1;ui16temp<=16;ui16temp++)
+//             {
+//                 CANA_tzRxdRegs.tzVSData.CellVolt[7][ui16temp] = 0;
+//             }
+//         }
+//     }
+//     else
+//     {
+//         CANA_tzTimerRegs.tzVS.CANfailCnt[7] = 0;
+//     }
+//
+//
+//     if(CANA_tzVSRegs.Node!= 8)
+//     {
+//         if(CANA_tzTimerRegs.tzVS.CANfailCnt[8]++ >= 200)
+//         {
+//             CANA_tzTimerRegs.tzVS.CANfailCnt[8] = 200;
+//             for(ui16temp = 1;ui16temp<=16;ui16temp++)
+//             {
+//                 CANA_tzRxdRegs.tzVSData.CellVolt[8][ui16temp] = 0;
+//             }
+//         }
+//     }
+//     else
+//     {
+//         CANA_tzTimerRegs.tzVS.CANfailCnt[8] = 0;
+//     }
+//
+//
+//     if(CANA_tzVSRegs.Node!= 9)
+//     {
+//         if(CANA_tzTimerRegs.tzVS.CANfailCnt[9]++ >= 200)
+//         {
+//             CANA_tzTimerRegs.tzVS.CANfailCnt[9] = 200;
+//             for(ui16temp = 1;ui16temp<=16;ui16temp++)
+//             {
+//                 CANA_tzRxdRegs.tzVSData.CellVolt[9][ui16temp] = 0;
+//             }
+//         }
+//     }
+//     else
+//     {
+//         CANA_tzTimerRegs.tzVS.CANfailCnt[9] = 0;
+//     }
+//
+//
+//
+//
+//     if(CANA_tzVSRegs.Node!= 10)
+//     {
+//         if(CANA_tzTimerRegs.tzVS.CANfailCnt[10]++ >= 200)
+//         {
+//             CANA_tzTimerRegs.tzVS.CANfailCnt[10] = 200;
+//             for(ui16temp = 1;ui16temp<=16;ui16temp++)
+//             {
+//                 CANA_tzRxdRegs.tzVSData.CellVolt[10][ui16temp] = 0;
+//             }
+//         }
+//     }
+//     else
+//     {
+//         CANA_tzTimerRegs.tzVS.CANfailCnt[10] = 0;
+//     }
+//
+//
+//     if(CANA_tzVSRegs.Node!= 11)
+//     {
+//         if(CANA_tzTimerRegs.tzVS.CANfailCnt[11]++ >= 200)
+//         {
+//             CANA_tzTimerRegs.tzVS.CANfailCnt[11] = 200;
+//             for(ui16temp = 1;ui16temp<=16;ui16temp++)
+//             {
+//                 CANA_tzRxdRegs.tzVSData.CellVolt[11][ui16temp] = 0;
+//             }
+//         }
+//     }
+//     else
+//     {
+//         CANA_tzTimerRegs.tzVS.CANfailCnt[11] = 0;
+//     }
+//
+//
+//     if(CANA_tzVSRegs.Node!= 12)
+//     {
+//         if(CANA_tzTimerRegs.tzVS.CANfailCnt[12]++ >= 200)
+//         {
+//             CANA_tzTimerRegs.tzVS.CANfailCnt[12] = 200;
+//             for(ui16temp = 1;ui16temp<=16;ui16temp++)
+//             {
+//                 CANA_tzRxdRegs.tzVSData.CellVolt[12][ui16temp] = 0;
+//             }
+//         }
+//     }
+//     else
+//     {
+//         CANA_tzTimerRegs.tzVS.CANfailCnt[12] = 0;
+//     }
+//
+//     if(CANA_tzVSRegs.Node!= 13)
+//     {
+//         if(CANA_tzTimerRegs.tzVS.CANfailCnt[13]++ >= 200)
+//         {
+//             CANA_tzTimerRegs.tzVS.CANfailCnt[13] = 200;
+//             for(ui16temp = 1;ui16temp<=16;ui16temp++)
+//             {
+//                 CANA_tzRxdRegs.tzVSData.CellVolt[13][ui16temp] = 0;
+//             }
+//         }
+//     }
+//     else
+//     {
+//         CANA_tzTimerRegs.tzVS.CANfailCnt[13] = 0;
+//     }
+
 }
 
 /*==============================================================================

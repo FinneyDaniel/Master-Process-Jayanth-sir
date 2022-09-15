@@ -80,7 +80,8 @@ uint16_t LHCIO2FaultRegs[16] = { 0 };
 // LHC Faults
 
 #define FAULT_mDOS101_103          (0U)
-#define FAULT_mDOS301_303          (1U)
+#define FAULT_mLGT101_402          (1U)
+//#define FAULT_mLGT101_303          (1U)
 
 #define FAULT_mLVL101              (8U)
 #define FAULT_mPRT101              (9U)
@@ -314,14 +315,14 @@ void faultCheck(void)
             || (CANA_tzLHCDI_IORegs[CANA_mLHC10_IO].bit.DI_bit3 == 0x01))
     {
         CANA_tzLHCIO1_DIFaultRegs.bit.LGT101_402 = faultLHCIO1_fnSet(
-        FAULT_mDOS301_303,
+                FAULT_mLGT101_402,
                                                                      20);
     }
     else if ((CANA_tzLHCDI_IORegs[CANA_mLHC10_IO].bit.DI_bit2 == 0x0)
             && (CANA_tzLHCDI_IORegs[CANA_mLHC10_IO].bit.DI_bit3 == 0x0))
     {
         CANA_tzLHCIO1_DIFaultRegs.bit.LGT101_402 = faultLHCIO1_fnReset(
-        FAULT_mDOS301_303,
+                FAULT_mLGT101_402,
                                                                        20);
     }
 

@@ -271,7 +271,7 @@ void CANA_fnPSUTX_Event(void)
         {
             CANA_tzTimerRegs.tzPSU.TxCount++;
 
-            CANA_tzTxdRegs.tzPSUData.VoltageSet = 400.0;
+            CANA_tzTxdRegs.tzPSUData.VoltageSet = 0.0;
 
             cana_fnSetVoltage_PSU(0, CANA_tzTxdRegs.tzPSUData.VoltageSet, 1);
 
