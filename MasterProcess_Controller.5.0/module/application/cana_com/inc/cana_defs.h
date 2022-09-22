@@ -31,7 +31,7 @@
  Defines
  ==============================================================================*/
 
-#define CANA_mTOTAL_IONODE                                                                                   (4U)
+#define CANA_mTOTAL_IONODE                                                                                   (2U)
 #define CANA_mTOTAL_VSNODE                                                                                   (12U)
 
 #define CANA_mNODEID_MASKPSU                                                                                  (0x0000FF00U)
@@ -833,6 +833,7 @@ extern void CANA_fnIOHrtBt();
 extern void cana_fnVSCTx(void);
 extern void CANA_fnComFailChk(void);
 
+extern CANA_tzAI_IOREGS CANA_tzAIData_LPCIORegs[CANA_mTOTAL_LPCNODES],CANA_tzAIData_LHCIORegs[CANA_mTOTAL_LHCNODES];
 
 /*==============================================================================
  Extern/Public Constants

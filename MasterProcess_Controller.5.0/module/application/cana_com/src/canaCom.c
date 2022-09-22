@@ -47,7 +47,7 @@ CANA_tzIOFLAGS CANA_tzIOflags;
 CANA_tzTIMERIOREGS CANA_tzIOtimers;
 CANA_tzMSREGS CANA_tzMSRegs;
 
-CANA_tzAI_IOREGS CANA_tzAIData_IORegs[CANA_mTOTAL_IONODE];
+CANA_tzAI_IOREGS CANA_tzAIData_LPCIORegs[CANA_mTOTAL_LPCNODES],CANA_tzAIData_LHCIORegs[CANA_mTOTAL_LHCNODES];
 CANA_tzDIFREQ_IOREGS CANA_tzAIDataFreq_IORegs[CANA_mTOTAL_IONODE];
 
 CANA_tzTHERMAL_IOREGS CANA_tzThermal_IORegs[CANA_mTOTAL_IONODE];
@@ -375,7 +375,7 @@ static void cana_fnmsgPrcsLPCIO(uint16_t uiMsgtype, uint16_t *msgDataIO,
 
         case LPC_30:
 
-            //if (CANA_tzIOtimers.RxCntLPC30 != msgDataIO[0])
+            if (CANA_tzIOtimers.RxCntLPC30 != msgDataIO[0])
         {
             CANA_tzIOtimers.RxCntLPC30 = msgDataIO[0];
 
@@ -393,7 +393,7 @@ static void cana_fnmsgPrcsLPCIO(uint16_t uiMsgtype, uint16_t *msgDataIO,
 
         case LPC_31:
 
-            //if (CANA_tzIOtimers.RxCntLPC31 != msgDataIO[0])
+            if (CANA_tzIOtimers.RxCntLPC31 != msgDataIO[0])
         {
             CANA_tzIOtimers.RxCntLPC31 = msgDataIO[0];
 
@@ -419,29 +419,29 @@ static void cana_fnmsgPrcsLPCIO(uint16_t uiMsgtype, uint16_t *msgDataIO,
 
         case LPC_30:
 
-            CANA_tzAIData_IORegs[CANA_mLPC30_IO].AI0_Data = ((msgDataIO[0] << 8)
+            CANA_tzAIData_LPCIORegs[CANA_mLPC30_IO].AI0_Data = ((msgDataIO[0] << 8)
                     | (msgDataIO[1])) * 0.001;
-            CANA_tzAIData_IORegs[CANA_mLPC30_IO].AI1_Data = ((msgDataIO[2] << 8)
+            CANA_tzAIData_LPCIORegs[CANA_mLPC30_IO].AI1_Data = ((msgDataIO[2] << 8)
                     | (msgDataIO[3])) * 0.001;
-            CANA_tzAIData_IORegs[CANA_mLPC30_IO].AI2_Data = ((msgDataIO[4] << 8)
+            CANA_tzAIData_LPCIORegs[CANA_mLPC30_IO].AI2_Data = ((msgDataIO[4] << 8)
                     | (msgDataIO[5])) * 0.001;
-            CANA_tzAIData_IORegs[CANA_mLPC30_IO].AI3_Data = ((msgDataIO[6] << 8)
+            CANA_tzAIData_LPCIORegs[CANA_mLPC30_IO].AI3_Data = ((msgDataIO[6] << 8)
                     | (msgDataIO[7])) * 0.001;
             break;
 
         case LPC_31:
 
-            CANA_tzAIData_IORegs[CANA_mLPC31_IO].AI0_Data = ((msgDataIO[0] << 8)
+            CANA_tzAIData_LPCIORegs[CANA_mLPC31_IO].AI0_Data = ((msgDataIO[0] << 8)
                     | (msgDataIO[1])) * 0.001;
-            CANA_tzAIData_IORegs[CANA_mLPC31_IO].AI1_Data = ((msgDataIO[2] << 8)
+            CANA_tzAIData_LPCIORegs[CANA_mLPC31_IO].AI1_Data = ((msgDataIO[2] << 8)
                     | (msgDataIO[3])) * 0.001;
-            CANA_tzAIData_IORegs[CANA_mLPC31_IO].AI2_Data = ((msgDataIO[4] << 8)
+            CANA_tzAIData_LPCIORegs[CANA_mLPC31_IO].AI2_Data = ((msgDataIO[4] << 8)
                     | (msgDataIO[5])) * 0.001;
-            CANA_tzAIData_IORegs[CANA_mLPC31_IO].AI3_Data = ((msgDataIO[6] << 8)
+            CANA_tzAIData_LPCIORegs[CANA_mLPC31_IO].AI3_Data = ((msgDataIO[6] << 8)
                     | (msgDataIO[7])) * 0.001;
 
             CANA_tzAISensorData.HYS_401 =
-                    CANA_tzAIData_IORegs[CANA_mLPC31_IO].AI3_Data;
+                    CANA_tzAIData_LPCIORegs[CANA_mLPC31_IO].AI3_Data;
 
             break;
         default:
@@ -456,35 +456,35 @@ static void cana_fnmsgPrcsLPCIO(uint16_t uiMsgtype, uint16_t *msgDataIO,
 
         case LPC_30:
 
-            CANA_tzAIData_IORegs[CANA_mLPC30_IO].AI4_Data = ((msgDataIO[0] << 8)
+            CANA_tzAIData_LPCIORegs[CANA_mLPC30_IO].AI4_Data = ((msgDataIO[0] << 8)
                     | (msgDataIO[1])) * 0.001;
-            CANA_tzAIData_IORegs[CANA_mLPC30_IO].AI5_Data = ((msgDataIO[2] << 8)
+            CANA_tzAIData_LPCIORegs[CANA_mLPC30_IO].AI5_Data = ((msgDataIO[2] << 8)
                     | (msgDataIO[3])) * 0.001;
-            CANA_tzAIData_IORegs[CANA_mLPC30_IO].AI6_Data = ((msgDataIO[4] << 8)
+            CANA_tzAIData_LPCIORegs[CANA_mLPC30_IO].AI6_Data = ((msgDataIO[4] << 8)
                     | (msgDataIO[5])) * 0.001;
-            CANA_tzAIData_IORegs[CANA_mLPC30_IO].AI7_Data = ((msgDataIO[6] << 8)
+            CANA_tzAIData_LPCIORegs[CANA_mLPC30_IO].AI7_Data = ((msgDataIO[6] << 8)
                     | (msgDataIO[7])) * 0.001;
             break;
 
         case LPC_31:
 
-            CANA_tzAIData_IORegs[CANA_mLPC31_IO].AI4_Data = ((msgDataIO[0] << 8)
+            CANA_tzAIData_LPCIORegs[CANA_mLPC31_IO].AI4_Data = ((msgDataIO[0] << 8)
                     | (msgDataIO[1])) * 0.001;
-            CANA_tzAIData_IORegs[CANA_mLPC31_IO].AI5_Data = ((msgDataIO[2] << 8)
+            CANA_tzAIData_LPCIORegs[CANA_mLPC31_IO].AI5_Data = ((msgDataIO[2] << 8)
                     | (msgDataIO[3])) * 0.001;
-            CANA_tzAIData_IORegs[CANA_mLPC31_IO].AI6_Data = ((msgDataIO[4] << 8)
+            CANA_tzAIData_LPCIORegs[CANA_mLPC31_IO].AI6_Data = ((msgDataIO[4] << 8)
                     | (msgDataIO[5])) * 0.001;
-            CANA_tzAIData_IORegs[CANA_mLPC31_IO].AI7_Data = ((msgDataIO[6] << 8)
+            CANA_tzAIData_LPCIORegs[CANA_mLPC31_IO].AI7_Data = ((msgDataIO[6] << 8)
                     | (msgDataIO[7])) * 0.001;
 
             CANA_tzAISensorData.HYS_101 =
-                    CANA_tzAIData_IORegs[CANA_mLPC31_IO].AI4_Data;
+                    CANA_tzAIData_LPCIORegs[CANA_mLPC31_IO].AI4_Data;
             CANA_tzAISensorData.HYS_102 =
-                    CANA_tzAIData_IORegs[CANA_mLPC31_IO].AI5_Data;
+                    CANA_tzAIData_LPCIORegs[CANA_mLPC31_IO].AI5_Data;
             CANA_tzAISensorData.OXS_101 =
-                    CANA_tzAIData_IORegs[CANA_mLPC31_IO].AI6_Data;
+                    CANA_tzAIData_LPCIORegs[CANA_mLPC31_IO].AI6_Data;
             CANA_tzAISensorData.HYS_501 =
-                    CANA_tzAIData_IORegs[CANA_mLPC31_IO].AI7_Data;
+                    CANA_tzAIData_LPCIORegs[CANA_mLPC31_IO].AI7_Data;
 
             break;
         default:
@@ -576,7 +576,7 @@ static void cana_fnmsgPrcsLHCIO(uint16_t uiMsgtype, uint16_t *msgDataIO,
 
         case LHC_10:
 
-            //if (CANA_tzIOtimers.RxCntLHC10 != msgDataIO[0])
+            if (CANA_tzIOtimers.RxCntLHC10 != msgDataIO[0])
         {
             CANA_tzIOtimers.RxCntLHC10 = msgDataIO[0];
 
@@ -597,7 +597,7 @@ static void cana_fnmsgPrcsLHCIO(uint16_t uiMsgtype, uint16_t *msgDataIO,
 
         case LHC_11:
 
-            //if (CANA_tzIOtimers.RxCntLHC11 != msgDataIO[0])
+            if (CANA_tzIOtimers.RxCntLHC11 != msgDataIO[0])
         {
             CANA_tzIOtimers.RxCntLHC11 = msgDataIO[0];
 
@@ -621,29 +621,29 @@ static void cana_fnmsgPrcsLHCIO(uint16_t uiMsgtype, uint16_t *msgDataIO,
 
         case LHC_10:
 
-            CANA_tzAIData_IORegs[CANA_mLHC10_IO].AI0_Data = ((msgDataIO[0] << 8)
+            CANA_tzAIData_LHCIORegs[CANA_mLHC10_IO].AI0_Data = ((msgDataIO[0] << 8)
                     | (msgDataIO[1])) * 0.001;
-            CANA_tzAIData_IORegs[CANA_mLHC10_IO].AI1_Data = ((msgDataIO[2] << 8)
+            CANA_tzAIData_LHCIORegs[CANA_mLHC10_IO].AI1_Data = ((msgDataIO[2] << 8)
                     | (msgDataIO[3])) * 0.001;
-            CANA_tzAIData_IORegs[CANA_mLHC10_IO].AI2_Data = ((msgDataIO[4] << 8)
+            CANA_tzAIData_LHCIORegs[CANA_mLHC10_IO].AI2_Data = ((msgDataIO[4] << 8)
                     | (msgDataIO[5])) * 0.001;
-            CANA_tzAIData_IORegs[CANA_mLHC10_IO].AI3_Data = ((msgDataIO[6] << 8)
+            CANA_tzAIData_LHCIORegs[CANA_mLHC10_IO].AI3_Data = ((msgDataIO[6] << 8)
                     | (msgDataIO[7])) * 0.001;
             break;
 
         case LHC_11:
 
-            CANA_tzAIData_IORegs[CANA_mLHC11_IO].AI0_Data = ((msgDataIO[0] << 8)
+            CANA_tzAIData_LHCIORegs[CANA_mLHC11_IO].AI0_Data = ((msgDataIO[0] << 8)
                     | (msgDataIO[1])) * 0.001;
-            CANA_tzAIData_IORegs[CANA_mLHC11_IO].AI1_Data = ((msgDataIO[2] << 8)
+            CANA_tzAIData_LHCIORegs[CANA_mLHC11_IO].AI1_Data = ((msgDataIO[2] << 8)
                     | (msgDataIO[3])) * 0.001;
-            CANA_tzAIData_IORegs[CANA_mLHC11_IO].AI2_Data = ((msgDataIO[4] << 8)
+            CANA_tzAIData_LHCIORegs[CANA_mLHC11_IO].AI2_Data = ((msgDataIO[4] << 8)
                     | (msgDataIO[5])) * 0.001;
-            CANA_tzAIData_IORegs[CANA_mLHC11_IO].AI3_Data = ((msgDataIO[6] << 8)
+            CANA_tzAIData_LHCIORegs[CANA_mLHC11_IO].AI3_Data = ((msgDataIO[6] << 8)
                     | (msgDataIO[7])) * 0.001;
 
             CANA_tzAISensorData.PRT_402 =
-                    CANA_tzAIData_IORegs[CANA_mLHC11_IO].AI3_Data;
+                    CANA_tzAIData_LHCIORegs[CANA_mLHC11_IO].AI3_Data;
 
             break;
         default:
@@ -658,43 +658,43 @@ static void cana_fnmsgPrcsLHCIO(uint16_t uiMsgtype, uint16_t *msgDataIO,
 
         case LHC_10:
 
-            CANA_tzAIData_IORegs[CANA_mLHC10_IO].AI4_Data = ((msgDataIO[0] << 8)
+            CANA_tzAIData_LHCIORegs[CANA_mLHC10_IO].AI4_Data = ((msgDataIO[0] << 8)
                     | (msgDataIO[1])) * 0.001;
-            CANA_tzAIData_IORegs[CANA_mLHC10_IO].AI5_Data = ((msgDataIO[2] << 8)
+            CANA_tzAIData_LHCIORegs[CANA_mLHC10_IO].AI5_Data = ((msgDataIO[2] << 8)
                     | (msgDataIO[3])) * 0.001;
-            CANA_tzAIData_IORegs[CANA_mLHC10_IO].AI6_Data = ((msgDataIO[4] << 8)
+            CANA_tzAIData_LHCIORegs[CANA_mLHC10_IO].AI6_Data = ((msgDataIO[4] << 8)
                     | (msgDataIO[5])) * 0.001;
-            CANA_tzAIData_IORegs[CANA_mLHC10_IO].AI7_Data = ((msgDataIO[6] << 8)
+            CANA_tzAIData_LHCIORegs[CANA_mLHC10_IO].AI7_Data = ((msgDataIO[6] << 8)
                     | (msgDataIO[7])) * 0.001;
 
             CANA_tzAISensorData.LVL_101 =
-                    CANA_tzAIData_IORegs[CANA_mLHC10_IO].AI4_Data;
+                    CANA_tzAIData_LHCIORegs[CANA_mLHC10_IO].AI4_Data;
             CANA_tzAISensorData.PRT_101 =
-                    CANA_tzAIData_IORegs[CANA_mLHC10_IO].AI5_Data;
+                    CANA_tzAIData_LHCIORegs[CANA_mLHC10_IO].AI5_Data;
             CANA_tzAISensorData.PRT_102 =
-                    CANA_tzAIData_IORegs[CANA_mLHC10_IO].AI6_Data;
+                    CANA_tzAIData_LHCIORegs[CANA_mLHC10_IO].AI6_Data;
             CANA_tzAISensorData.COS_101 =
-                    CANA_tzAIData_IORegs[CANA_mLHC10_IO].AI7_Data;
+                    CANA_tzAIData_LHCIORegs[CANA_mLHC10_IO].AI7_Data;
 
             break;
 
         case LHC_11:
 
-            CANA_tzAIData_IORegs[CANA_mLHC11_IO].AI4_Data = ((msgDataIO[0] << 8)
+            CANA_tzAIData_LHCIORegs[CANA_mLHC11_IO].AI4_Data = ((msgDataIO[0] << 8)
                     | (msgDataIO[1])) * 0.001;
-            CANA_tzAIData_IORegs[CANA_mLHC11_IO].AI5_Data = ((msgDataIO[2] << 8)
+            CANA_tzAIData_LHCIORegs[CANA_mLHC11_IO].AI5_Data = ((msgDataIO[2] << 8)
                     | (msgDataIO[3])) * 0.001;
-            CANA_tzAIData_IORegs[CANA_mLHC11_IO].AI6_Data = ((msgDataIO[4] << 8)
+            CANA_tzAIData_LHCIORegs[CANA_mLHC11_IO].AI6_Data = ((msgDataIO[4] << 8)
                     | (msgDataIO[5])) * 0.001;
-            CANA_tzAIData_IORegs[CANA_mLHC11_IO].AI7_Data = ((msgDataIO[6] << 8)
+            CANA_tzAIData_LHCIORegs[CANA_mLHC11_IO].AI7_Data = ((msgDataIO[6] << 8)
                     | (msgDataIO[7])) * 0.001;
 
             CANA_tzAISensorData.PRT_401 =
-                    CANA_tzAIData_IORegs[CANA_mLHC11_IO].AI5_Data;
+                    CANA_tzAIData_LHCIORegs[CANA_mLHC11_IO].AI5_Data;
             CANA_tzAISensorData.TE_401 =
-                    CANA_tzAIData_IORegs[CANA_mLHC11_IO].AI6_Data;
+                    CANA_tzAIData_LHCIORegs[CANA_mLHC11_IO].AI6_Data;
             CANA_tzAISensorData.DPT_401 =
-                    CANA_tzAIData_IORegs[CANA_mLHC11_IO].AI7_Data;
+                    CANA_tzAIData_LHCIORegs[CANA_mLHC11_IO].AI7_Data;
 
             break;
         default:
