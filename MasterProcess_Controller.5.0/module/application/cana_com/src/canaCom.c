@@ -113,6 +113,8 @@ static void cana_fnmsgPrcsLHCIO(uint16_t uimsgID, uint16_t *msgData,
                                 uint16_t uiNodeType);
 
 static void cana_fnmsgPrcsMS(uint16_t uiMsgtype, uint16_t *msgDataMS);
+static float32_t limitAnalogSensorData(float32 SensorType);
+
 
 void CANA_fnIOHrtBt();
 void safeshutDown();
@@ -157,7 +159,7 @@ uint16_t ui16CabID = 0, ui16prev_value = 0;
 uint16_t uiCabIDAO = 0, uiNodeIDAO = 0;
 uint16_t ui16Cnt = 0;
 uint16_t ui16StateTnstCnt = 0, ui16StateRstCnt = 0;
-uint16_t testCabID = 0, testNodeID = 0, testCntVFD = 0, ui16ComsnCnt = 0;
+uint16_t testCabID = 0, testCabID1 = 0, testNodeID = 0, testCntVFD = 0, ui16ComsnCnt = 0;
 float32 testEBV = 0;
 uint16_t var = 0, ui16IOcnt = 0;
 /*==============================================================================
@@ -554,6 +556,17 @@ static void cana_fnmsgPrcsLPCIO(uint16_t uiMsgtype, uint16_t *msgDataIO,
 
     }
 
+
+    CANA_tzAISensorData.HYS_101 = limitAnalogSensorData(
+            CANA_tzAISensorData.HYS_101);
+    CANA_tzAISensorData.HYS_102 = limitAnalogSensorData(
+            CANA_tzAISensorData.HYS_102);
+    CANA_tzAISensorData.HYS_501 = limitAnalogSensorData(
+            CANA_tzAISensorData.HYS_501);
+    CANA_tzAISensorData.HYS_401 = limitAnalogSensorData(
+            CANA_tzAISensorData.HYS_401);
+    CANA_tzAISensorData.OXS_101 = limitAnalogSensorData(
+            CANA_tzAISensorData.OXS_101);
 }
 
 /*=============================================================================
@@ -742,6 +755,25 @@ static void cana_fnmsgPrcsLHCIO(uint16_t uiMsgtype, uint16_t *msgDataIO,
         break;
 
     }
+
+    CANA_tzAISensorData.LVL_101 = limitAnalogSensorData(
+            CANA_tzAISensorData.LVL_101);
+    CANA_tzAISensorData.PRT_101 = limitAnalogSensorData(
+            CANA_tzAISensorData.PRT_101);
+    CANA_tzAISensorData.PRT_102 = limitAnalogSensorData(
+            CANA_tzAISensorData.PRT_102);
+    CANA_tzAISensorData.PRT_401 = limitAnalogSensorData(
+            CANA_tzAISensorData.PRT_401);
+    CANA_tzAISensorData.PRT_402 = limitAnalogSensorData(
+            CANA_tzAISensorData.PRT_402);
+    CANA_tzAISensorData.TE_401 = limitAnalogSensorData(
+            CANA_tzAISensorData.TE_401);
+    CANA_tzAISensorData.COS_101 = limitAnalogSensorData(
+            CANA_tzAISensorData.COS_101);
+    CANA_tzAISensorData.OXS_101 = limitAnalogSensorData(
+            CANA_tzAISensorData.OXS_101);
+    CANA_tzAISensorData.DPT_401 = limitAnalogSensorData(
+            CANA_tzAISensorData.DPT_401);
 
 }
 
@@ -1223,8 +1255,12 @@ void CANA_fnTx()
     CANA_tzMSRegs.HBCntMS++;
     if (CANA_tzMSRegs.HBCntMS >= 50)
     {
+//        CANA_fnMSTxCmds(testCabID, testNodeID,
+//                        &CANA_tzDO[testCabID][testNodeID]); //Heartbeat
+
         CANA_fnMSTxCmds(testCabID, testNodeID,
-                        &CANA_tzDO[testCabID][testNodeID]); //Heartbeat
+                        &CANA_tzDO[testCabID1][testNodeID]); //Heartbeat
+
         CANA_tzMSRegs.HBCntMS = 0;
     }
 
@@ -1664,6 +1700,20 @@ void safeshutDown()
     }
 }
 
+
+static float32_t limitAnalogSensorData(float32_t SensorType)
+{
+    if (SensorType > 21.0f)
+    {
+        SensorType = 21.0f;
+    }
+    if (SensorType < 3.0f)
+    {
+        SensorType = 3.0f;
+    }
+    return (float32_t)(SensorType);
+}
+
 void cana_CommisionMode()
 {
 
@@ -1680,7 +1730,7 @@ void cana_CommisionMode()
         {
 
             CANA_fnMSTxCmds(testCabID, testNodeID,
-                            &CANA_tzDO[testCabID][testNodeID]); //Heartbeat
+                            &CANA_tzDO[testCabID1][testNodeID]); //Heartbeat
         }
         if (CANA_tzMSRegs.ManualTestCntMS == 10)
         {
@@ -1691,7 +1741,7 @@ void cana_CommisionMode()
         }
         else if ((CANA_tzMSRegs.ManualTestCntMS == 20))
         {
-            CANA_tzAnaOPParams.CANA_tzAOI[1][0].AOI1 = (testEBV * 10);
+            CANA_tzAnaOPParams.CANA_tzAOI[1][0].AOI1 = (testEBV * 100);
 
             CANA_fnCmdsForAnaOPIs(CANA_tzIORegs.uiUnitID, 1, 0,
                                   &CANA_tzAnaOPParams);

@@ -56,7 +56,6 @@ MATHCONV_tzREGS MATHConvtzRegs;
 //==============================================================================*/
 
 void MATH_fnCalc(void);
-static float32_t limitAnalogSensorData(float32 SensorType);
 
 ///*==============================================================================
 // Local Variables
@@ -154,32 +153,7 @@ inline float32 math_fnTTCCJCtomV(float32 CJC_temp)
 void MATH_fnCalc(void)
 {
 
-    CANA_tzAISensorData.DPT_401 = limitAnalogSensorData(
-            CANA_tzAISensorData.DPT_401);
-    CANA_tzAISensorData.HYS_101 = limitAnalogSensorData(
-            CANA_tzAISensorData.HYS_101);
-    CANA_tzAISensorData.HYS_102 = limitAnalogSensorData(
-            CANA_tzAISensorData.HYS_102);
-    CANA_tzAISensorData.HYS_501 = limitAnalogSensorData(
-            CANA_tzAISensorData.HYS_501);
-    CANA_tzAISensorData.HYS_401 = limitAnalogSensorData(
-            CANA_tzAISensorData.HYS_401);
-    CANA_tzAISensorData.LVL_101 = limitAnalogSensorData(
-            CANA_tzAISensorData.LVL_101);
-//    CANA_tzAISensorData.PRT_101 = limitAnalogSensorData(
-//            CANA_tzAISensorData.PRT_101);
-//    CANA_tzAISensorData.PRT_102 = limitAnalogSensorData(
-//            CANA_tzAISensorData.PRT_102);
-//    CANA_tzAISensorData.PRT_401 = limitAnalogSensorData(
-//            CANA_tzAISensorData.PRT_401);
-//    CANA_tzAISensorData.PRT_402 = limitAnalogSensorData(
-//            CANA_tzAISensorData.PRT_402);
-    CANA_tzAISensorData.TE_401 = limitAnalogSensorData(
-            CANA_tzAISensorData.TE_401);
-    CANA_tzAISensorData.COS_101 = limitAnalogSensorData(
-            CANA_tzAISensorData.COS_101);
-    CANA_tzAISensorData.OXS_101 = limitAnalogSensorData(
-            CANA_tzAISensorData.OXS_101);
+
 
     MATHConvtzRegs.AISensorLVL101 = math_fnLVLmAtoPercent(
             CANA_tzAISensorData.LVL_101);
@@ -271,18 +245,7 @@ void MATH_fnCalc(void)
 
 }
 
-static float32_t limitAnalogSensorData(float32_t SensorType)
-{
-    if (SensorType > 20.0)
-    {
-        SensorType = 20.0;
-    }
-    if (SensorType < 4.0)
-    {
-        SensorType = 4.0;
-    }
-    return (float32_t)(SensorType);
-}
+
 //
 ///*==============================================================================
 // End of File
