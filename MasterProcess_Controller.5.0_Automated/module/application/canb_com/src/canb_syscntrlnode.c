@@ -1120,7 +1120,10 @@ static void canb_fnmsgPrcsSP(uint16_t uiMsgtype, uint16_t *msgDataSP)
         break;
 
     case 2:
-        CANB_tzSiteRegs.H2Percent = ((msgDataSP[0] << 8) | (msgDataSP[1]))
+
+        if((msgDataSP[0] == 0x0) && (msgDataSP[1] == 0x10))
+
+        CANB_tzSiteRegs.H2Percent = ((msgDataSP[2] << 8) | (msgDataSP[3]))
                 * 0.01;
 
         CANB_tzSiteRegs.f32VoltSet = 400.0;
@@ -1128,11 +1131,14 @@ static void canb_fnmsgPrcsSP(uint16_t uiMsgtype, uint16_t *msgDataSP)
         CANB_tzSiteRegs.f32CurrSet =
                 (CANB_tzSiteRegs.H2Percent * 0.01 * 1000.0);
 
-        CANB_tzSiteRegs.numofCells = ((msgDataSP[2] << 8) | (msgDataSP[3]))
-                * 0.01;
+        CANB_tzSiteRegs.numofCells = ((msgDataSP[4] << 8) | (msgDataSP[5]));
 
-        CANB_tzSiteRegs.numofStack = ((msgDataSP[4] << 8) | (msgDataSP[5]))
-                * 0.01;
+        CANB_tzSiteRegs.numofStack = ((msgDataSP[6] << 8) | (msgDataSP[7]));
+
+        break;
+
+    default:
+        break;
     }
 }
 

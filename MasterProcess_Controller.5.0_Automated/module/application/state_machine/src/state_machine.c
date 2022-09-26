@@ -265,6 +265,7 @@ static void stat_fnFSMNextState()
             stat_IOReset();
             STAT_tzStateMac.Next_st = READY;
             CANB_tzSiteRxRegs.Start_cmd = 1;
+            CANA_tzQueryType.PSU = QUERY_PROGPARAM;
 
         }
         else if (ui16InstShutDownFlg == 1)

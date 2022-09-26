@@ -165,7 +165,7 @@ void CANA_fnPSUTX_Event(void)
     case READY:
 
         if ((CANA_tzQueryType.PSU == QUERY_PROGPARAM)
-                || (CANA_tzQueryType.PSU == TURN_OFF)
+             //   || (CANA_tzQueryType.PSU == TURN_OFF)
                 || (CANA_tzQueryType.PSU == IDLE_PSU))
 
         {
@@ -209,9 +209,24 @@ void CANA_fnPSUTX_Event(void)
             {
                 CANA_tzTimerRegs.tzPSU.TxCount = 0;
 
-                CANA_tzQueryType.PSU = QUERY_PROGPARAM;
+                CANA_tzQueryType.PSU = TURN_OFF;
 
             }
+        }
+
+        else if (CANA_tzQueryType.PSU == TURN_OFF)
+        {
+            CANA_tzTimerRegs.tzPSU.TxCount++;
+
+            cana_fnTurnON_PSU(0, CANA_mTURNOFF_DCDC, 1);
+
+            if (CANA_tzTimerRegs.tzPSU.TxCount > 10)
+            {
+                CANA_tzTimerRegs.tzPSU.TxCount = 0;
+
+                CANA_tzQueryType.PSU = QUERY_PROGPARAM;
+            }
+
         }
 
         break;
