@@ -358,6 +358,7 @@ case 2:
 
     break;
 
+
 case 3:
 
     CAN_setupMessageObject(CANB_BASE, CAN_mMAILBOX_2,
@@ -413,50 +414,6 @@ case 4:
     ui16txMsgDataSite2[0] = 0x0;
     ui16txMsgDataSite2[1] = 0x4;
 
-    ui32temp = (MATHConvtzRegs.AISensorPRT101 * 100);
-
-    if (ui32temp < 0)
-    {
-        ui32temp = 0;
-    }
-
-    ui16txMsgDataSite2[2] = (ui32temp & 0xFF00) >> 8;
-    ui16txMsgDataSite2[3] = (ui32temp & 0x00FF);
-
-    ui32temp = (MATHConvtzRegs.AISensorPRT102 * 100);
-
-    if (ui32temp < 0)
-    {
-        ui32temp = 0;
-    }
-
-    ui16txMsgDataSite2[4] = (ui32temp & 0xFF00) >> 8;
-    ui16txMsgDataSite2[5] = (ui32temp & 0x00FF);
-
-    ui32temp = (MATHConvtzRegs.AISensorPRT401 * 100);
-
-    if (ui32temp < 0)
-    {
-        ui32temp = 0;
-    }
-
-    ui16txMsgDataSite2[6] = (ui32temp & 0xFF00) >> 8;
-    ui16txMsgDataSite2[7] = (ui32temp & 0x00FF);
-
-    CAN_sendMessage(CANB_BASE, CAN_mMAILBOX_2, CAN_mLEN8, ui16txMsgDataSite2);
-    break;
-
-case 5:
-
-    CAN_setupMessageObject(CANB_BASE, CAN_mMAILBOX_2,
-                           (0x11943020 | (CANA_tzIORegs.uiUnitID << 8)),
-                           CAN_MSG_FRAME_EXT, CAN_MSG_OBJ_TYPE_TX, 0x1FFFFFFF,
-                           CAN_MSG_OBJ_NO_FLAGS,
-                           CAN_mLEN8);
-
-    ui16txMsgDataSite2[0] = 0x0;
-    ui16txMsgDataSite2[1] = 0x5;
-
     ui32temp = (MATHConvtzRegs.AISensorPRT402 * 100);
 
     if (ui32temp < 0)
@@ -490,7 +447,7 @@ case 5:
     CAN_sendMessage(CANB_BASE, CAN_mMAILBOX_2, CAN_mLEN8, ui16txMsgDataSite2);
     break;
 
-case 6:
+case 5:
 
     CAN_setupMessageObject(CANB_BASE, CAN_mMAILBOX_2,
                            (0x11943020 | (CANA_tzIORegs.uiUnitID << 8)),
@@ -499,7 +456,7 @@ case 6:
                            CAN_mLEN8);
 
     ui16txMsgDataSite2[0] = 0x0;
-    ui16txMsgDataSite2[1] = 0x6;
+    ui16txMsgDataSite2[1] = 0x5;
     ui16txMsgDataSite2[2] = (CANB_tzSiteRegs.WaterDemand);
     ui16txMsgDataSite2[3] = (CANB_tzSiteRegs.TurnONLCC);
 
@@ -512,7 +469,7 @@ case 6:
     CAN_sendMessage(CANB_BASE, CAN_mMAILBOX_2, CAN_mLEN8, ui16txMsgDataSite2);
     break;
 
-case 7:
+case 6:
 
     CAN_setupMessageObject(CANB_BASE, CAN_mMAILBOX_2,
                            (0x11943020 | (CANA_tzIORegs.uiUnitID << 8)),
@@ -521,7 +478,7 @@ case 7:
                            CAN_mLEN8);
 
     ui16txMsgDataSite2[0] = 0x0;
-    ui16txMsgDataSite2[1] = 0x7;
+    ui16txMsgDataSite2[1] = 0x6;
 
     ui32temp = (MATHConvtzRegs.TempSensorTTC101 * 100);
 
@@ -556,7 +513,7 @@ case 7:
     CAN_sendMessage(CANB_BASE, CAN_mMAILBOX_2, CAN_mLEN8, ui16txMsgDataSite2);
     break;
 
-case 8:
+case 7:
 
     CAN_setupMessageObject(CANB_BASE, CAN_mMAILBOX_2,
                            (0x11943020 | (CANA_tzIORegs.uiUnitID << 8)),
@@ -565,7 +522,7 @@ case 8:
                            CAN_mLEN8);
 
     ui16txMsgDataSite2[0] = 0x0;
-    ui16txMsgDataSite2[1] = 0x8;
+    ui16txMsgDataSite2[1] = 0x7;
 
     ui32temp = (MATHConvtzRegs.TempSensorKTC401 * 100);
 
