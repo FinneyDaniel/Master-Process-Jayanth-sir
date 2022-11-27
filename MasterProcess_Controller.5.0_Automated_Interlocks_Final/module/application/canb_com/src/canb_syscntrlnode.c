@@ -815,17 +815,17 @@ case 5:
     ui16txMsgDataSite4[0] = ui16nodeIDVS;
     ui16txMsgDataSite4[1] = 0x5;
 
-    ui32temp = (canA_tzVSC_info[ui16nodeIDVS].f32Cellvolt[14] * 1000);
+    ui32temp = (canA_tzVSC_info[ui16nodeIDVS].f32Cellvolt[13] * 1000);
 
     ui16txMsgDataSite4[2] = (ui32temp & 0xFF00) >> 8;
     ui16txMsgDataSite4[3] = (ui32temp & 0x00FF);
 
-    ui32temp = (canA_tzVSC_info[ui16nodeIDVS].f32Cellvolt[15] * 1000);
+    ui32temp = (canA_tzVSC_info[ui16nodeIDVS].f32Cellvolt[14] * 1000);
 
     ui16txMsgDataSite4[4] = (ui32temp & 0xFF00) >> 8;
     ui16txMsgDataSite4[5] = (ui32temp & 0x00FF);
 
-    ui32temp = (canA_tzVSC_info[ui16nodeIDVS].f32Cellvolt[16] * 1000);
+    ui32temp = (canA_tzVSC_info[ui16nodeIDVS].f32Cellvolt[15] * 1000);
 
     ui16txMsgDataSite4[6] = (ui32temp & 0xFF00) >> 8;
     ui16txMsgDataSite4[7] = (ui32temp & 0x00FF);
@@ -844,6 +844,36 @@ case 6:
 
     ui16txMsgDataSite4[0] = ui16nodeIDVS;
     ui16txMsgDataSite4[1] = 0x6;
+
+    ui32temp = (canA_tzVSC_info[ui16nodeIDVS].f32Cellvolt[16] * 1000);
+
+    ui16txMsgDataSite4[2] = (ui32temp & 0xFF00) >> 8;
+    ui16txMsgDataSite4[3] = (ui32temp & 0x00FF);
+
+    ui32temp = 0;
+
+    ui16txMsgDataSite4[4] = (ui32temp & 0xFF00) >> 8;
+    ui16txMsgDataSite4[5] = (ui32temp & 0x00FF);
+
+    ui32temp = 0;
+
+    ui16txMsgDataSite4[6] = (ui32temp & 0xFF00) >> 8;
+    ui16txMsgDataSite4[7] = (ui32temp & 0x00FF);
+
+    CAN_sendMessage(CANB_BASE, CAN_mMAILBOX_4, CAN_mLEN8, ui16txMsgDataSite4);
+
+    break;
+	
+case 7:
+
+    CAN_setupMessageObject(CANB_BASE, CAN_mMAILBOX_4,
+                           (0x11B43020 | (CANA_tzIORegs.uiUnitID << 8)),
+                           CAN_MSG_FRAME_EXT, CAN_MSG_OBJ_TYPE_TX, 0x1FFFFFFF,
+                           CAN_MSG_OBJ_NO_FLAGS,
+                           CAN_mLEN8);
+
+    ui16txMsgDataSite4[0] = ui16nodeIDVS;
+    ui16txMsgDataSite4[1] = 0x7;
 
     ui16txMsgDataSite4[2] = (canA_tzVSC_info[ui16nodeIDVS].uiMaxcellNum[0]
             * 0xFF);
@@ -865,7 +895,7 @@ case 6:
 
     break;
 
-case 7:
+case 8:
 
     CAN_setupMessageObject(CANB_BASE, CAN_mMAILBOX_4,
                            (0x11B43020 | (CANA_tzIORegs.uiUnitID << 8)),
@@ -874,7 +904,7 @@ case 7:
                            CAN_mLEN8);
 
     ui16txMsgDataSite4[0] = ui16nodeIDVS;
-    ui16txMsgDataSite4[1] = 0x7;
+    ui16txMsgDataSite4[1] = 0x8;
 
     ui16txMsgDataSite4[2] = (canA_tzVSC_info[ui16nodeIDVS].uiMincellNum[0]
             * 0xFF);
