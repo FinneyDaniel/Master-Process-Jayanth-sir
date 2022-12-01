@@ -100,7 +100,7 @@ static void VSC_fntxCellcnt(uint16_t uiNodeid, uint16_t uiCellcount)
     uiVSCtxbuf[2] = 0x00;
     uiVSCtxbuf[3] = 0x00;
     uiVSCtxbuf[4] = 0x00;
-    uiVSCtxbuf[5] = CANB_tzSiteRegs.numofCells & 0xFF;
+    uiVSCtxbuf[5] = uiCellcount;
     uiVSCtxbuf[6] = 0x00;
     uiVSCtxbuf[7] = 0x00;
 

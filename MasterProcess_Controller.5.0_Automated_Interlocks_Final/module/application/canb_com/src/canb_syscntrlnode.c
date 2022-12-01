@@ -683,7 +683,7 @@ case 1:
     ui16nodeIDVS++;
     if (ui16nodeIDVS > 16)
     {
-        ui16nodeIDVS = 1;
+        ui16nodeIDVS = 0;
     }
 
     CAN_setupMessageObject(CANB_BASE, CAN_mMAILBOX_4,
