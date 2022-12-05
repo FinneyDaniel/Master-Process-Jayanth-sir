@@ -340,13 +340,13 @@ void faultCheck(void)
 //
 //    }
 
-    if (MATHConvtzRegs.AISensorCOS101 >= 3.0)
+    if (MATHConvtzRegs.AISensorCOS101 >= 10.0)
     {
         CANA_tzLHCIO1_AIFaultRegs.bit.COS_101 = faultLHCIO1_fnSet(
         FAULT_mCOS101,
                                                                   20);
     }
-    else if (MATHConvtzRegs.AISensorCOS101 <= 2.0)
+    else if (MATHConvtzRegs.AISensorCOS101 <= 8.0)
     {
         CANA_tzLHCIO1_AIFaultRegs.bit.COS_101 = faultLHCIO1_fnReset(
         FAULT_mCOS101,

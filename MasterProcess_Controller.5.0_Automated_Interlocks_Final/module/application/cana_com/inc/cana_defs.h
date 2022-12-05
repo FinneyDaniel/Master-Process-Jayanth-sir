@@ -730,12 +730,14 @@ union CANA_tzDOMS_STATUS_REGS
 
 struct CANA_tzMPFLT_BITS
 {
-    uint16_t fan101_102 :1;
-    uint16_t fan501_502 :1;
-    uint16_t fan401_402 :1;
-    uint16_t DOS101_103 :1;
-    uint16_t DOS301 :1;
-    uint16_t D0S303 :1;
+       uint16_t fan101_102 :1;
+       uint16_t fan501_502 :1;
+       uint16_t fan401_402 :1;
+       uint16_t DOS101_103 :1;
+       uint16_t DOS301_303 :1;
+       uint16_t LVL_101 :1;
+       uint16_t PRT_102 :1;
+       uint16_t PRT_401 :1;
  };
 
 union CANA_tzMP_FAULTS_REGS
