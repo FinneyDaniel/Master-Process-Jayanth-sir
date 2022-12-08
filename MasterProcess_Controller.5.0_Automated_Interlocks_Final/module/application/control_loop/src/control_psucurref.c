@@ -93,7 +93,8 @@ void CONTROL_fnPSU_IRef(void)
      {
         CANA_tzActNodeRegs_IO.bit.CellFault = 1;
      }
-     else if (f32maxCellVolt <= CANB_tzSiteRxRegs.CellMinLimit)
+    // else if (f32maxCellVolt <= CANB_tzSiteRxRegs.CellMinLimit) //CANB_tzSiteRxRegs.CellMinLimit
+    else
      {
          CANA_tzActNodeRegs_IO.bit.CellFault= 0;
      }
@@ -124,10 +125,10 @@ void CONTROL_fnPSU_IRef(void)
      }
 /*******************************************************************************************************************/
     // Receiving Current References from SP and Move to Stack Check from Ready State
-     if(CANB_tzSiteRegs.f32CurrSet>20.0f) //for safety
-     {
-         CANB_tzSiteRegs.f32CurrSet = 20.0f;
-     }
+//     if(CANB_tzSiteRegs.f32CurrSet>100.0f) //for safety
+//     {
+//         CANB_tzSiteRegs.f32CurrSet = 100.0f;
+//     }
     if (CANB_tzSiteRegs.f32CurrSet >= 10.0f)
     {
         CANB_tzSiteRxRegs.Start_H2Cmd = 1;
