@@ -69,7 +69,9 @@ typedef struct CANB_zSITERXREGS
     uint16_t RUTHandShake;
     uint16_t Start_H2Cmd;
     uint16_t Start_H2CmdStkpwr;
-
+    float32 CellMaxLimit;
+    float32 CellNotokTripCnt;
+    float32 CellMinLimit;
     uint16_t StartSpectroscopy;
     uint16_t ImpAmpVar;
     uint16_t ImpFreqVar;

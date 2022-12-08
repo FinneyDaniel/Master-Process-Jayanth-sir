@@ -37,6 +37,7 @@ All trademarks are owned by Enarka India Private Limited
 ==============================================================================*/
 CANA_tzVSC canA_VSCbuff;
 CANA_tzVSC_CELL_INFO canA_tzVSC_info[17];
+uint16_t ui16CANVSTX_cnt=0;
 /*==============================================================================
  Macros
 ==============================================================================*/
@@ -53,7 +54,7 @@ void cana_fnVSCTx(void);
 ==============================================================================*/
 uint16_t uiMaxCards_VSC = 0;
 uint16_t uiMaxCellsLastCard_VSC = 0;
-uint16_t uiCellCount = 0;
+uint16_t uiCellCount = 0,uiNoOfStackSets = 0;
 /*==============================================================================
  Local Constants
 ==============================================================================*/
@@ -68,18 +69,50 @@ uint16_t uiCellCount = 0;
 void cana_fnVSCTx(void)
 {
     //TODO: uicellcount to be read from CAN-B
+    static uint16_t cnt = 0;
+    ui16CANVSTX_cnt++;
 
-    uiMaxCards_VSC = CANB_tzSiteRegs.numofCells >> 4;
-    uiMaxCellsLastCard_VSC = CANB_tzSiteRegs.numofCells & 0xF;
-
-    if (uiMaxCellsLastCard_VSC)
+    if (ui16CANVSTX_cnt > 100)
     {
-        VSC_fntxCellcnt(uiMaxCards_VSC + 1, uiMaxCellsLastCard_VSC);
-        uiMaxCards_VSC = uiMaxCards_VSC+1;
+        ui16CANVSTX_cnt = 0;
+
+        switch (cnt)
+        {
+            case 0:
+                VSC_fntxCellcnt(0, 8);
+                break;
+
+            case 1:
+                VSC_fntxCellcnt(4, 8);
+                break;
+
+            case 2:
+                VSC_fntxCellcnt(8, 8);
+                break;
+
+            case 3:
+                VSC_fntxCellcnt(12, 8);
+                break;
+
+            default:
+                cnt = 0;
+                break;
+
+        }
+        cnt++;
+#if 0
+        uiMaxCards_VSC = CANB_tzSiteRegs.numofCells >> 4;
+        uiMaxCellsLastCard_VSC = CANB_tzSiteRegs.numofCells & 0xF;
+
+                if (uiMaxCellsLastCard_VSC)
+                {
+                    VSC_fntxCellcnt(uiMaxCards_VSC + 1, uiMaxCellsLastCard_VSC);
+                    uiMaxCards_VSC = uiMaxCards_VSC + 1;
+                }
+#endif
     }
 
 }
-
 /*=============================================================================
  @brief infinite loop for the main where tasks are executed is defined here
 
@@ -100,7 +133,7 @@ static void VSC_fntxCellcnt(uint16_t uiNodeid, uint16_t uiCellcount)
     uiVSCtxbuf[2] = 0x00;
     uiVSCtxbuf[3] = 0x00;
     uiVSCtxbuf[4] = 0x00;
-    uiVSCtxbuf[5] = uiCellcount;
+    uiVSCtxbuf[5] = uiCellcount;//uiCellcount;//CANB_tzSiteRegs.numofCells & 0xFF;
     uiVSCtxbuf[6] = 0x00;
     uiVSCtxbuf[7] = 0x00;
 
@@ -116,14 +149,16 @@ static void VSC_fntxCellcnt(uint16_t uiNodeid, uint16_t uiCellcount)
  ============================================================================ */
 void cana_fnmsgPrcsVSC(uint16_t nodeID, uint16_t msgtype, uint16_t *msgbuf)
 {
+    uint16_t ui16temp;
     uint16_t uiCellNum = 0;
     uint32_t u32temp = 0x0000FFFF;
     uint32_t u32temp1 = 0x0000FFFF;
 
     // to receive data from active VSC only
+    uiMaxCards_VSC = 16;
     if (nodeID <= (uiMaxCards_VSC))
     {
-
+        canA_tzVSC_info[nodeID].isReceived = 1;
         switch (msgtype)
         {
         case 1:
@@ -136,6 +171,10 @@ void cana_fnmsgPrcsVSC(uint16_t nodeID, uint16_t msgtype, uint16_t *msgbuf)
                     | msgbuf[5] << 0) * 0.001;
             canA_tzVSC_info[nodeID].f32Cellvolt[4] = (float32_t) (msgbuf[6] << 8
                     | msgbuf[7] << 0) * 0.001;
+            for (ui16temp = 0; ui16temp < 8; ui16temp++)
+                        {
+                            msgbuf[ui16temp] = 0;
+                        }
         }
             break;
 
@@ -149,6 +188,10 @@ void cana_fnmsgPrcsVSC(uint16_t nodeID, uint16_t msgtype, uint16_t *msgbuf)
                     | msgbuf[5] << 0) * 0.001;
             canA_tzVSC_info[nodeID].f32Cellvolt[8] = (float32_t) (msgbuf[6] << 8
                     | msgbuf[7] << 0) * 0.001;
+            for (ui16temp = 0; ui16temp < 8; ui16temp++)
+                                    {
+                msgbuf[ui16temp] = 0;
+                                    }
         }
             break;
 
@@ -162,6 +205,29 @@ void cana_fnmsgPrcsVSC(uint16_t nodeID, uint16_t msgtype, uint16_t *msgbuf)
                     << 8 | msgbuf[5] << 0) * 0.001;
             canA_tzVSC_info[nodeID].f32Cellvolt[12] = (float32_t) (msgbuf[6]
                     << 8 | msgbuf[7] << 0) * 0.001;
+            canA_tzVSC_info[0].f32Cellvolt[9] = 0.0;
+            canA_tzVSC_info[0].f32Cellvolt[10] = 0.0;
+            canA_tzVSC_info[0].f32Cellvolt[11] = 0.0;
+            canA_tzVSC_info[0].f32Cellvolt[12] = 0.0;
+            canA_tzVSC_info[4].f32Cellvolt[9] = 0.0;
+            canA_tzVSC_info[4].f32Cellvolt[10] = 0.0;
+            canA_tzVSC_info[4].f32Cellvolt[11] = 0.0;
+            canA_tzVSC_info[4].f32Cellvolt[12] = 0.0;
+            canA_tzVSC_info[8].f32Cellvolt[9] = 0.0;
+             canA_tzVSC_info[8].f32Cellvolt[10] = 0.0;
+             canA_tzVSC_info[8].f32Cellvolt[11] = 0.0;
+             canA_tzVSC_info[8].f32Cellvolt[12] = 0.0;
+             canA_tzVSC_info[12].f32Cellvolt[9] = 0.0;
+             canA_tzVSC_info[12].f32Cellvolt[10] = 0.0;
+             canA_tzVSC_info[12].f32Cellvolt[11] = 0.0;
+             canA_tzVSC_info[12].f32Cellvolt[12] = 0.0;
+
+             for (ui16temp = 0; ui16temp < 8; ui16temp++)
+                                     {
+                                         msgbuf[ui16temp] = 0;
+                                     }
+
+
         }
             break;
 
@@ -175,6 +241,32 @@ void cana_fnmsgPrcsVSC(uint16_t nodeID, uint16_t msgtype, uint16_t *msgbuf)
                     << 8 | msgbuf[5] << 0) * 0.001;
             canA_tzVSC_info[nodeID].f32Cellvolt[16] = (float32_t) (msgbuf[6]
                     << 8 | msgbuf[7] << 0) * 0.001;
+
+            canA_tzVSC_info[0].f32Cellvolt[13] = 0.0;
+            canA_tzVSC_info[0].f32Cellvolt[14] = 0.0;
+            canA_tzVSC_info[0].f32Cellvolt[15] = 0.0;
+            canA_tzVSC_info[0].f32Cellvolt[16] = 0.0;
+
+            canA_tzVSC_info[4].f32Cellvolt[13] = 0.0;
+            canA_tzVSC_info[4].f32Cellvolt[14] = 0.0;
+            canA_tzVSC_info[4].f32Cellvolt[15] = 0.0;
+            canA_tzVSC_info[4].f32Cellvolt[16] = 0.0;
+
+            canA_tzVSC_info[8].f32Cellvolt[13] = 0.0;
+            canA_tzVSC_info[8].f32Cellvolt[14] = 0.0;
+            canA_tzVSC_info[8].f32Cellvolt[15] = 0.0;
+            canA_tzVSC_info[8].f32Cellvolt[16] = 0.0;
+
+            canA_tzVSC_info[12].f32Cellvolt[13] = 0.0;
+            canA_tzVSC_info[12].f32Cellvolt[14] = 0.0;
+            canA_tzVSC_info[12].f32Cellvolt[15] = 0.0;
+            canA_tzVSC_info[12].f32Cellvolt[16] = 0.0;
+
+            for (ui16temp = 0; ui16temp < 8; ui16temp++)
+                                     {
+                                         msgbuf[ui16temp] = 0;
+                                     }
+
         }
             break;
 
@@ -186,6 +278,10 @@ void cana_fnmsgPrcsVSC(uint16_t nodeID, uint16_t msgtype, uint16_t *msgbuf)
             canA_tzVSC_info[nodeID].f32MaxCellVolt[1] = (float32_t) (msgbuf[3]
                     << 8 | msgbuf[4] << 0) * 0.001;
             canA_tzVSC_info[nodeID].uiMaxcellNum[1] = msgbuf[5] & 0xFF;
+            for (ui16temp = 0; ui16temp < 8; ui16temp++)
+                                    {
+                                        msgbuf[ui16temp] = 0;
+                                    }
         }
             break;
 
@@ -197,6 +293,10 @@ void cana_fnmsgPrcsVSC(uint16_t nodeID, uint16_t msgtype, uint16_t *msgbuf)
             canA_tzVSC_info[nodeID].f32MinCellVolt[1] = (float32_t) (msgbuf[3]
                     << 8 | msgbuf[4] << 0) * 0.001;
             canA_tzVSC_info[nodeID].uiMincellNum[1] = msgbuf[5] & 0xFF;
+            for (ui16temp = 0; ui16temp < 8; ui16temp++)
+                                    {
+                                        msgbuf[ui16temp] = 0;
+                                    }
         }
             break;
 
@@ -216,11 +316,27 @@ void cana_fnmsgPrcsVSC(uint16_t nodeID, uint16_t msgtype, uint16_t *msgbuf)
             canA_tzVSC_info[nodeID].f32Z_Img[uiCellNum] = (int32_t) (u32temp1
                     | (int32_t) (((msgbuf[5] << 8) | ((msgbuf[6]) & 0x00FF))
                             & 0x0000FFFF)) * 0.0001;
+            for (ui16temp = 0; ui16temp < 8; ui16temp++)
+                                    {
+                                        msgbuf[ui16temp] = 0;
+                                    }
         }
             break;
         default:
             break;
         }
+
+
+//            canA_tzVSC_info[0].f32Cellvolt[0][9] = 0.0;
+//            canA_tzVSC_info[0].f32Cellvolt[0][10] = 0.0;
+//            canA_tzVSC_info[0].f32Cellvolt[0][11] = 0.0;
+//            canA_tzVSC_info[0].f32Cellvolt[0][12] = 0.0;
+//            canA_tzVSC_info[0].f32Cellvolt[0][13] = 0.0;
+//            canA_tzVSC_info[0].f32Cellvolt[0][14] = 0.0;
+//            canA_tzVSC_info[0].f32Cellvolt[0][15] = 0.0;
+//            canA_tzVSC_info[0].f32Cellvolt[0][16] = 0.0;
+
+
     }
 
 

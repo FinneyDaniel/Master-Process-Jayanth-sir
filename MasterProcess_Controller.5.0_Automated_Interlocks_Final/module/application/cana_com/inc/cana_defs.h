@@ -666,6 +666,7 @@ struct CANA_tzACTIVE_IONODE_BITS
     uint16_t bt_LHC10 :1;
     uint16_t bt_LHC11 :1;
     uint16_t bt_MS :1;
+    uint16_t CellFault :1;
 
 };
 
@@ -730,7 +731,7 @@ union CANA_tzDOMS_STATUS_REGS
 
 struct CANA_tzMPFLT_BITS
 {
-       uint16_t fan101_102 :1;
+    uint16_t fan101_102 :1;
        uint16_t fan501_502 :1;
        uint16_t fan401_402 :1;
        uint16_t DOS101_103 :1;

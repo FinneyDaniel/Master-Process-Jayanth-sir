@@ -970,7 +970,7 @@ void CANA_fnComFailChk()
 {
 
 
-
+    int i;
     uint16_t ui16temp;
 
 
@@ -1030,23 +1030,22 @@ void CANA_fnComFailChk()
 
     if (ui16CANAVSFailTrig1 == 1)
     {
-        canA_VSCbuff.uiNodeID = 0;
+       // canA_VSCbuff.uiNodeID = 0;
     }
-
 
     // VS-1-12 CAN Fail after 20sec of Communication break
 
-
+#if 0
     if (canA_VSCbuff.uiNodeID != 1)
     {
-        if (canA_tzVSC_info[1].CANfailCnt++ >= 2000)
+        if (canA_tzVSC_info[1].CANfailCnt++ >= 5000)
         {
-            canA_tzVSC_info[1].CANfailCnt = 2000;
+            canA_tzVSC_info[1].CANfailCnt = 5000;
             CANA_tzActNodeRegs_VS.bit.bt_VS1 = 0;
 
             for (ui16temp = 1; ui16temp <= 16; ui16temp++)
             {
-                canA_tzVSC_info[1].f32Cellvolt[ui16temp] = 0;
+              //  canA_tzVSC_info[1].f32Cellvolt[ui16temp] = 0;
             }
         }
     }
@@ -1059,13 +1058,13 @@ void CANA_fnComFailChk()
 
     if (canA_VSCbuff.uiNodeID != 2)
     {
-        if (canA_tzVSC_info[2].CANfailCnt++ >= 2000)
+        if (canA_tzVSC_info[2].CANfailCnt++ >= 5000)
         {
-            canA_tzVSC_info[2].CANfailCnt = 2000;
+            canA_tzVSC_info[2].CANfailCnt = 5000;
             CANA_tzActNodeRegs_VS.bit.bt_VS2 = 0;
             for (ui16temp = 1; ui16temp <= 16; ui16temp++)
             {
-                canA_tzVSC_info[2].f32Cellvolt[ui16temp] = 0;
+                //canA_tzVSC_info[2].f32Cellvolt[ui16temp] = 0;
 
             }
         }
@@ -1079,13 +1078,13 @@ void CANA_fnComFailChk()
 
     if (canA_VSCbuff.uiNodeID != 3)
     {
-        if (canA_tzVSC_info[3].CANfailCnt++ >= 2000)
+        if (canA_tzVSC_info[3].CANfailCnt++ >= 5000)
         {
-            canA_tzVSC_info[3].CANfailCnt = 2000;
+            canA_tzVSC_info[3].CANfailCnt = 5000;
             CANA_tzActNodeRegs_VS.bit.bt_VS3 = 0;
             for (ui16temp = 1; ui16temp <= 16; ui16temp++)
             {
-                canA_tzVSC_info[3].f32Cellvolt[ui16temp] = 0;
+              //  canA_tzVSC_info[3].f32Cellvolt[ui16temp] = 0;
 
             }
         }
@@ -1099,13 +1098,13 @@ void CANA_fnComFailChk()
 
     if (canA_VSCbuff.uiNodeID != 4)
     {
-        if (canA_tzVSC_info[4].CANfailCnt++ >= 2000)
+        if (canA_tzVSC_info[4].CANfailCnt++ >= 5000)
         {
-            canA_tzVSC_info[4].CANfailCnt = 2000;
+            canA_tzVSC_info[4].CANfailCnt = 5000;
             CANA_tzActNodeRegs_VS.bit.bt_VS4 = 0;
             for (ui16temp = 1; ui16temp <= 16; ui16temp++)
             {
-                canA_tzVSC_info[4].f32Cellvolt[ui16temp] = 0;
+             //   canA_tzVSC_info[4].f32Cellvolt[ui16temp] = 0;
 
             }
         }
@@ -1119,13 +1118,13 @@ void CANA_fnComFailChk()
 
     if (canA_VSCbuff.uiNodeID != 5)
     {
-        if (canA_tzVSC_info[5].CANfailCnt++ >= 2000)
+        if (canA_tzVSC_info[5].CANfailCnt++ >= 5000)
         {
-            canA_tzVSC_info[5].CANfailCnt = 2000;
+            canA_tzVSC_info[5].CANfailCnt = 5000;
             CANA_tzActNodeRegs_VS.bit.bt_VS5 = 0;
             for (ui16temp = 1; ui16temp <= 16; ui16temp++)
             {
-                canA_tzVSC_info[5].f32Cellvolt[ui16temp] = 0;
+              //  canA_tzVSC_info[5].f32Cellvolt[ui16temp] = 0;
 
             }
         }
@@ -1139,13 +1138,13 @@ void CANA_fnComFailChk()
 
     if (canA_VSCbuff.uiNodeID != 6)
     {
-        if (canA_tzVSC_info[6].CANfailCnt++ >= 2000)
+        if (canA_tzVSC_info[6].CANfailCnt++ >= 5000)
         {
-            canA_tzVSC_info[6].CANfailCnt = 2000;
+            canA_tzVSC_info[6].CANfailCnt = 5000;
             CANA_tzActNodeRegs_VS.bit.bt_VS6 = 0;
             for (ui16temp = 1; ui16temp <= 16; ui16temp++)
             {
-                canA_tzVSC_info[6].f32Cellvolt[ui16temp] = 0;
+              //  canA_tzVSC_info[6].f32Cellvolt[ui16temp] = 0;
 
             }
         }
@@ -1159,13 +1158,13 @@ void CANA_fnComFailChk()
 
     if (canA_VSCbuff.uiNodeID != 7)
     {
-        if (canA_tzVSC_info[7].CANfailCnt++ >= 2000)
+        if (canA_tzVSC_info[7].CANfailCnt++ >= 5000)
         {
-            canA_tzVSC_info[7].CANfailCnt = 2000;
+            canA_tzVSC_info[7].CANfailCnt = 5000;
             CANA_tzActNodeRegs_VS.bit.bt_VS7 = 0;
             for (ui16temp = 1; ui16temp <= 16; ui16temp++)
             {
-                canA_tzVSC_info[7].f32Cellvolt[ui16temp] = 0;
+              //  canA_tzVSC_info[7].f32Cellvolt[ui16temp] = 0;
 
             }
         }
@@ -1179,9 +1178,9 @@ void CANA_fnComFailChk()
 
     if (canA_VSCbuff.uiNodeID != 8)
     {
-        if (canA_tzVSC_info[8].CANfailCnt++ >= 2000)
+        if (canA_tzVSC_info[8].CANfailCnt++ >= 5000)
         {
-            canA_tzVSC_info[8].CANfailCnt = 2000;
+            canA_tzVSC_info[8].CANfailCnt = 5000;
             CANA_tzActNodeRegs_VS.bit.bt_VS8 = 0;
             for (ui16temp = 1; ui16temp <= 16; ui16temp++)
             {
@@ -1199,9 +1198,9 @@ void CANA_fnComFailChk()
 
     if (canA_VSCbuff.uiNodeID != 9)
     {
-        if (canA_tzVSC_info[9].CANfailCnt++ >= 2000)
+        if (canA_tzVSC_info[9].CANfailCnt++ >= 5000)
         {
-            canA_tzVSC_info[9].CANfailCnt = 2000;
+            canA_tzVSC_info[9].CANfailCnt = 5000;
             CANA_tzActNodeRegs_VS1.bit.bt_VS9 = 0;
             for (ui16temp = 1; ui16temp <= 16; ui16temp++)
             {
@@ -1219,9 +1218,9 @@ void CANA_fnComFailChk()
 
     if (canA_VSCbuff.uiNodeID != 10)
     {
-        if (canA_tzVSC_info[10].CANfailCnt++ >= 2000)
+        if (canA_tzVSC_info[10].CANfailCnt++ >= 5000)
         {
-            canA_tzVSC_info[10].CANfailCnt = 2000;
+            canA_tzVSC_info[10].CANfailCnt = 5000;
             CANA_tzActNodeRegs_VS1.bit.bt_VS10 = 0;
             for (ui16temp = 1; ui16temp <= 16; ui16temp++)
             {
@@ -1239,9 +1238,9 @@ void CANA_fnComFailChk()
 
     if (canA_VSCbuff.uiNodeID != 11)
     {
-        if (canA_tzVSC_info[11].CANfailCnt++ >= 2000)
+        if (canA_tzVSC_info[11].CANfailCnt++ >= 5000)
         {
-            canA_tzVSC_info[11].CANfailCnt = 2000;
+            canA_tzVSC_info[11].CANfailCnt = 5000;
             for (ui16temp = 1; ui16temp <= 16; ui16temp++)
             {
                 canA_tzVSC_info[11].f32Cellvolt[ui16temp] = 0;
@@ -1259,9 +1258,9 @@ void CANA_fnComFailChk()
 
     if (canA_VSCbuff.uiNodeID != 12)
     {
-        if (canA_tzVSC_info[12].CANfailCnt++ >= 2000)
+        if (canA_tzVSC_info[12].CANfailCnt++ >= 5000)
         {
-            canA_tzVSC_info[12].CANfailCnt = 2000;
+            canA_tzVSC_info[12].CANfailCnt = 5000;
             CANA_tzActNodeRegs_VS1.bit.bt_VS12 = 0;
 
             for (ui16temp = 1; ui16temp <= 16; ui16temp++)
@@ -1279,9 +1278,9 @@ void CANA_fnComFailChk()
 
     if (canA_VSCbuff.uiNodeID != 13)
     {
-        if (canA_tzVSC_info[13].CANfailCnt++ >= 2000)
+        if (canA_tzVSC_info[13].CANfailCnt++ >= 5000)
         {
-            canA_tzVSC_info[13].CANfailCnt = 2000;
+            canA_tzVSC_info[13].CANfailCnt = 5000;
             CANA_tzActNodeRegs_VS1.bit.bt_VS13 = 0;
 
             for (ui16temp = 1; ui16temp <= 16; ui16temp++)
@@ -1299,9 +1298,9 @@ void CANA_fnComFailChk()
 
     if (canA_VSCbuff.uiNodeID != 14)
     {
-        if (canA_tzVSC_info[14].CANfailCnt++ >= 2000)
+        if (canA_tzVSC_info[14].CANfailCnt++ >= 5000)
         {
-            canA_tzVSC_info[14].CANfailCnt = 2000;
+            canA_tzVSC_info[14].CANfailCnt = 5000;
             CANA_tzActNodeRegs_VS1.bit.bt_VS14 = 0;
 
             for (ui16temp = 1; ui16temp <= 16; ui16temp++)
@@ -1319,9 +1318,9 @@ void CANA_fnComFailChk()
 
     if (canA_VSCbuff.uiNodeID != 15)
     {
-        if (canA_tzVSC_info[15].CANfailCnt++ >= 2000)
+        if (canA_tzVSC_info[15].CANfailCnt++ >= 5000)
         {
-            canA_tzVSC_info[15].CANfailCnt = 2000;
+            canA_tzVSC_info[15].CANfailCnt = 5000;
             CANA_tzActNodeRegs_VS1.bit.bt_VS15 = 0;
 
             for (ui16temp = 1; ui16temp <= 16; ui16temp++)
@@ -1339,9 +1338,9 @@ void CANA_fnComFailChk()
 
     if (canA_VSCbuff.uiNodeID != 16)
     {
-        if (canA_tzVSC_info[16].CANfailCnt++ >= 2000)
+        if (canA_tzVSC_info[16].CANfailCnt++ >= 5000)
         {
-            canA_tzVSC_info[16].CANfailCnt = 2000;
+            canA_tzVSC_info[16].CANfailCnt = 5000;
             CANA_tzActNodeRegs_VS1.bit.bt_VS16 = 0;
 
             for (ui16temp = 1; ui16temp <= 16; ui16temp++)
@@ -1356,7 +1355,28 @@ void CANA_fnComFailChk()
         CANA_tzActNodeRegs_VS1.bit.bt_VS16 = 1;
 
     }
-
+#endif
+    for (i = 1; i <= 16; i++)
+    {
+        if (canA_tzVSC_info[i].isReceived)
+        {
+            canA_tzVSC_info[i].isReceived = 0;
+            canA_tzVSC_info[i].CANfailCnt = 0;
+            //CANA_tzActNodeRegs_VS1.bit.bt_VS16 = 1;
+        }
+        else
+        {
+            if (++canA_tzVSC_info[i].CANfailCnt >= 2000)
+            {
+                canA_tzVSC_info[i].CANfailCnt = 2000;
+                //CANA_tzActNodeRegs_VS1.bit.bt_VS16 = 0;
+                for (ui16temp = 1; ui16temp <= 16; ui16temp++)
+                {
+                    canA_tzVSC_info[i].f32Cellvolt[ui16temp] = 0;
+                }
+            }
+        }
+    }
 }
 
 /*=============================================================================

@@ -28,7 +28,7 @@
 #include "scheduler.h"
 #include "cana_defs.h"
 #include "canb_defs.h"
-
+#include "cana_vsc.h"
 #include "mathcalc.h"
 #include "control_defs.h"
 /*==============================================================================
@@ -69,12 +69,11 @@ uint32_t ui32WaterOkCnt = 0, ui32WaterNotOkCnt = 0;
 uint32_t ui32CellVoltTripCnt = 0, ui32stackCellNotokcnt = 0,
         ui32stackCellokcnt = 0;
 
-int16_t n1 = 12, i, j, k1;
+int16_t n1 = 16, i, j, z;
 int16_t n2 = 12;
-int16_t n3 = 25; //Array Size Declaration
-float32_t c[26]; //Array Declaration
+int16_t n3 = 32; //Array Size Declaration
+float32_t c[32]; //Array Declaration
 float32_t f32maxCellVolt;
-
 /*==============================================================================
  Local Constants
  ==============================================================================*/
@@ -87,6 +86,42 @@ float32_t f32maxCellVolt;
  ============================================================================ */
 void CONTROL_fnPSU_IRef(void)
 {
+
+    control_fncellmaxval();
+
+    if (f32maxCellVolt > CANB_tzSiteRxRegs.CellMaxLimit )
+     {
+        CANA_tzActNodeRegs_IO.bit.CellFault = 1;
+     }
+     else if (f32maxCellVolt < CANB_tzSiteRxRegs.CellMinLimit)
+     {
+         CANA_tzActNodeRegs_IO.bit.CellFault= 0;
+     }
+
+    // Receiving Count value in seconds => 1 count = 60msec, ....cnts = 1sec => 1/60ms = 16.667
+
+     ui32CellVoltTripCnt = (ceil)(CANB_tzSiteRxRegs.CellNotokTripCnt * 20.0);
+
+     if (CANA_tzActNodeRegs_IO.bit.CellFault== 1)
+     {
+         ui32stackCellokcnt = 0;
+         ui32stackCellNotokcnt++;
+         if (ui32stackCellNotokcnt >= ui32CellVoltTripCnt)
+         {
+             ui32stackCellNotokcnt = ui32CellVoltTripCnt;
+             CONTROLtzFaultRegs.bit.StackcellFault = 1;
+         }
+     }
+     else if (CANA_tzActNodeRegs_IO.bit.CellFault== 0)
+     {
+         ui32stackCellNotokcnt = 0;
+         ui32stackCellokcnt++;
+         if (ui32stackCellokcnt >= ui32CellVoltTripCnt)
+         {
+             ui32stackCellokcnt = ui32CellVoltTripCnt;
+             CONTROLtzFaultRegs.bit.StackcellFault = 0;
+         }
+     }
 
     // Receiving Current References from SP and Move to Stack Check from Ready State
 
@@ -380,26 +415,44 @@ void CONTROL_fnPSU_IRef(void)
 /*==============================================================================
  End of File
  ==============================================================================*/
-//void control_fncellmaxval()
-//{
-//
-//    for (i = 0; i < n1; i++)
-//    {
-//        c[i] = CANA_tzRxdRegs.tzVSData.MaxCellvolt1[i];
-//    }
-//    for (j = n1; j < n3; j++)
-//    {
-//        c[j] = CANA_tzRxdRegs.tzVSData.MaxCellvolt2[j - i];
-//    }
-//
-//    f32maxCellVolt = c[0];
-//
-//    for (k1 = 1; k1 < n3; k1++)
-//    {
-//        if (c[k1] > f32maxCellVolt)
-//        {
-//            f32maxCellVolt = c[k1];
-//        }
-//    }
-//
-//}
+void control_fncellmaxval()
+{
+
+    uint16_t uiMaxCelltemp = 0;
+
+    while(uiMaxCelltemp < 16)
+    {
+        canA_tzVSC_info[uiMaxCelltemp].f32MaxCellVolt[0]=canA_tzVSC_info[uiMaxCelltemp].f32Cellvolt[1];
+
+        for (j = 2; j <= 8; j++)
+        {
+            if (canA_tzVSC_info[uiMaxCelltemp].f32Cellvolt[1] > canA_tzVSC_info[uiMaxCelltemp].f32MaxCellVolt[0])
+            {
+                canA_tzVSC_info[uiMaxCelltemp].f32MaxCellVolt[0] = canA_tzVSC_info[uiMaxCelltemp].f32Cellvolt[1];
+                canA_tzVSC_info[uiMaxCelltemp].f32MaxCellVolt[1]  = canA_tzVSC_info[uiMaxCelltemp].f32Cellvolt[1];
+                canA_tzVSC_info[uiMaxCelltemp].uiMaxcellNum[0] = j;
+                canA_tzVSC_info[uiMaxCelltemp].uiMaxcellNum[1] = j;
+            }
+        }
+
+        uiMaxCelltemp = uiMaxCelltemp + 4;
+    }
+    for (i = 0; i < n1; i++)
+    {
+        c[i] = canA_tzVSC_info[i].f32MaxCellVolt[0];
+    }
+    for (j = (n1-1); j < n3; j++)
+    {
+        c[j] = canA_tzVSC_info[j - i].f32MaxCellVolt[1];
+    }
+
+    f32maxCellVolt = c[0];
+
+    for (z = 0; z < n3; z++)
+    {
+        if (c[z] > f32maxCellVolt)
+        {
+            f32maxCellVolt = c[z];
+        }
+    }
+ }

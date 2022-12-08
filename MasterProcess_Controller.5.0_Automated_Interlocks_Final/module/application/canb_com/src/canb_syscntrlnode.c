@@ -459,12 +459,17 @@ case 5:
     ui16txMsgDataSite2[1] = 0x5;
     ui16txMsgDataSite2[2] = (CANB_tzSiteRegs.WaterDemand);
     ui16txMsgDataSite2[3] = (CANB_tzSiteRegs.TurnONLCC);
+    ui32temp = (MATHConvtzRegs.AISensorCOS101 * 100); // Added newly
 
-    ui16txMsgDataSite2[4] = (0);
-    ui16txMsgDataSite2[5] = (0);
+     if (ui32temp < 0)
+     {
+         ui32temp = 0;
+     }
 
-    ui16txMsgDataSite2[6] = (0);
-    ui16txMsgDataSite2[7] = (0);
+     ui16txMsgDataSite2[4] = (ui32temp & 0xFF00) >> 8;
+     ui16txMsgDataSite2[5] = (ui32temp & 0x00FF);
+     ui16txMsgDataSite2[6] = STAT_tzStateMacMS.Present_st;
+     ui16txMsgDataSite2[7] = STAT_tzStateMac.Present_st;
 
     CAN_sendMessage(CANB_BASE, CAN_mMAILBOX_2, CAN_mLEN8, ui16txMsgDataSite2);
     break;
@@ -863,7 +868,7 @@ case 6:
     CAN_sendMessage(CANB_BASE, CAN_mMAILBOX_4, CAN_mLEN8, ui16txMsgDataSite4);
 
     break;
-	
+
 case 7:
 
     CAN_setupMessageObject(CANB_BASE, CAN_mMAILBOX_4,
@@ -1097,6 +1102,15 @@ static void canb_fnmsgPrcsSP(uint16_t uiMsgtype, uint16_t *msgDataSP)
             CANB_tzSiteRxRegs.Start_H2CmdStkpwr = 0x0;
         }
 
+
+/*********************************************************************************/
+        if (msgDataSP[1] == 0x03)
+         {
+            CANB_tzSiteRxRegs.CellNotokTripCnt = ((msgDataSP[2] << 8)|(msgDataSP[3])) * 0.01;
+             CANB_tzSiteRxRegs.CellMaxLimit =  ((msgDataSP[4] << 8)|(msgDataSP[5])) * 0.001;
+             CANB_tzSiteRxRegs.CellMinLimit =  ((msgDataSP[6] << 8)|(msgDataSP[7])) * 0.001;
+         }
+/****************************************************************************************/
         CANB_tzSiteRegs.SPComFailCnt++;
         if (CANB_tzSiteRegs.SPComFailCnt >= 3000)
         {

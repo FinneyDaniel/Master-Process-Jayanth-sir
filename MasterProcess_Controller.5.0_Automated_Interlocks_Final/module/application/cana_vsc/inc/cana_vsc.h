@@ -50,6 +50,7 @@ typedef struct CANA_zVSC_CELL_INFO
    float32_t f32Z_Real[17];
    float32_t f32Z_Img[17];
    uint32_t CANfailCnt;
+   uint16_t isReceived;
 
 }CANA_tzVSC_CELL_INFO;
 
