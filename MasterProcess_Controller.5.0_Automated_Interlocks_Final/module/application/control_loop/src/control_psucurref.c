@@ -93,12 +93,12 @@ void CONTROL_fnPSU_IRef(void)
      {
         CANA_tzActNodeRegs_IO.bit.CellFault = 1;
      }
-     else if (f32maxCellVolt < CANB_tzSiteRxRegs.CellMinLimit)
+     else if (f32maxCellVolt <= CANB_tzSiteRxRegs.CellMinLimit)
      {
          CANA_tzActNodeRegs_IO.bit.CellFault= 0;
      }
 
-    // Receiving Count value in seconds => 1 count = 60msec, ....cnts = 1sec => 1/60ms = 16.667
+    // Receiving Count value in seconds => 1 count = 50msec, ....cnts = 1sec => 1/50ms = 20
 
      ui32CellVoltTripCnt = (ceil)(CANB_tzSiteRxRegs.CellNotokTripCnt * 20.0);
 
@@ -122,9 +122,12 @@ void CONTROL_fnPSU_IRef(void)
              CONTROLtzFaultRegs.bit.StackcellFault = 0;
          }
      }
-
+/*******************************************************************************************************************/
     // Receiving Current References from SP and Move to Stack Check from Ready State
-
+     if(CANB_tzSiteRegs.f32CurrSet>20.0f) //for safety
+     {
+         CANB_tzSiteRegs.f32CurrSet = 20.0f;
+     }
     if (CANB_tzSiteRegs.f32CurrSet >= 10.0f)
     {
         CANB_tzSiteRxRegs.Start_H2Cmd = 1;
@@ -135,41 +138,6 @@ void CONTROL_fnPSU_IRef(void)
         CANB_tzSiteRxRegs.Start_H2Cmd = 0;
     }
 
-//    control_fncellmaxval();
-//
-//    if (f32maxCellVolt > CANB_tzSiteRxRegs.CellMaxLimit)
-//    {
-//        CANA_tzIOFlags.CellFault = 1;
-//    }
-//    else if (f32maxCellVolt < CANB_tzSiteRxRegs.CellRecvryLimit)
-//    {
-//        CANA_tzIOFlags.CellFault = 0;
-//    }
-
-    // Receiving Count value in seconds => 1 count = 60msec, ....cnts = 1sec => 1/60ms = 16.667
-
-//    ui32CellVoltTripCnt = (ceil)(CANB_tzSiteRxRegs.CellNotokTripCnt * 16.667);
-//
-//    if (CANA_tzIOFlags.CellFault == 1)
-//    {
-//        ui32stackCellokcnt = 0;
-//        ui32stackCellNotokcnt++;
-//        if (ui32stackCellNotokcnt >= ui32CellVoltTripCnt)
-//        {
-//            ui32stackCellNotokcnt = ui32CellVoltTripCnt;
-//            CONTROLtzFaultRegs.bit.StackcellFault = 0;
-//        }
-//    }
-//    else if (CANA_tzIOFlags.CellFault == 0)
-//    {
-//        ui32stackCellNotokcnt = 0;
-//        ui32stackCellokcnt++;
-//        if (ui32stackCellokcnt >= ui32CellVoltTripCnt)
-//        {
-//            ui32stackCellokcnt = ui32CellVoltTripCnt;
-//            CONTROLtzFaultRegs.bit.StackcellFault = 0;
-//        }
-//    }
 
     if (MATHConvtzRegs.AISensorPRT101 < 0.0f)
     {
@@ -262,6 +230,7 @@ void CONTROL_fnPSU_IRef(void)
                     && (CANA_tzThermalFaultRegs.bit.TTC_301 == 0)
                     && (CANA_tzThermalFaultRegs.bit.KTC_401 == 0)
                     && (CANA_tzLHCIO2_AIFaultRegs.bit.TE_401 == 0)
+                    && (CONTROLtzFaultRegs.bit.StackcellFault == 0)
                     && (CANA_tzLPCIO2_AIFaultRegs.bit.OXS_101_RmpDwn == 0)
                     && (CANA_tzLPCIO2_AIFaultRegs.bit.OXS_101_ShtDwn == 0)
                     && (CANA_tzLPCIO2_AIFaultRegs.bit.HYS_102_ShtDwn == 0))
@@ -324,6 +293,7 @@ void CONTROL_fnPSU_IRef(void)
                         || (CANA_tzThermalFaultRegs.bit.TTC_301 == 1)
                         || (CANA_tzThermalFaultRegs.bit.KTC_401 == 1)
                         || (CANA_tzLHCIO2_AIFaultRegs.bit.TE_401 == 1)
+                        || (CONTROLtzFaultRegs.bit.StackcellFault == 1)
                         || (CANA_tzLPCIO2_AIFaultRegs.bit.OXS_101_RmpDwn == 1))
                 {
 
@@ -417,7 +387,7 @@ void CONTROL_fnPSU_IRef(void)
  ==============================================================================*/
 void control_fncellmaxval()
 {
-
+#if 0
     uint16_t uiMaxCelltemp = 0;
 
     while(uiMaxCelltemp < 16)
@@ -437,6 +407,8 @@ void control_fncellmaxval()
 
         uiMaxCelltemp = uiMaxCelltemp + 4;
     }
+#endif
+
     for (i = 0; i < n1; i++)
     {
         c[i] = canA_tzVSC_info[i].f32MaxCellVolt[0];
@@ -455,4 +427,5 @@ void control_fncellmaxval()
             f32maxCellVolt = c[z];
         }
     }
+
  }

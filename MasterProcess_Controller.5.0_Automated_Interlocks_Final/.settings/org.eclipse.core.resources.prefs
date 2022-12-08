@@ -46,4 +46,5 @@ encoding//Debug/module/rte/src/subdir_rules.mk=UTF-8
 encoding//Debug/module/rte/src/subdir_vars.mk=UTF-8
 encoding//Debug/module/safety/src/subdir_rules.mk=UTF-8
 encoding//Debug/module/safety/src/subdir_vars.mk=UTF-8
+encoding//Debug/objects.mk=UTF-8
 encoding//Debug/sources.mk=UTF-8
