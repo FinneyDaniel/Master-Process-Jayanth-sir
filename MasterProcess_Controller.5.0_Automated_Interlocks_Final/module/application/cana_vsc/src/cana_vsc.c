@@ -78,19 +78,19 @@ void cana_fnVSCTx(void)
 
         switch (cnt)
         {
-            case 0:
+            case 1:
                 VSC_fntxCellcnt(0, 8);
                 break;
 
-            case 1:
+            case 2:
                 VSC_fntxCellcnt(4, 8);
                 break;
 
-            case 2:
+            case 3:
                 VSC_fntxCellcnt(8, 8);
                 break;
 
-            case 3:
+            case 4:
                 VSC_fntxCellcnt(12, 8);
                 break;
 
