@@ -26,6 +26,7 @@
 #include "hal/driverlib/can.h"
 #include "cana_defs.h"
 #include "cana_PSUCom.h"
+#include "../main/ver.h"
 
 #include "canb_defs.h"
 
@@ -84,6 +85,7 @@ uint16_t ui16txMsgDataSite1[8] = { 0 };
 uint16_t ui16txMsgDataSite2[8] = { 0 };
 uint16_t ui16txMsgDataSite3[8] = { 0 };
 uint16_t ui16txMsgDataSite4[8] = { 0 };
+uint16_t ui16txMsgDataSite5[8] = { 0 };
 
 uint16_t ui16rxMsgSP[8] = { 0 };
 uint16_t uirxPrcsMsgSP[8] = { 0 };
@@ -91,7 +93,7 @@ uint16_t uirxPrcsMsgSP[8] = { 0 };
 uint16_t ui16CANBTxCntPSU = 0, ui16CANBTxNodeCntPSU = 0;
 
 uint16_t ui16nodeIDVS = 0, ui16CANBTxCntSnsr = 0, ui16CANBTxCntFlts = 0,
-        ui16CANBTxCntVSC = 0;
+        ui16CANBTxCntVSC = 0, ui16CANBTxCntVer = 0;
 
 uint32_t u32CANBmsgID1 = 0;
 uint16_t uiCANBDataLength1 = 0;
@@ -934,6 +936,34 @@ case 8:
 default:
     break;
     }
+
+        // Version data
+
+        ui16CANBTxCntVer++;
+
+        if (ui16CANBTxCntVer > 10)
+        {
+            ui16CANBTxCntVer = 1;
+        }
+
+        CAN_setupMessageObject(CANB_BASE, CAN_mMAILBOX_12,
+                                   (0x11F43020 | (CANA_tzIORegs.uiUnitID << 8)),
+                                   CAN_MSG_FRAME_EXT, CAN_MSG_OBJ_TYPE_TX, 0x1FFFFFFF,
+                                   CAN_MSG_OBJ_NO_FLAGS,
+                                   CAN_mLEN8);
+        switch (ui16CANBTxCntVer)
+        {
+            case 1:
+                ui16txMsgDataSite4[0] = (ui16CANBTxCntVer >> 8) & 0xFF;
+                ui16txMsgDataSite4[1] = ui16CANBTxCntVer & 0xFF;
+                ui16txMsgDataSite4[2] = MAJOR;
+                ui16txMsgDataSite4[3] = MINOR;
+                ui16txMsgDataSite4[4] = (BUILD >> 8) & 0xFF;
+                ui16txMsgDataSite4[5] = BUILD & 0xFF;
+                ui16txMsgDataSite4[6] = 0;
+                ui16txMsgDataSite4[7] = 0;
+                break;
+        }
 
 }
 
