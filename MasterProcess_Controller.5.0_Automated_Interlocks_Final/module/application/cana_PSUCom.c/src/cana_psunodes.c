@@ -531,9 +531,9 @@ void CANA_fnPSURX_Event(void)
         CANA_PSURegs.HiNode = 0;
     }
 
-    cana_fnReadMBox_PSU();
+    //cana_fnReadMBox_PSU();
 
-    if (CANA_PSURegs.MBox5 == 1)  // Measured Output Parameters
+    if (CAN_IsMessageReceived(CANA_BASE, CAN_mMAILBOX_5))
     {
         CAN_readMessage(CANA_BASE, CAN_mMAILBOX_5, ui16RxMsgDataPSU);
 
@@ -603,7 +603,7 @@ void CANA_fnPSURX_Event(void)
         CANA_PSURegs.MBox5 = 0;
     }
 
-    else if (CANA_PSURegs.MBox6 == 1)  // Faults
+    if (CAN_IsMessageReceived(CANA_BASE, CAN_mMAILBOX_6))
     {
         CAN_readMessage(CANA_BASE, CAN_mMAILBOX_6, ui16Rx1MsgDataPSU);
 
@@ -646,7 +646,7 @@ void CANA_fnPSURX_Event(void)
 
     }
 
-    else if (CANA_PSURegs.MBox7 == 1)  // Faults
+    if (CAN_IsMessageReceived(CANA_BASE, CAN_mMAILBOX_7))
     {
         CAN_readMessage(CANA_BASE, CAN_mMAILBOX_7, ui16Rx2MsgDataPSU);
 
@@ -717,7 +717,7 @@ void CANA_fnPSURX_Event(void)
 
     }
 
-    else if (CANA_PSURegs.MBox8 == 1)  // AC parameters
+    if (CAN_IsMessageReceived(CANA_BASE, CAN_mMAILBOX_8))
     {
         CAN_readMessage(CANA_BASE, CAN_mMAILBOX_8, ui16Rx3MsgDataPSU);
 
