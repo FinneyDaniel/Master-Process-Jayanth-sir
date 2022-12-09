@@ -224,9 +224,23 @@ void CANA_fnPSUTX_Event(void)
             {
                 CANA_tzTimerRegs.tzPSU.TxCount = 0;
 
-                CANA_tzQueryType.PSU = QUERY_PROGPARAM;
+                CANA_tzQueryType.PSU = QUERY_OP_PARAM;
             }
 
+        }
+
+        else if (CANA_tzQueryType.PSU == QUERY_OP_PARAM)
+        {
+            CANA_tzTimerRegs.tzPSU.TxCount++;
+
+            cana_fnQryOutputParam_PSU(CANA_tzTimerRegs.tzPSU.TxCount);
+
+            if (CANA_tzTimerRegs.tzPSU.TxCount > CANA_mTOTAL_PSUNODE)
+            {
+                CANA_tzTimerRegs.tzPSU.TxCount = 0;
+
+                CANA_tzQueryType.PSU = QUERY_PROGPARAM;
+            }
         }
 
         break;
