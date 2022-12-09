@@ -883,7 +883,7 @@ case 7:
     ui16txMsgDataSite4[1] = 0x7;
 
     ui16txMsgDataSite4[2] = (canA_tzVSC_info[ui16nodeIDVS].uiMaxcellNum[0]
-            * 0xFF);
+            & 0xFF);
 
     ui16txMsgDataSite4[3] = (canA_tzVSC_info[ui16nodeIDVS].uiMaxcellNum[1]
             & 0xFF);
@@ -914,7 +914,7 @@ case 8:
     ui16txMsgDataSite4[1] = 0x8;
 
     ui16txMsgDataSite4[2] = (canA_tzVSC_info[ui16nodeIDVS].uiMincellNum[0]
-            * 0xFF);
+            & 0xFF);
 
     ui16txMsgDataSite4[3] = (canA_tzVSC_info[ui16nodeIDVS].uiMincellNum[1]
             & 0xFF);
