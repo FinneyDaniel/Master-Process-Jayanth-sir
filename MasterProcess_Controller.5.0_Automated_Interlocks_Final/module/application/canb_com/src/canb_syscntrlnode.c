@@ -954,14 +954,16 @@ default:
         switch (ui16CANBTxCntVer)
         {
             case 1:
-                ui16txMsgDataSite4[0] = (ui16CANBTxCntVer >> 8) & 0xFF;
-                ui16txMsgDataSite4[1] = ui16CANBTxCntVer & 0xFF;
-                ui16txMsgDataSite4[2] = MAJOR;
-                ui16txMsgDataSite4[3] = MINOR;
-                ui16txMsgDataSite4[4] = (BUILD >> 8) & 0xFF;
-                ui16txMsgDataSite4[5] = BUILD & 0xFF;
-                ui16txMsgDataSite4[6] = 0;
-                ui16txMsgDataSite4[7] = 0;
+                ui16txMsgDataSite5[0] = (ui16CANBTxCntVer >> 8) & 0xFF;
+                ui16txMsgDataSite5[1] = ui16CANBTxCntVer & 0xFF;
+                ui16txMsgDataSite5[2] = MAJOR;
+                ui16txMsgDataSite5[3] = MINOR;
+                ui16txMsgDataSite5[4] = (BUILD >> 8) & 0xFF;
+                ui16txMsgDataSite5[5] = BUILD & 0xFF;
+                ui16txMsgDataSite5[6] = 0;
+                ui16txMsgDataSite5[7] = 0;
+
+                CAN_sendMessage(CANB_BASE, CAN_mMAILBOX_12, CAN_mLEN8, ui16txMsgDataSite5);
                 break;
         }
 
